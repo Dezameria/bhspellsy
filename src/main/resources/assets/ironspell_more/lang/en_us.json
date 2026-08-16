@@ -1,0 +1,13 @@
+{
+  "spell.ironspell_more.super_heal": "Super Heal",
+  "spell.ironspell_more.super_heal.guide": "Cast to heal yourself.",
+  "spell.ironspell_more.lightning_strike": "Lightning Strike",
+  "spell.ironspell_more.lightning_strike.guide": "Summons a lightning bolt to strike target area.",
+  "spell.ironspell_more.thunder_step": "Thunder Step",
+  "spell.ironspell_more.thunder_step.guide": "Dash instantly forward, zapping all enemies along the path.",
+  "spell.ironspell_more.spin_strike": "Spin Strike",
+  "spell.ironspell_more.spin_strike.guide": "Perform a fiery spin attack forward, piercing through enemies and dealing damage.",
+  "effect.ironspell_more.spin_strike": "Spin Strike",
+  "ui.ironspell_more.healing": "Healing",
+  "item.ironspell_more.example_magic_sword": "Example Magic Sword"
+}

@@ -3,7 +3,6 @@ package io.redspace.ironspell_more;
 import com.mojang.logging.LogUtils;
 import io.redspace.ironspell_more.particle.ShockwaveParticleCustom;
 import io.redspace.ironspell_more.particle.ZapParticleCustom;
-import io.redspace.ironspell_more.registry.ItemRegistry;
 import io.redspace.ironspell_more.registry.ParticleRegistry;
 import io.redspace.ironspell_more.registry.SpellRegistry;
 import net.minecraftforge.api.distmarker.Dist;
@@ -28,7 +27,6 @@ public class IronSpellMore {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::commonSetup);
         SpellRegistry.register(modEventBus);
-        ItemRegistry.register(modEventBus);
         ParticleRegistry.register(modEventBus);
         MinecraftForge.EVENT_BUS.register(this);
     }

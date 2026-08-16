@@ -13,7 +13,6 @@ Adds powerful new spells, custom 3D particle effects, custom mechanics, and spel
 | **Spin Strike** | 🔥 Fire | Charges forward in a fiery spin attack (Riptide spin animation), smoothly piercing through all enemies and dealing fire damage along the path. |
 | **Lightning Strike** | ⚡ Lightning | Rapidly locks on and lunges toward a target with high-speed lightning impact, 3D directional shockwave rings, and screen shake. |
 | **Thunder Step** | ⚡ Lightning | Blinks instantly forward across a path, zapping and electrocuting all enemies between the starting point and destination. |
-| **Super Heal** | ✨ Holy | Instantly channels holy energy to restore the caster's health. |
 
 ---
 

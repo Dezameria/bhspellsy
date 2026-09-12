@@ -7,6 +7,10 @@
   "spell.ironspell_more.thunder_step.guide": "Dash instantly forward, zapping all enemies along the path.",
   "spell.ironspell_more.spin_strike": "Spin Strike",
   "spell.ironspell_more.spin_strike.guide": "Perform a fiery spin attack forward, piercing through enemies and dealing damage.",
+  "spell.ironspell_more.pure_white_flame_burst": "Pure White Flame Burst",
+  "spell.ironspell_more.pure_white_flame_burst.guide": "Grab a target within strict melee range and fling them forward, triggering an explosive burst followed by a cone wave. Imposes severe recoil penalties on the caster.",
+  "spell.ironspell_more.shackle_of_fear": "Shackle of Fear",
+  "spell.ironspell_more.shackle_of_fear.guide": "Launches a projectile that binds affected targets with chains.",
   "effect.ironspell_more.spin_strike": "Spin Strike",
   "ui.ironspell_more.healing": "Healing",
   "item.ironspell_more.example_magic_sword": "Example Magic Sword"

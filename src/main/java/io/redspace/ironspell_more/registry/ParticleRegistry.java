@@ -2,8 +2,8 @@ package io.redspace.ironspell_more.registry;
 
 import com.mojang.serialization.Codec;
 import io.redspace.ironspell_more.IronSpellMore;
-import io.redspace.ironspell_more.particle.ShockwaveParticleOptionCustom;
-import io.redspace.ironspell_more.particle.ZapParticleOptionCustom;
+import io.redspace.ironspell_more.client.particle.ShockwaveParticleOptionCustom;
+import io.redspace.ironspell_more.client.particle.ZapParticleOptionCustom;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;

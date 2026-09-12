@@ -78,6 +78,13 @@ repositories {
     maven { url = "https://cursemaven.com" }
     maven { url = "https://maven.blamejared.com" }
     maven { url = "https://maven.kosmx.dev/" }
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+    }
+    flatDir {
+        dir 'libs'
+    }
 }
 
 //This is helpful if you are using ISS SNAPSHOT releases.  You can comment it out if you are using an actual version
@@ -92,9 +99,17 @@ dependencies {
     // MIXINS *****************************************************************************************************
     annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
 
+    // AAA PARTICLES (Effekseer Loader) **************************************************************************
+    implementation fg.deobf("maven.modrinth:En8uHTOK:aTc9PgXJ")
+
+    // EPIC FIGHT *************************************************************************************************
+    implementation fg.deobf("maven.modrinth:vu3NZ5Ma:KEBfkBat")
+
     // IRONS SPELLS N SPELLBOOKS **********************************************************************************
-    compileOnly fg.deobf("io.redspace.ironsspellbooks:irons_spellbooks:${irons_spells_version}")
-    runtimeOnly fg.deobf("io.redspace.ironsspellbooks:irons_spellbooks:${irons_spells_version}")
+    compileOnly fg.deobf("io.redspace:irons_spellbooks:${irons_spells_version}")
+    runtimeOnly fg.deobf("io.redspace:irons_spellbooks:${irons_spells_version}")
+    implementation fg.deobf("io.redspace:irons_lib:${irons_lib_version}")
+    compileOnly fg.deobf("blank:bhspells:1.20.1-1.3.0-forge")
 
     // GECKOLIB ***************************************************************************************************
     implementation fg.deobf("software.bernie.geckolib:geckolib-forge-${geckolib_version}")
@@ -119,13 +134,8 @@ dependencies {
     runtimeOnly fg.deobf("mezz.jei:jei-${jei_mc_version}-forge:${jei_version}")
 
     // CURIOS *****************************************************************************************************
-    implementation fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
-    //Uncomment the following line to run with Curios in dev
+    compileOnly "top.theillusivec4.curios:curios-forge:${curios_version}:api"
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")
-
-    // BETTER COMBAT **********************************************************************************************
-    //runtimeOnly fg.deobf("curse.maven:better-combat-by-daedelus-${better_combat_version}")
-    //runtimeOnly fg.deobf("curse.maven:cloth-config-348521:4633416")
 
     // PATCHOULI **************************************************************************************************
     compileOnly fg.deobf("vazkii.patchouli:Patchouli:${patchouli_version}:api")
@@ -141,23 +151,20 @@ dependencies {
     implementation "com.google.code.gson:gson:${gson_version}"
 }
 
-def resourceTargets = ['META-INF/mods.toml', 'pack.mcmeta']
-def replaceProperties = [
-        minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
-        forge_version       : forge_version, forge_version_range: forge_version_range,
-        loader_version_range: loader_version_range,
-        mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
-        mod_authors         : mod_authors, mod_description: mod_description, mod_credits: mod_credits,
-        mod_issue_tracker   : mod_issue_tracker, mod_display_url: mod_display_url,
-        mod_logo_file       : mod_logo_file
-]
-
-processResources {
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+            minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
+            forge_version       : forge_version, forge_version_range: forge_version_range,
+            loader_version_range: loader_version_range,
+            mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
+            mod_authors         : mod_authors, mod_description: mod_description, mod_credits: mod_credits,
+            mod_issue_tracker   : mod_issue_tracker, mod_display_url: mod_display_url,
+            mod_logo_file       : mod_logo_file
+    ]
     inputs.properties replaceProperties
-    replaceProperties.put 'project', project
 
-    filesMatching(resourceTargets) {
-        expand replaceProperties
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
     }
 }
 

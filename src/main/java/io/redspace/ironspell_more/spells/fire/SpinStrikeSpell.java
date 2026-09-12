@@ -1,7 +1,7 @@
-package io.redspace.ironspell_more.spells;
+package io.redspace.ironspell_more.spells.fire;
 
 import io.redspace.ironspell_more.IronSpellMore;
-import io.redspace.ironspell_more.registry.SpellRegistry;
+import io.redspace.ironspell_more.registry.MobEffectsRegistry;
 import io.redspace.ironsspellbooks.api.config.DefaultConfig;
 import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.api.registry.SchoolRegistry;
@@ -106,7 +106,7 @@ public class SpinStrikeSpell extends AbstractSpell {
 
         // ส่ง Effect ไปคอยผลักดันให้พุ่งทะลุและทำดาเมจอย่างต่อเนื่องทุก Tick
         int damageValue = (int) getDamage(spellLevel, entity);
-        entity.addEffect(new MobEffectInstance(SpellRegistry.SPIN_STRIKE.get(), 12,
+        entity.addEffect(new MobEffectInstance(MobEffectsRegistry.SPIN_STRIKE.get(), 12,
                 damageValue, false, false, false));
 
         world.playSound(null, entity.getX(), entity.getY(), entity.getZ(),

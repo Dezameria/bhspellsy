@@ -1,4 +1,4 @@
-package io.redspace.ironspell_more.particle;
+package io.redspace.ironspell_more.client.particle;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;

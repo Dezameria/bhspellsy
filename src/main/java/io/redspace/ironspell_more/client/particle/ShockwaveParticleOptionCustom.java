@@ -1,4 +1,4 @@
-package io.redspace.ironspell_more.particle;
+package io.redspace.ironspell_more.client.particle;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;

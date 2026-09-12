@@ -1,8 +1,8 @@
-package io.redspace.ironspell_more.spells;
+package io.redspace.ironspell_more.spells.lightning;
 
 import io.redspace.ironspell_more.IronSpellMore;
-import io.redspace.ironspell_more.particle.ShockwaveParticleOptionCustom;
-import io.redspace.ironspell_more.particle.ZapParticleOptionCustom;
+import io.redspace.ironspell_more.client.particle.ShockwaveParticleOptionCustom;
+import io.redspace.ironspell_more.client.particle.ZapParticleOptionCustom;
 import io.redspace.ironsspellbooks.api.config.DefaultConfig;
 import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.api.registry.SchoolRegistry;
@@ -12,16 +12,16 @@ import io.redspace.ironsspellbooks.api.util.CameraShakeData;
 import io.redspace.ironsspellbooks.api.util.CameraShakeManager;
 import io.redspace.ironsspellbooks.api.util.Utils;
 import io.redspace.ironsspellbooks.capabilities.magic.MagicManager;
-import io.redspace.ironsspellbooks.util.ParticleHelper;
 import io.redspace.ironsspellbooks.damage.DamageSources;
 import io.redspace.ironsspellbooks.registries.SoundRegistry;
-import net.minecraft.commands.arguments.EntityAnchorArgument;
+import io.redspace.ironsspellbooks.util.ParticleHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -30,7 +30,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
-import net.minecraft.sounds.SoundEvents;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -133,7 +133,6 @@ public class LightningStrikeSpell extends AbstractSpell {
 
                     // 1. 3D Directional Shockwave Multi-Rings (สีชมพูตั้งฉากตามทิศทางพุ่ง 100%)
                     for (ServerPlayer player : serverLevel.players()) {
-
                         serverLevel.sendParticles(player,
                                 new ShockwaveParticleOptionCustom(centerColor, radius, true, lookVec), true, targetX,
                                 targetY, targetZ, 1, 0, 0, 0, 0);
@@ -143,7 +142,6 @@ public class LightningStrikeSpell extends AbstractSpell {
                             0.25, 0.25, 0.25, 0.7f + radius * 0.1f, false);
 
                     // 2. Electric Pink Lightning Burst Sparks
-
                     Vec3 forwardDir = entity.getLookAngle().normalize();
 
                     // ปรับทิศทางตรงนี้: 1.0 (ไปข้างหน้า/ทะลุออกด้านหลังเป้าหมาย) หรือ -1.0

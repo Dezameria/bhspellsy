@@ -1,11 +1,9 @@
-package io.redspace.ironspell_more.items;
+package io.redspace.ironspell_more.item;
 
-import io.redspace.ironsspellbooks.api.item.weapons.ExtendedSwordItem;
 import io.redspace.ironsspellbooks.api.item.weapons.MagicSwordItem;
 import io.redspace.ironsspellbooks.api.registry.AttributeRegistry;
 import io.redspace.ironsspellbooks.api.registry.SpellDataRegistryHolder;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.Tiers;

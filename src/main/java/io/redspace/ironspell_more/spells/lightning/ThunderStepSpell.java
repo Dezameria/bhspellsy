@@ -1,4 +1,4 @@
-package io.redspace.ironspell_more.spells;
+package io.redspace.ironspell_more.spells.lightning;
 
 import io.redspace.ironspell_more.IronSpellMore;
 import io.redspace.ironsspellbooks.IronsSpellbooks;

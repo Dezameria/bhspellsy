@@ -2,6 +2,8 @@ package io.redspace.ironspell_more.client;
 
 import io.redspace.ironspell_more.IronSpellMore;
 import io.redspace.ironspell_more.client.particle.ShockwaveParticleCustom;
+import io.redspace.ironspell_more.client.particle.WhiteEmberParticle;
+import io.redspace.ironspell_more.client.particle.WhiteFireParticle;
 import io.redspace.ironspell_more.client.particle.ZapParticleCustom;
 import io.redspace.ironspell_more.registry.ParticleRegistry;
 import io.redspace.ironspell_more.entity.spells.gold_chain.ArcaneShackleRenderer;
@@ -20,6 +22,9 @@ public class IronSpellMoreClient {
     public static void registerParticleProviders(RegisterParticleProvidersEvent event) {
         event.registerSpriteSet(ParticleRegistry.ZAP_CUSTOM.get(), ZapParticleCustom.Provider::new);
         event.registerSpriteSet(ParticleRegistry.SHOCKWAVE_CUSTOM.get(), ShockwaveParticleCustom.Provider::new);
+        event.registerSpriteSet(ParticleRegistry.WHITE_FIRE.get(), WhiteFireParticle.Provider::new);
+        event.registerSpriteSet(ParticleRegistry.WHITE_EMBER.get(), WhiteEmberParticle.Provider::new);
+        event.registerSpriteSet(ParticleRegistry.WHITE_FIRE_EMITTER.get(), io.redspace.ironspell_more.client.particle.WhiteFireEmitterParticle.Provider::new);
     }
 
     @SubscribeEvent

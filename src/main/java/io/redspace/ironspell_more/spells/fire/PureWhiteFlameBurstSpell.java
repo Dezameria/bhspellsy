@@ -1,6 +1,8 @@
 package io.redspace.ironspell_more.spells.fire;
 
 import io.redspace.ironspell_more.IronSpellMore;
+import io.redspace.ironspell_more.registry.MobEffectsRegistry;
+import io.redspace.ironspell_more.registry.ParticleRegistry;
 import io.redspace.ironsspellbooks.api.config.DefaultConfig;
 import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.api.registry.SchoolRegistry;
@@ -17,6 +19,7 @@ import io.redspace.ironsspellbooks.spells.TargetedTargetAreaCastData;
 import io.redspace.ironsspellbooks.util.ParticleHelper;
 import mod.chloeprime.aaaparticles.api.common.AAALevel;
 import mod.chloeprime.aaaparticles.api.common.ParticleEmitterInfo;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -31,10 +34,14 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
+import io.redspace.ironsspellbooks.particle.SparkParticleOptions;
+import yesman.epicfight.api.utils.LevelUtil;
 
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +52,7 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
             "pure_white_flame_burst");
     private static final ParticleEmitterInfo PURE_WHITE_FLAME_FX = new ParticleEmitterInfo(
             ResourceLocation.fromNamespaceAndPath(IronSpellMore.MODID, "pure_white_flame"));
+    private static final SparkParticleOptions WHITE_SPARKS = new SparkParticleOptions(new Vector3f(1.0F, 1.0F, 1.0F));
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.RARE)
@@ -99,7 +107,7 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
 
     @Override
     public AnimationHolder getCastStartAnimation() {
-        return SpellAnimations.CHARGE_ANIMATION;
+        return SpellAnimations.ANIMATION_CONTINUOUS_CAST_ONE_HANDED;
     }
 
     @Override
@@ -182,7 +190,7 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
             return;
         }
 
-        serverLevel.sendParticles(ParticleTypes.FLAME,
+        serverLevel.sendParticles(ParticleRegistry.WHITE_FIRE_EMITTER.get(),
                 entity.getX(), entity.getY() + entity.getBbHeight() * 0.5, entity.getZ(),
                 2, 0.25, 0.25, 0.25, 0.02);
 
@@ -245,7 +253,7 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
 
             // Suction visual effects: flames & smoke streaming from target towards caster
             if (entity.tickCount % 2 == 0) {
-                serverLevel.sendParticles(ParticleTypes.FLAME,
+                serverLevel.sendParticles(ParticleRegistry.WHITE_FIRE_EMITTER.get(),
                         lockedTarget.getX(), lockedTarget.getY() + lockedTarget.getBbHeight() * 0.5,
                         lockedTarget.getZ(),
                         3, 0.15, 0.15, 0.15, 0.02);
@@ -253,7 +261,7 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
                         lockedTarget.getX(), lockedTarget.getY() + lockedTarget.getBbHeight() * 0.5,
                         lockedTarget.getZ(),
                         2, 0.1, 0.1, 0.1, 0.01);
-                MagicManager.spawnParticles(serverLevel, ParticleHelper.FIRE,
+                MagicManager.spawnParticles(serverLevel, ParticleRegistry.WHITE_FIRE_EMITTER.get(),
                         lockedTarget.getX(), lockedTarget.getY() + lockedTarget.getBbHeight() * 0.5,
                         lockedTarget.getZ(),
                         1, 0.1, 0.1, 0.1, 0.02, false);
@@ -331,21 +339,83 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
         // Sub-step 2: Phase 1 Explosion (Primary Impact Damage & Effects)
         float damage = getDamage(spellLevel, entity);
         DamageSources.applyDamage(primaryTarget, damage, getDamageSource(entity));
-        primaryTarget.setRemainingFireTicks(100); // 5.0 seconds burn
-        primaryTarget.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 2)); // Slowness III for 10.0s
+        primaryTarget.clearFire();
+        primaryTarget.addEffect(
+                new MobEffectInstance(MobEffectsRegistry.WHITE_FLAME_BURN.get(), 100, 0, false, false, true)); // 5s
+                                                                                                               // White
+                                                                                                               // Flame
+                                                                                                               // Burn
+                                                                                                               // (show
+                                                                                                               // icon
+                                                                                                               // in
+                                                                                                               // HUD,
+                                                                                                               // no
+                                                                                                               // potion
+                                                                                                               // swirl)
+        primaryTarget.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 2, false, false, false)); // Slowness
+                                                                                                                   // III
+                                                                                                                   // for
+                                                                                                                   // 10.0s
+                                                                                                                   // (no
+                                                                                                                   // particles)
 
         // Phase 1 VFX & SFX
         serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER, primaryTarget.getX(), primaryTarget.getY() + 0.5,
                 primaryTarget.getZ(), 1, 0, 0, 0, 0);
-        serverLevel.sendParticles(ParticleTypes.FLAME, primaryTarget.getX(), primaryTarget.getY() + 0.5,
+        serverLevel.sendParticles(ParticleRegistry.WHITE_FIRE_EMITTER.get(), primaryTarget.getX(), primaryTarget.getY() + 0.5,
                 primaryTarget.getZ(), 40, 0.4, 0.4, 0.4, 0.15);
 
-        // Effekseer VFX: pure_white_flame run once upon explosion on grabbed target (scaled to 0.5, 2.5 blocks forward from caster)
-        Vec3 effekPos = entity.position().add(0, entity.getEyeHeight() * 0.65, 0).add(lookVec.scale(2.5));
+        // Effekseer VFX: pure_white_flame run once upon explosion on grabbed target
+        // (scaled to 0.5, 2.5 blocks forward from caster horizontally, no pitch tilt)
+        Vec3 horizontalForward = new Vec3(lookVec.x, 0, lookVec.z);
+        if (horizontalForward.lengthSqr() < 1.0E-5) {
+            float yRotRad = (float) Math.toRadians(entity.getYRot());
+            horizontalForward = new Vec3(-Math.sin(yRotRad), 0, Math.cos(yRotRad));
+        } else {
+            horizontalForward = horizontalForward.normalize();
+        }
+
+        Vec3 effekPos = entity.position().add(0, entity.getEyeHeight() * 0.65 - 1.0, 0)
+                .add(horizontalForward.scale(2.5));
         AAALevel.addParticle(serverLevel, 64.0, PURE_WHITE_FLAME_FX.clone()
                 .position(effekPos)
-                .rotationFromForward(lookVec)
+                .rotationFromForward(horizontalForward, (float) Math.PI)
                 .scale(0.5f));
+
+        // Epic Fight ground slam fracture VFX centered in front of caster
+        Vec3 slamPos = entity.position().add(horizontalForward.scale(2.2));
+        int blockX = (int) Math.floor(slamPos.x);
+        int blockZ = (int) Math.floor(slamPos.z);
+        BlockPos groundPos = null;
+
+        // Search down for solid ground from +2 to -6 relative to caster
+        for (int dy = 2; dy >= -6; dy--) {
+            BlockPos checkPos = new BlockPos(blockX, (int) Math.floor(entity.getY() + dy), blockZ);
+            BlockState state = level.getBlockState(checkPos);
+            if (LevelUtil.canTransferShockWave(level, checkPos, state)) {
+                groundPos = checkPos;
+                break;
+            }
+        }
+
+        // Fallback: check directly below caster if front is above a void or drop
+        if (groundPos == null) {
+            blockX = (int) Math.floor(entity.getX());
+            blockZ = (int) Math.floor(entity.getZ());
+            for (int dy = 1; dy >= -4; dy--) {
+                BlockPos checkPos = new BlockPos(blockX, (int) Math.floor(entity.getY() + dy), blockZ);
+                BlockState state = level.getBlockState(checkPos);
+                if (LevelUtil.canTransferShockWave(level, checkPos, state)) {
+                    groundPos = checkPos;
+                    break;
+                }
+            }
+        }
+
+        if (groundPos != null) {
+            Vec3 fracturePos = new Vec3(groundPos.getX() + 0.5, groundPos.getY(), groundPos.getZ() + 0.5);
+            LevelUtil.circleSlamFracture(entity, level, fracturePos, 4.0, false, false, false);
+        }
 
         level.playSound(null, primaryTarget.getX(), primaryTarget.getY(), primaryTarget.getZ(),
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 2.0f, 0.9f);
@@ -389,7 +459,9 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
                         && Math.abs(localRight) <= (halfWidth + extraW)
                         && Math.abs(localUp) <= (halfHeight + extraH)) {
                     DamageSources.applyDamage(targetInBox, phase2Damage, getDamageSource(entity));
-                    targetInBox.setRemainingFireTicks(100);
+                    targetInBox.clearFire();
+                    targetInBox.addEffect(new MobEffectInstance(MobEffectsRegistry.WHITE_FLAME_BURN.get(), 100, 0,
+                            false, false, false));
 
                     // Powerful directional knockback pushed outward along forward direction
                     targetInBox.setDeltaMovement(f.scale(1.8).add(0, 0.45, 0));
@@ -402,12 +474,49 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
                     boxLength, boxWidth, boxHeight);
         }));
 
+        // Epic Fight rapid ground fracture wave rushing forward along the 20x7
+        // rectangular corridor (5 steps, 1 tick apart)
+        final Vec3 casterBasePos = entity.position();
+        final Vec3 waveForward = horizontalForward;
+        final int baseFractureTick = serverLevel.getServer().getTickCount() + 8;
+
+        for (int i = 0; i < 5; i++) {
+            final int stepIndex = i;
+            final double dist = 3.5 + stepIndex * 4.0;
+            serverLevel.getServer().tell(new TickTask(baseFractureTick + stepIndex, () -> {
+                Vec3 stepPos = casterBasePos.add(waveForward.scale(dist));
+                int stepX = (int) Math.floor(stepPos.x);
+                int stepZ = (int) Math.floor(stepPos.z);
+                BlockPos stepGroundPos = null;
+
+                for (int dy = 3; dy >= -4; dy--) {
+                    BlockPos checkPos = new BlockPos(stepX, (int) Math.floor(casterBasePos.y + dy), stepZ);
+                    BlockState state = serverLevel.getBlockState(checkPos);
+                    if (LevelUtil.canTransferShockWave(serverLevel, checkPos, state)) {
+                        stepGroundPos = checkPos;
+                        break;
+                    }
+                }
+
+                if (stepGroundPos != null) {
+                    Vec3 fracturePos = new Vec3(stepGroundPos.getX() + 0.5, stepGroundPos.getY(),
+                            stepGroundPos.getZ() + 0.5);
+                    LevelUtil.circleSlamFracture(entity, serverLevel, fracturePos, 3.5, false, false, false);
+                }
+            }));
+        }
+
         // Sub-step 4: Caster Backfire Penalty
         float hpCost = entity.getHealth() * 0.20F;
         entity.setHealth(Math.max(1.0F, entity.getHealth() - hpCost));
-        entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 2)); // Slowness III for 10s
-        entity.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 0)); // Wither I for 5s
-        entity.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 600, 0)); // Weakness I for 30s
+        entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 2, false, false, false)); // Slowness
+                                                                                                            // III for
+                                                                                                            // 10s (no
+                                                                                                            // particles)
+        entity.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 0, false, false, false)); // Wither I for 5s (no
+                                                                                                 // particles)
+        entity.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 600, 0, false, false, false)); // Weakness I for 30s
+                                                                                                   // (no particles)
 
         serverLevel.sendParticles(ParticleTypes.SMOKE, entity.getX(), entity.getY() + 1.0, entity.getZ(), 25, 0.3, 0.5,
                 0.3, 0.05);
@@ -464,27 +573,30 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
 
             Vec3 result = (rotation.scale(3.0).add(randomVec)).normalize().scale(speed);
 
-            // FIRE_EMITTER flies forward along the result vector (creates the floating fire
-            // wave effect)
-            level.sendParticles(ParticleHelper.FIRE_EMITTER, pPos.x, pPos.y, pPos.z, 0, result.x, result.y, result.z,
+            // WHITE_FIRE_EMITTER flies forward along the result vector (creates the floating white
+            // fire wave effect and continuously drops white embers)
+            level.sendParticles(ParticleRegistry.WHITE_FIRE_EMITTER.get(), pPos.x, pPos.y, pPos.z, 0, result.x, result.y,
+                    result.z,
                     1.0);
 
             if (i % 2 == 0) {
-                // High-speed fiery sparks streaking ahead of the wave
-                level.sendParticles(ParticleHelper.FIERY_SPARKS, pPos.x, pPos.y, pPos.z, 0, result.x * 1.25,
+                // High-speed white sparks streaking ahead of the wave
+                level.sendParticles(WHITE_SPARKS, pPos.x, pPos.y, pPos.z, 0, result.x * 1.25,
                         result.y * 1.25, result.z * 1.25, 1.0);
             }
 
             if (i % 3 == 0) {
-                // Flame particles floating forward with the wave
-                level.sendParticles(ParticleTypes.FLAME, pPos.x, pPos.y, pPos.z, 0, result.x * 0.9, result.y * 0.9,
+                // Additional white fire emitter particles floating forward with the wave
+                level.sendParticles(ParticleRegistry.WHITE_FIRE_EMITTER.get(), pPos.x, pPos.y, pPos.z, 0, result.x * 0.9,
+                        result.y * 0.9,
                         result.z * 0.9, 1.0);
             }
 
             if (i % 4 == 0) {
-                // Trailing embers floating forward
-                level.sendParticles(ParticleHelper.EMBERS, pPos.x, pPos.y, pPos.z, 0, result.x * 0.65, result.y * 0.65,
-                        result.z * 0.65, 1.0);
+                // Trailing white embers floating closer to caster
+                level.sendParticles(ParticleRegistry.WHITE_EMBER.get(), pPos.x, pPos.y, pPos.z, 0, result.x * 0.25,
+                        result.y * 0.25,
+                        result.z * 0.25, 1.0);
             }
         }
     }
@@ -520,7 +632,8 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
                         (Math.random() * 2.0 - 1.0) * angularness,
                         (Math.random() * 2.0 - 1.0) * angularness);
                 Vec3 result = (rotation.scale(3.0).add(randomVec)).normalize().scale(speed);
-                level.addParticle(ParticleHelper.FIRE_EMITTER, x + ox, y + oy, z + oz, result.x, result.y, result.z);
+                level.addParticle(ParticleRegistry.WHITE_FIRE_EMITTER.get(), x + ox, y + oy, z + oz, result.x, result.y,
+                        result.z);
             }
         }
     }

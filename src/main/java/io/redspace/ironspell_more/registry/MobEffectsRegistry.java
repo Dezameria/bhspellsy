@@ -15,6 +15,9 @@ public class MobEffectsRegistry {
     public static final RegistryObject<MobEffect> SPIN_STRIKE = MOB_EFFECTS.register("spin_strike",
             () -> new SpinStrikeEffect(MobEffectCategory.BENEFICIAL, 0x4dd9eb));
 
+    public static final RegistryObject<MobEffect> WHITE_FLAME_BURN = MOB_EFFECTS.register("white_flame_burn",
+            () -> new io.redspace.ironspell_more.effect.WhiteFlameBurnEffect(MobEffectCategory.HARMFUL, 0xFFFFFF));
+
     public static void register(IEventBus eventBus) {
         MOB_EFFECTS.register(eventBus);
     }

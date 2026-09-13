@@ -31,6 +31,15 @@ public class ParticleRegistry {
                 }
             });
 
+    public static final RegistryObject<net.minecraft.core.particles.SimpleParticleType> WHITE_FIRE = PARTICLE_TYPES.register("white_fire",
+            () -> new net.minecraft.core.particles.SimpleParticleType(false));
+
+    public static final RegistryObject<net.minecraft.core.particles.SimpleParticleType> WHITE_EMBER = PARTICLE_TYPES.register("white_ember",
+            () -> new net.minecraft.core.particles.SimpleParticleType(false));
+
+    public static final RegistryObject<net.minecraft.core.particles.SimpleParticleType> WHITE_FIRE_EMITTER = PARTICLE_TYPES.register("white_fire_emitter",
+            () -> new net.minecraft.core.particles.SimpleParticleType(false));
+
     public static void register(IEventBus eventBus) {
         PARTICLE_TYPES.register(eventBus);
     }

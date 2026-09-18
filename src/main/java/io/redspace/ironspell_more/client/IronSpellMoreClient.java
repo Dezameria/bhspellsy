@@ -31,5 +31,6 @@ public class IronSpellMoreClient {
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(EntityRegistry.ARCANE_SHACKLE.get(), ArcaneShackleRenderer::new);
         event.registerEntityRenderer(EntityRegistry.GOLD_CHAIN.get(), GoldChainRenderer::new);
+        event.registerEntityRenderer(EntityRegistry.WING_OF_TEMPEST_AOE.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
     }
 }

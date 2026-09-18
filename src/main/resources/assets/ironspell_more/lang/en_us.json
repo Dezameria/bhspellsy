@@ -11,6 +11,8 @@
   "spell.ironspell_more.pure_white_flame_burst.guide": "Grab a target within strict melee range and fling them forward, triggering an explosive burst followed by a cone wave. Imposes severe recoil penalties on the caster.",
   "spell.ironspell_more.shackle_of_fear": "Shackle of Fear",
   "spell.ironspell_more.shackle_of_fear.guide": "Launches a projectile that binds affected targets with chains.",
+  "spell.ironspell_more.wings_of_tempest": "Wings of Tempest",
+  "spell.ironspell_more.wings_of_tempest.guide": "Summons a swirling tempest around the caster that traps and spins surrounding targets in an orbit, inflicting debilitating debuffs.",
   "effect.ironspell_more.spin_strike": "Spin Strike",
   "effect.ironspell_more.white_flame_burn": "White Flame Burn",
   "ui.ironspell_more.healing": "Healing",

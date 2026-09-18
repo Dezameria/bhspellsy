@@ -25,6 +25,12 @@ public class EntityRegistry {
                     .clientTrackingRange(64)
                     .build(IronSpellMore.MODID + ":gold_chain"));
 
+    public static final RegistryObject<EntityType<io.redspace.ironspell_more.entity.spells.WingofTempestAoe>> WING_OF_TEMPEST_AOE = ENTITIES.register("wing_of_tempest_aoe",
+            () -> EntityType.Builder.<io.redspace.ironspell_more.entity.spells.WingofTempestAoe>of(io.redspace.ironspell_more.entity.spells.WingofTempestAoe::new, MobCategory.MISC)
+                    .sized(4.0f, 1.0f)
+                    .clientTrackingRange(64)
+                    .build(IronSpellMore.MODID + ":wing_of_tempest_aoe"));
+
     public static void register(IEventBus eventBus) {
         ENTITIES.register(eventBus);
     }

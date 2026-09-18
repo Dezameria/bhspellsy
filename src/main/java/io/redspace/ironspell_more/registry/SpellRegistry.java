@@ -26,6 +26,9 @@ public class SpellRegistry {
     // GOLD
     public static final RegistryObject<AbstractSpell> SHACKLE_OF_FEAR_SPELL = registerSpell(new ShackleofFearSpell());
 
+    // NATURE
+    public static final RegistryObject<AbstractSpell> WINGS_OF_TEMPEST_SPELL = registerSpell(new io.redspace.ironspell_more.spells.nature.WingsofTempestSpell());
+
     public static RegistryObject<AbstractSpell> registerSpell(AbstractSpell spell) {
         return SPELLS.register(spell.getSpellName(), () -> spell);
     }

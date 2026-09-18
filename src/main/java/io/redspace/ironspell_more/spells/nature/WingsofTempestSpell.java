@@ -1,7 +1,8 @@
 package io.redspace.ironspell_more.spells.nature;
 
+import com.github.L_Ender.cataclysm.client.particle.StormParticle;
 import io.redspace.ironspell_more.IronSpellMore;
-import io.redspace.ironspell_more.entity.spells.WingofTempestAoe;
+import io.redspace.ironspell_more.entity.spells.wings_of_tempest.WingofTempestAoe;
 import io.redspace.ironspell_more.registry.EntityRegistry;
 import io.redspace.ironsspellbooks.api.config.DefaultConfig;
 import io.redspace.ironsspellbooks.api.magic.MagicData;
@@ -17,6 +18,7 @@ import io.redspace.ironsspellbooks.api.util.Utils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
@@ -85,6 +87,17 @@ public class WingsofTempestSpell extends AbstractSpell {
     }
 
     @Override
+    public void onServerCastTick(Level level, int spellLevel, LivingEntity entity, MagicData playerMagicData) {
+        super.onServerCastTick(level, spellLevel, entity, playerMagicData);
+        if (level instanceof ServerLevel serverLevel && entity.tickCount % 4 == 0) {
+            float width = 1.5f + entity.getRandom().nextFloat() * 1.5f;
+            float height = 0.2f + entity.getRandom().nextFloat() * 1.5f;
+            serverLevel.sendParticles(new StormParticle.OrbData(1.0f, 1.0f, 1.0f, width, height, entity.getId()),
+                    entity.getX(), entity.getY(), entity.getZ(), 1, 0, 0, 0, 0);
+        }
+    }
+
+    @Override
     public void onCast(Level level, int spellLevel, LivingEntity entity, CastSource castSource,
             MagicData playerMagicData) {
         int duration = getDurationTicks(spellLevel, entity);
@@ -96,6 +109,16 @@ public class WingsofTempestSpell extends AbstractSpell {
         aoe.setRadius(radius);
         aoe.setDuration(duration);
         level.addFreshEntity(aoe);
+
+        if (level instanceof ServerLevel serverLevel) {
+            for (int i = 0; i < 6; i++) {
+                float orbRadius = 2.5f + (i % 3) * 2.5f;
+                float orbHeight = 0.3f + (i / 3.0f) * 1.2f;
+                serverLevel.sendParticles(
+                        new StormParticle.OrbData(1.0f, 1.0f, 1.0f, orbRadius, orbHeight, entity.getId()),
+                        entity.getX(), entity.getY(), entity.getZ(), 1, 0, 0, 0, 0);
+            }
+        }
 
         super.onCast(level, spellLevel, entity, castSource, playerMagicData);
     }

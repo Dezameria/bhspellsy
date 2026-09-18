@@ -18,7 +18,7 @@
 | Target type | Self-centered AoE (รอบตัวผู้ร่าย) |
 | Radius | `8 + (4 × entityPowerMultiplier)` blocks |
 | Duration | `20 × (12 + 2.25 × spellLevel)` ticks (14.25 – 30 วินาที สำหรับเลเวล 1–8) |
-| Spawned Entity | `ironspell_more:wing_of_tempest_aoe` (`WingofTempestAoe.java`) |
+| Spawned Entity | `ironspell_more:wing_of_tempest_aoe` (`entity/spells/wings_of_tempest/WingofTempestAoe.java`) |
 | Language keys | `spell.ironspell_more.wings_of_tempest` และ `.guide` |
 
 ## พฤติกรรมการทำงาน
@@ -40,7 +40,12 @@
 - **Cast Start**: เสียง `SoundEvents.ELYTRA_FLYING` พร้อมแอนิเมชันร่ายแบบยาว (`ANIMATION_LONG_CAST`)
 - **Cast Finish**: เสียง `SoundEvents.PHANTOM_SWOOP`
 - **Ambient Loop**: เล่นเสียง `SoundEvents.ELYTRA_FLYING` ทุก 40 ticks ที่ตำแหน่งศูนย์กลางของพายุ
-- **Particles**: สปอว์นอนุภาค `ParticleTypes.CLOUD` (70%) และ `ParticleTypes.POOF` (30%) หมุนวนรอบศูนย์กลางพายุตามแนวสัมผัส (ฝั่งไคลเอนต์)
+- **Particles**:
+  - **Cataclysm Storm Trail**: ใช้อนุภาค `com.github.L_Ender.cataclysm.client.particle.StormParticle$OrbData` สีขาวบริสุทธิ์ (RGB 1.0, 1.0, 1.0) หมุนวนรอบตัวผู้ร่าย:
+    - ระหว่างชาร์จร่าย (`onServerCastTick`): ปลดปล่อย Storm Trail หมุนวนกระชับรอบตัวผู้ร่าย
+    - เมื่อร่ายเสร็จ (`onCast`): ปลดปล่อย Storm Trail ระเบิดขยายวงรอบตัวผู้ร่าย
+    - ระหว่างพายุทำงาน (`WingofTempestAoe.ambientParticles`): สปอว์น Storm Trail โคจรรอบตัวผู้ร่ายตามระดับความสูงและรัศมีต่างๆ อย่างต่อเนื่อง
+  - **Ambient Dust/Cloud**: สปอว์นอนุภาค `ParticleTypes.CLOUD` (70%) และ `ParticleTypes.POOF` (30%) หมุนวนรอบศูนย์กลางพายุตามแนวสัมผัส (ฝั่งไคลเอนต์)
 
 ## สถานะความสอดคล้อง (Synchronization Status)
 

@@ -1,0 +1,12 @@
+{
+  "venomous_blossomfall_charge_1": {
+    "sounds": [
+      "ironspell_more:venomousblossomfall_charge_1"
+    ]
+  },
+  "venomous_blossomfall_charge_2": {
+    "sounds": [
+      "ironspell_more:venomousblossomfall_charge_2"
+    ]
+  }
+}

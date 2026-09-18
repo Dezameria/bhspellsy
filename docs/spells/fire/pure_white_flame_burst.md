@@ -50,7 +50,9 @@
 - `ironspell_more:white_flame_burn` ล้างไฟ vanilla และทำ fire damage `2 + amplifier` ทุก 20 ticks
 - ใช้ particles `white_fire`, `white_fire_emitter`, `white_ember`, white sparks, smoke และ explosion
 - ใช้ Effekseer effect `ironspell_more:pure_white_flame` ผ่าน AAA Particles
-- ใช้ `LevelUtil.circleSlamFracture` จาก Epic Fight สำหรับพื้นแตกร้าวที่จุดกระแทกและคลื่น 5 จุด
+- ใช้ `compat/epicfight/EpicFightFractureHelper` เป็น optional integration boundary ก่อนเรียก
+  `LevelUtil.circleSlamFracture` สำหรับพื้นแตกร้าวที่จุดกระแทกและคลื่น 5 จุด หากไม่มี Epic Fight
+  ส่วน fracture จะเป็น no-op โดยไม่กระทบ damage หรือเอฟเฟกต์หลักของสกิล
 - ใช้เสียง Blaze, explosion, dragon fireball และ wither ตามแต่ละช่วง
 
 ## การตรวจสอบ
@@ -58,4 +60,3 @@
 - ทดสอบทั้งกรณีโดนและพลาดเป้าหมาย รวมถึงเป้าหมายที่ตายระหว่างชาร์จ
 - ทดสอบ Phase 2 กับทิศมองขึ้น/ลง, พื้นต่างระดับ และพื้นที่ว่าง
 - ตรวจ friendly fire, HP ขั้นต่ำ 1 และ duration ของ debuff ทุกชนิด
-

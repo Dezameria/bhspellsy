@@ -9,6 +9,9 @@ import io.redspace.ironspell_more.registry.ParticleRegistry;
 import io.redspace.ironspell_more.entity.spells.gold_chain.ArcaneShackleRenderer;
 import io.redspace.ironspell_more.entity.spells.gold_chain.GoldChainRenderer;
 import io.redspace.ironspell_more.registry.EntityRegistry;
+import io.redspace.ironspell_more.entity.spells.venomous_blossomfall.AzureVenomNeedleModel;
+import io.redspace.ironspell_more.entity.spells.venomous_blossomfall.AzureVenomNeedleRenderer;
+import io.redspace.ironspell_more.entity.spells.wind_arrow.WindArrowRenderer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
@@ -32,5 +35,14 @@ public class IronSpellMoreClient {
         event.registerEntityRenderer(EntityRegistry.ARCANE_SHACKLE.get(), ArcaneShackleRenderer::new);
         event.registerEntityRenderer(EntityRegistry.GOLD_CHAIN.get(), GoldChainRenderer::new);
         event.registerEntityRenderer(EntityRegistry.WING_OF_TEMPEST_AOE.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
+        event.registerEntityRenderer(EntityRegistry.CRIMSON_SPEAR.get(), io.redspace.ironspell_more.entity.spells.crimson_rain_bathes_moon.CrimsonSpearRenderer::new);
+        event.registerEntityRenderer(EntityRegistry.GALE_DRIVE_VORTEX.get(), io.redspace.ironspell_more.entity.spells.gale_drive.GaleDriveVortexRenderer::new);
+        event.registerEntityRenderer(EntityRegistry.AZURE_VENOM_NEEDLE.get(), AzureVenomNeedleRenderer::new);
+        event.registerEntityRenderer(EntityRegistry.WIND_ARROW.get(), WindArrowRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(AzureVenomNeedleModel.LAYER_LOCATION, AzureVenomNeedleModel::createBodyLayer);
     }
 }

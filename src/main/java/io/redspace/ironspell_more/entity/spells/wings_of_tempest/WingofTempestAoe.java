@@ -1,5 +1,6 @@
-package io.redspace.ironspell_more.entity.spells;
+package io.redspace.ironspell_more.entity.spells.wings_of_tempest;
 
+import com.github.L_Ender.cataclysm.client.particle.StormParticle;
 import io.redspace.ironspell_more.registry.EntityRegistry;
 import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.damage.DamageSources;
@@ -125,6 +126,15 @@ public class WingofTempestAoe extends AoeEntity implements AntiMagicSusceptible 
 
         float radius = getRadius();
         int particleSpawns = 6;
+
+        Entity owner = getOwner();
+        int orbitEntityId = owner != null ? owner.getId() : this.getId();
+        if (this.tickCount % 3 == 0) {
+            float orbRadius = 2.0f + this.random.nextFloat() * (radius - 2.0f);
+            float orbHeight = 0.2f + this.random.nextFloat() * 2.5f;
+            this.level().addParticle(new StormParticle.OrbData(1.0f, 1.0f, 1.0f, orbRadius, orbHeight, orbitEntityId),
+                    getX(), getY(), getZ(), 0, 0, 0);
+        }
 
         for (int i = 0; i < particleSpawns; i++) {
             float r = 1.0f + this.random.nextFloat() * (radius - 1.0f);

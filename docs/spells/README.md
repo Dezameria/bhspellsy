@@ -5,18 +5,35 @@ This directory is the required source of detailed design and implementation note
 ## File organization
 
 - Keep exactly one primary Markdown document per spell.
-- Name the file after the spell registry path using lowercase snake case: `<spell_id>.md`.
-- Example: `ironspell_more:wings_of_tempest` is documented in `wings_of_tempest.md`.
+- Place the document inside its corresponding magic school directory (e.g., `fire/`, `lightning/`, `nature/`, `aqua/`, `gold/`, `ground/`).
+- Name the file after the spell registry path using lowercase snake case: `<school>/<spell_id>.md`.
+- Example: `ironspell_more:wings_of_tempest` is documented in `nature/wings_of_tempest.md`.
 - Do not put the detailed specification for multiple spells in the same file.
 
 ## Spell index
 
-- [Spin Strike](spin_strike.md)
-- [Pure White Flame Burst](pure_white_flame_burst.md)
-- [Lightning Strike](lightning_strike.md)
-- [Thunder Step](thunder_step.md)
-- [Shackle of Fear](shackle_of_fear.md)
-- [Wings of Tempest](wings_of_tempest.md)
+### 🔥 Fire
+- [Pure White Flame Burst](fire/pure_white_flame_burst.md)
+- [Spin Strike](fire/spin_strike.md)
+- [Gale Drive](fire/gale_drive.md)
+
+### ⚡ Lightning
+- [Lightning Strike](lightning/lightning_strike.md)
+- [Thunder Step](lightning/thunder_step.md)
+
+### 🌿 Nature
+- [Wings of Tempest](nature/wings_of_tempest.md)
+- [Venomous Blossomfall](nature/venomous_blossomfall.md)
+- [Wind Arrow](nature/wind_arrow.md)
+
+### 🌊 Aqua
+- [Crimson Rain Bathes Moon](aqua/crimson_rain_bathes_moon.md)
+- [Glacial Veil](aqua/glacial_veil.md)
+
+
+### 🪙 Gold
+- [Shackle of Fear](gold/shackle_of_fear.md)
+
 
 ## Required workflow
 

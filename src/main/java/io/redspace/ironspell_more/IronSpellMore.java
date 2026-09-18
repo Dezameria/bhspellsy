@@ -30,6 +30,7 @@ public class IronSpellMore {
         ItemRegistry.register(modEventBus);
         SpellRegistry.register(modEventBus);
         ParticleRegistry.register(modEventBus);
+        io.redspace.ironspell_more.registry.SoundRegistry.register(modEventBus);
         io.redspace.ironspell_more.registry.EntityRegistry.register(modEventBus);
 
         MinecraftForge.EVENT_BUS.register(this);

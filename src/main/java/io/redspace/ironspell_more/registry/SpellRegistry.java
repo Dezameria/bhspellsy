@@ -6,6 +6,7 @@ import io.redspace.ironspell_more.spells.fire.SpinStrikeSpell;
 import io.redspace.ironspell_more.spells.gold.ShackleofFearSpell;
 import io.redspace.ironspell_more.spells.lightning.LightningStrikeSpell;
 import io.redspace.ironspell_more.spells.lightning.ThunderStepSpell;
+import io.redspace.ironspell_more.spells.nature.VenomousBlossomfallSpell;
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -18,6 +19,7 @@ public class SpellRegistry {
     // FIRE
     public static final RegistryObject<AbstractSpell> SPIN_STRIKE_SPELL = registerSpell(new SpinStrikeSpell());
     public static final RegistryObject<AbstractSpell> PURE_WHITE_FLAME_BURST_SPELL = registerSpell(new PureWhiteFlameBurstSpell());
+    public static final RegistryObject<AbstractSpell> GALE_DRIVE_SPELL = registerSpell(new io.redspace.ironspell_more.spells.fire.GaleDriveSpell());
 
     // LIGHTNING
     public static final RegistryObject<AbstractSpell> LIGHTNING_STRIKE_SPELL = registerSpell(new LightningStrikeSpell());
@@ -28,6 +30,12 @@ public class SpellRegistry {
 
     // NATURE
     public static final RegistryObject<AbstractSpell> WINGS_OF_TEMPEST_SPELL = registerSpell(new io.redspace.ironspell_more.spells.nature.WingsofTempestSpell());
+    public static final RegistryObject<AbstractSpell> VENOMOUS_BLOSSOMFALL_SPELL = registerSpell(new VenomousBlossomfallSpell());
+    public static final RegistryObject<AbstractSpell> WIND_ARROW_SPELL = registerSpell(new io.redspace.ironspell_more.spells.nature.WindArrowSpell());
+
+    // AQUA
+    public static final RegistryObject<AbstractSpell> CRIMSON_RAIN_BATHES_MOON_SPELL = registerSpell(new io.redspace.ironspell_more.spells.aqua.CrimsonRainBathesMoonSpell());
+    public static final RegistryObject<AbstractSpell> GLACIAL_VEIL_SPELL = registerSpell(new io.redspace.ironspell_more.spells.aqua.GlacialVeilSpell());
 
     public static RegistryObject<AbstractSpell> registerSpell(AbstractSpell spell) {
         return SPELLS.register(spell.getSpellName(), () -> spell);

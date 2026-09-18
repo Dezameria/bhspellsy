@@ -1,0 +1,88 @@
+{
+	"warning": "Made by GameTechBC for T.O Tweaks mod, others are NOT allowed to use this model for their own project. You project might be taken down.",
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.unknown",
+				"texture_width": 512,
+				"texture_height": 512,
+				"visible_bounds_width": 9,
+				"visible_bounds_height": 9.5,
+				"visible_bounds_offset": [0, 4.25, 0]
+			},
+			"bones": [
+				{
+					"name": "root",
+					"pivot": [0, 2, 0]
+				},
+				{
+					"name": "bone",
+					"parent": "root",
+					"pivot": [0, 2, 0],
+					"cubes": [
+						{"origin": [-4, 0, -4], "size": [8, 8, 8], "uv": [276, 178]}
+					]
+				},
+				{
+					"name": "bone2",
+					"parent": "root",
+					"pivot": [0, 9, 0],
+					"cubes": [
+						{"origin": [-7, 8, -7], "size": [14, 12, 14], "uv": [276, 152]}
+					]
+				},
+				{
+					"name": "bone3",
+					"parent": "root",
+					"pivot": [0, 21, 0],
+					"cubes": [
+						{"origin": [-11, 20, -11], "size": [22, 14, 22], "uv": [276, 116]}
+					]
+				},
+				{
+					"name": "bone4",
+					"parent": "root",
+					"pivot": [0, 8, 0],
+					"rotation": [0, -45, 0],
+					"cubes": [
+						{"origin": [-15, 34, -15], "size": [30, 16, 30], "uv": [212, 267]}
+					]
+				},
+				{
+					"name": "bone5",
+					"parent": "root",
+					"pivot": [0, 34, 0],
+					"cubes": [
+						{"origin": [-20, 50, -21], "size": [40, 17, 42], "uv": [212, 208]}
+					]
+				},
+				{
+					"name": "bone6",
+					"parent": "root",
+					"pivot": [0, 51, 0],
+					"rotation": [0, -45, 0],
+					"cubes": [
+						{"origin": [-26, 67, -27], "size": [52, 18, 54], "uv": [0, 208]}
+					]
+				},
+				{
+					"name": "bone7",
+					"parent": "root",
+					"pivot": [0, 70, 0],
+					"cubes": [
+						{"origin": [-34, 85, -35], "size": [68, 22, 70], "uv": [0, 116]}
+					]
+				},
+				{
+					"name": "bone8",
+					"parent": "root",
+					"pivot": [0, 94, 0],
+					"cubes": [
+						{"origin": [-44, 107, -45], "size": [88, 26, 90], "pivot": [0, 114, 0], "rotation": [0, -45, 0], "uv": [0, 0]}
+					]
+				}
+			]
+		}
+	]
+}

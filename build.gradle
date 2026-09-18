@@ -79,6 +79,10 @@ repositories {
     maven { url = "https://maven.blamejared.com" }
     maven { url = "https://maven.kosmx.dev/" }
     maven {
+        name = "Shadows of Fire"
+        url = "https://maven.shadowsoffire.dev/releases"
+    }
+    maven {
         name = "Modrinth"
         url = "https://api.modrinth.com/maven"
     }
@@ -96,6 +100,12 @@ dependencies {
     // FORGE ******************************************************************************************************
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
+    // FREECAM (LOCAL DEV/RUNTIME) ********************************************************************************
+    implementation fg.deobf("local:freecam-forge:1.2.1+1.20")
+
+    // Epicfight Nightfall ****************************************************************************************
+    implementation fg.deobf("curse.maven:epicfight-nightfall-1307848:8163633")
+
     // MIXINS *****************************************************************************************************
     annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
 
@@ -104,6 +114,9 @@ dependencies {
 
     // EPIC FIGHT *************************************************************************************************
     implementation fg.deobf("maven.modrinth:vu3NZ5Ma:KEBfkBat")
+    implementation fg.deobf("curse.maven:epic-fight-avalon-1268823:7619938")
+    implementation fg.deobf("maven.modrinth:epic-fight-invincible-lib:dDWp05UU")
+    implementation fg.deobf("maven.modrinth:weapons-of-miracles:eVJNVLxc")
 
     // IRONS SPELLS N SPELLBOOKS **********************************************************************************
     compileOnly fg.deobf("io.redspace:irons_spellbooks:${irons_spells_version}")
@@ -120,6 +133,9 @@ dependencies {
 
     // PLAYER ANIMATOR ********************************************************************************************
     implementation fg.deobf("dev.kosmx.player-anim:player-animation-lib-forge:${player_animator_version}")
+
+    // DUNGEONS AND COMBAT ****************************************************************************************
+    implementation fg.deobf("maven.modrinth:h7YaLrkk:XgFoh4Su")
 
 
     // JEI ********************************************************************************************************
@@ -138,8 +154,16 @@ dependencies {
     // APOTHEOSIS
     compileOnly fg.deobf("curse.maven:apotheosis-${apotheosis_version}")
     runtimeOnly fg.deobf("curse.maven:apotheosis-${apotheosis_version}")
-    runtimeOnly fg.deobf("curse.maven:placebo-${placebo_version}")
-    runtimeOnly fg.deobf("curse.maven:attributeslib-${attributeslib_version}")
+
+    // ADDITIONAL DEPENDENCIES
+    implementation fg.deobf("curse.maven:to-tweaks-irons-spells-1046916:7424522")
+    implementation fg.deobf("curse.maven:alexs-caves-924854:5848216")
+
+    implementation fg.deobf("curse.maven:lionfish-api-1001614:8094506")
+    implementation fg.deobf("dev.shadowsoffire:Placebo:${minecraft_version}-${placeboVersion}")
+    implementation fg.deobf("dev.shadowsoffire:ApothicAttributes:${minecraft_version}-${attributesLibVersion}")
+    implementation fg.deobf("curse.maven:lendercataclysm-551586:6906993")
+    implementation fg.deobf("curse.maven:citadel-331936:7476570")
 
     // JSON ******************************************************************************************************
     implementation "com.google.code.gson:gson:${gson_version}"

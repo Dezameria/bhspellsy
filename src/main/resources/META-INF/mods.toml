@@ -69,3 +69,9 @@ modId="minecraft"
     versionRange="[0.0,)"
     ordering="AFTER"
     side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="epicfight"
+    mandatory=false
+    versionRange="[20.14.17,)"
+    ordering="AFTER"
+    side="BOTH"

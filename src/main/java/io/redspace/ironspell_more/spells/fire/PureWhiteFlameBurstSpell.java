@@ -1,6 +1,7 @@
 package io.redspace.ironspell_more.spells.fire;
 
 import io.redspace.ironspell_more.IronSpellMore;
+import io.redspace.ironspell_more.compat.epicfight.EpicFightFractureHelper;
 import io.redspace.ironspell_more.registry.MobEffectsRegistry;
 import io.redspace.ironspell_more.registry.ParticleRegistry;
 import io.redspace.ironsspellbooks.api.config.DefaultConfig;
@@ -19,7 +20,6 @@ import io.redspace.ironsspellbooks.spells.TargetedTargetAreaCastData;
 import io.redspace.ironsspellbooks.util.ParticleHelper;
 import mod.chloeprime.aaaparticles.api.common.AAALevel;
 import mod.chloeprime.aaaparticles.api.common.ParticleEmitterInfo;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -34,14 +34,12 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 import io.redspace.ironsspellbooks.particle.SparkParticleOptions;
-import yesman.epicfight.api.utils.LevelUtil;
 
 import java.util.List;
 import java.util.Optional;
@@ -384,37 +382,11 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
 
         // Epic Fight ground slam fracture VFX centered in front of caster
         Vec3 slamPos = entity.position().add(horizontalForward.scale(2.2));
-        int blockX = (int) Math.floor(slamPos.x);
-        int blockZ = (int) Math.floor(slamPos.z);
-        BlockPos groundPos = null;
-
-        // Search down for solid ground from +2 to -6 relative to caster
-        for (int dy = 2; dy >= -6; dy--) {
-            BlockPos checkPos = new BlockPos(blockX, (int) Math.floor(entity.getY() + dy), blockZ);
-            BlockState state = level.getBlockState(checkPos);
-            if (LevelUtil.canTransferShockWave(level, checkPos, state)) {
-                groundPos = checkPos;
-                break;
-            }
-        }
-
-        // Fallback: check directly below caster if front is above a void or drop
-        if (groundPos == null) {
-            blockX = (int) Math.floor(entity.getX());
-            blockZ = (int) Math.floor(entity.getZ());
-            for (int dy = 1; dy >= -4; dy--) {
-                BlockPos checkPos = new BlockPos(blockX, (int) Math.floor(entity.getY() + dy), blockZ);
-                BlockState state = level.getBlockState(checkPos);
-                if (LevelUtil.canTransferShockWave(level, checkPos, state)) {
-                    groundPos = checkPos;
-                    break;
-                }
-            }
-        }
-
-        if (groundPos != null) {
-            Vec3 fracturePos = new Vec3(groundPos.getX() + 0.5, groundPos.getY(), groundPos.getZ() + 0.5);
-            LevelUtil.circleSlamFracture(entity, level, fracturePos, 4.0, false, false, false);
+        Vec3 fractureSearchOrigin = new Vec3(slamPos.x, entity.getY(), slamPos.z);
+        boolean spawnedFrontFracture = EpicFightFractureHelper.trySpawnFracture(entity, level,
+                fractureSearchOrigin, 2, 6, 4.0D);
+        if (!spawnedFrontFracture) {
+            EpicFightFractureHelper.trySpawnFracture(entity, level, entity.position(), 1, 4, 4.0D);
         }
 
         level.playSound(null, primaryTarget.getX(), primaryTarget.getY(), primaryTarget.getZ(),
@@ -485,24 +457,8 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
             final double dist = 3.5 + stepIndex * 4.0;
             serverLevel.getServer().tell(new TickTask(baseFractureTick + stepIndex, () -> {
                 Vec3 stepPos = casterBasePos.add(waveForward.scale(dist));
-                int stepX = (int) Math.floor(stepPos.x);
-                int stepZ = (int) Math.floor(stepPos.z);
-                BlockPos stepGroundPos = null;
-
-                for (int dy = 3; dy >= -4; dy--) {
-                    BlockPos checkPos = new BlockPos(stepX, (int) Math.floor(casterBasePos.y + dy), stepZ);
-                    BlockState state = serverLevel.getBlockState(checkPos);
-                    if (LevelUtil.canTransferShockWave(serverLevel, checkPos, state)) {
-                        stepGroundPos = checkPos;
-                        break;
-                    }
-                }
-
-                if (stepGroundPos != null) {
-                    Vec3 fracturePos = new Vec3(stepGroundPos.getX() + 0.5, stepGroundPos.getY(),
-                            stepGroundPos.getZ() + 0.5);
-                    LevelUtil.circleSlamFracture(entity, serverLevel, fracturePos, 3.5, false, false, false);
-                }
+                EpicFightFractureHelper.trySpawnFracture(entity, serverLevel,
+                        new Vec3(stepPos.x, casterBasePos.y, stepPos.z), 3, 4, 3.5D);
             }));
         }
 

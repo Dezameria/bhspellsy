@@ -4,6 +4,7 @@ import io.redspace.ironspell_more.IronSpellMore;
 import io.redspace.ironsspellbooks.api.config.DefaultConfig;
 import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.api.registry.SchoolRegistry;
+import com.gametechbc.traveloptics.api.init.TravelopticsSchools;
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import io.redspace.ironsspellbooks.api.spells.AutoSpellConfig;
 import io.redspace.ironsspellbooks.api.spells.CastSource;
@@ -46,7 +47,7 @@ public class GlacialVeilSpell extends AbstractSpell {
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.RARE)
-            .setSchoolResource(SchoolRegistry.ICE_RESOURCE)
+            .setSchoolResource(TravelopticsSchools.AQUA_RESOURCE)
             .setMaxLevel(5)
             .setCooldownSeconds(20)
             .build();

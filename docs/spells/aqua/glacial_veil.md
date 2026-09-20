@@ -3,7 +3,7 @@
 ## ข้อมูลพื้นฐาน (Basic Information)
 - **Display Name:** Glacial Veil
 - **Registry ID:** `ironspell_more:glacial_veil`
-- **School:** Ice / Aqua (`SchoolRegistry.ICE_RESOURCE`)
+- **School:** Aqua (`TravelopticsSchools.AQUA_RESOURCE`)
 - **Rarity:** RARE
 - **Max Level:** 5
 - **Cast Type:** INSTANT

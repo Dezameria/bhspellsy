@@ -32,6 +32,7 @@ public class IronSpellMore {
         ParticleRegistry.register(modEventBus);
         io.redspace.ironspell_more.registry.SoundRegistry.register(modEventBus);
         io.redspace.ironspell_more.registry.EntityRegistry.register(modEventBus);
+        io.redspace.ironspell_more.compat.CompatBootstrap.init(modEventBus);
 
         MinecraftForge.EVENT_BUS.register(this);
     }

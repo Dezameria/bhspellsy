@@ -52,12 +52,19 @@ public class EntityRegistry {
                     .updateInterval(1)
                     .build(IronSpellMore.MODID + ":azure_venom_needle"));
 
-    public static final RegistryObject<EntityType<io.redspace.ironspell_more.entity.spells.wind_arrow.WindArrowEntity>> WIND_ARROW = ENTITIES.register("wind_arrow",
-            () -> EntityType.Builder.<io.redspace.ironspell_more.entity.spells.wind_arrow.WindArrowEntity>of(io.redspace.ironspell_more.entity.spells.wind_arrow.WindArrowEntity::new, MobCategory.MISC)
-                    .sized(0.5F, 0.5F)
+    public static final RegistryObject<EntityType<io.redspace.ironspell_more.entity.spells.gale_piercer.WindArrowEntity>> WIND_ARROW = ENTITIES.register("wind_arrow",
+            () -> EntityType.Builder.<io.redspace.ironspell_more.entity.spells.gale_piercer.WindArrowEntity>of(io.redspace.ironspell_more.entity.spells.gale_piercer.WindArrowEntity::new, MobCategory.MISC)
+                    .sized(0.3F, 0.3F)
                     .clientTrackingRange(64)
                     .updateInterval(1)
                     .build(IronSpellMore.MODID + ":wind_arrow"));
+
+    public static final RegistryObject<EntityType<io.redspace.ironspell_more.entity.spells.gale_piercer.GaleArrowEntity>> GALE_ARROW = ENTITIES.register("gale_arrow",
+            () -> EntityType.Builder.<io.redspace.ironspell_more.entity.spells.gale_piercer.GaleArrowEntity>of(io.redspace.ironspell_more.entity.spells.gale_piercer.GaleArrowEntity::new, MobCategory.MISC)
+                    .sized(0.4F, 0.4F)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(IronSpellMore.MODID + ":gale_arrow"));
 
     public static void register(IEventBus eventBus) {
         ENTITIES.register(eventBus);

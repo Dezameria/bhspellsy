@@ -21,11 +21,14 @@ import io.redspace.ironsspellbooks.api.util.AnimationHolder;
 import io.redspace.ironsspellbooks.api.util.Utils;
 import io.redspace.ironsspellbooks.capabilities.magic.MagicManager;
 import io.redspace.ironsspellbooks.damage.DamageSources;
+import io.redspace.ironsspellbooks.network.casting.SyncTargetingDataPacket;
+import io.redspace.ironsspellbooks.setup.PacketDistributor;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -34,12 +37,14 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -125,10 +130,32 @@ public class CrimsonRainBathesMoonSpell extends AbstractUniqueSpell {
                 this.spawnStormBarrage(world, entity, stormCenter, stormHeight, radius, spellLevel, currentCastTime);
             }
 
+            // Sync visual target lock-on outline to player while channeling barrage
+            if (currentCastTime >= 70 && entity instanceof ServerPlayer player) {
+                LivingEntity lookTarget = this.findLookTarget(world, entity, this.getRange());
+                if (lookTarget != null) {
+                    PacketDistributor.sendToPlayer(player, new SyncTargetingDataPacket(lookTarget, this));
+                } else {
+                    PacketDistributor.sendToPlayer(player, new SyncTargetingDataPacket(this, Collections.emptyList()));
+                }
+            }
+
             this.applyScreenShake(world, entity, currentCastTime);
         }
 
         super.onServerCastTick(world, spellLevel, entity, playerMagicData);
+    }
+
+    @Override
+    public void onServerCastComplete(Level level, int spellLevel, LivingEntity caster, MagicData magicData,
+            boolean cancelled) {
+        try {
+            if (caster instanceof ServerPlayer player) {
+                PacketDistributor.sendToPlayer(player, new SyncTargetingDataPacket(this, Collections.emptyList()));
+            }
+        } catch (Exception ignored) {
+        }
+        super.onServerCastComplete(level, spellLevel, caster, magicData, cancelled);
     }
 
     private void spawnChargingLightning(Level world, Vec3 center, double height, float radius, int castTime) {
@@ -234,14 +261,14 @@ public class CrimsonRainBathesMoonSpell extends AbstractUniqueSpell {
                     0.8F + caster.getRandom().nextFloat() * 0.4F);
         }
 
-        if (castTime % 4 == 0) {
-            HitResult hitResult = Utils.raycastForEntity(world, caster, this.getRange(), true, 0.15F);
-            LivingEntity target = null;
-            if (hitResult.getType() == Type.ENTITY) {
-                Entity hitEntity = ((EntityHitResult) hitResult).getEntity();
-                if (hitEntity instanceof LivingEntity livingTarget) {
-                    target = livingTarget;
-                }
+        if (castTime % 8 == 0) {
+            LivingEntity target = this.findLookTarget(world, caster, this.getRange());
+            Vec3 hitLocation;
+            if (target != null) {
+                hitLocation = target.getBoundingBox().getCenter();
+            } else {
+                HitResult hitResult = Utils.raycastForEntity(world, caster, this.getRange(), true, 0.6F);
+                hitLocation = hitResult.getLocation();
             }
 
             int spearCount = this.getSpearCount();
@@ -252,8 +279,7 @@ public class CrimsonRainBathesMoonSpell extends AbstractUniqueSpell {
                 double spearX = center.x + Math.cos(angle) * (double) distance;
                 double spearZ = center.z + Math.sin(angle) * (double) distance;
                 double spearY = center.y + height;
-                this.spawnStormSpear(world, caster, spearX, spearY, spearZ, spellLevel, target,
-                        hitResult.getLocation());
+                this.spawnStormSpear(world, caster, spearX, spearY, spearZ, spellLevel, target, hitLocation);
             }
         }
 
@@ -266,19 +292,24 @@ public class CrimsonRainBathesMoonSpell extends AbstractUniqueSpell {
             @Nullable LivingEntity target, Vec3 hitLocation) {
         Vec3 spearPos = new Vec3(x, y, z);
         Vec3 targetPos;
-        if (target != null) {
+        if (target != null && target.isAlive()) {
+            Vec3 targetCenter = target.getBoundingBox().getCenter();
             Vec3 targetVelocity = target.getDeltaMovement();
-            double travelTime = spearPos.distanceTo(target.position()) / 1.5D;
-            Vec3 predictedPos = target.position().add(targetVelocity.scale(travelTime));
+            double dist = spearPos.distanceTo(targetCenter);
+            double speedEstimate = 1.6D;
+            double travelTime = dist / speedEstimate;
+            Vec3 predictedPos = targetCenter.add(targetVelocity.scale(travelTime));
+            // Slight natural scatter around target center (0.35m) so spears rain down
+            // aesthetically without clipping
             targetPos = predictedPos.add(
-                    (double) (caster.getRandom().nextFloat() - 0.5F) * 0.8D,
-                    (double) (caster.getRandom().nextFloat() - 0.5F) * 0.5D,
-                    (double) (caster.getRandom().nextFloat() - 0.5F) * 0.8D);
+                    (caster.getRandom().nextDouble() - 0.5D) * 0.35D,
+                    (caster.getRandom().nextDouble() - 0.5D) * 0.25D,
+                    (caster.getRandom().nextDouble() - 0.5D) * 0.35D);
         } else {
             targetPos = hitLocation.add(
-                    (double) (caster.getRandom().nextFloat() - 0.5F) * 1.2D,
-                    (double) (caster.getRandom().nextFloat() - 0.5F) * 0.8D,
-                    (double) (caster.getRandom().nextFloat() - 0.5F) * 1.2D);
+                    (caster.getRandom().nextDouble() - 0.5D) * 1.2D,
+                    (caster.getRandom().nextDouble() - 0.5D) * 0.8D,
+                    (caster.getRandom().nextDouble() - 0.5D) * 1.2D);
         }
 
         double deltaX = targetPos.x - x;
@@ -296,7 +327,50 @@ public class CrimsonRainBathesMoonSpell extends AbstractUniqueSpell {
         spear.setXRot(xRot);
         spear.moveTo(x, y, z);
         spear.setTotalBounces(2 + spellLevel);
+        if (target != null && target.isAlive()) {
+            spear.setHomingTarget(target);
+        }
         world.addFreshEntity(spear);
+    }
+
+    @Nullable
+    private LivingEntity findLookTarget(Level world, LivingEntity caster, float range) {
+        // 1. Direct crosshair raycast with generous hitbox inflate (0.6F)
+        HitResult hitResult = Utils.raycastForEntity(world, caster, range, true, 0.6F);
+        if (hitResult instanceof EntityHitResult entityHit
+                && entityHit.getEntity() instanceof LivingEntity livingTarget) {
+            if (isValidTarget(caster, livingTarget)) {
+                return livingTarget;
+            }
+        }
+
+        // 2. Cone search in look direction for valid targets within LOS
+        Vec3 eyePos = caster.getEyePosition();
+        Vec3 lookVec = caster.getLookAngle();
+        AABB searchBox = caster.getBoundingBox().inflate(range);
+        List<LivingEntity> candidates = world.getEntitiesOfClass(LivingEntity.class, searchBox,
+                e -> isValidTarget(caster, e) && e.distanceToSqr(caster) <= (double) (range * range));
+
+        LivingEntity bestTarget = null;
+        double bestScore = 0.85D; // Within ~31 degree cone of crosshair
+
+        for (LivingEntity candidate : candidates) {
+            Vec3 toCandidate = candidate.getBoundingBox().getCenter().subtract(eyePos).normalize();
+            double dot = lookVec.dot(toCandidate);
+            if (dot > bestScore && Utils.hasLineOfSight(world, caster, candidate, true)) {
+                bestScore = dot;
+                bestTarget = candidate;
+            }
+        }
+        return bestTarget;
+    }
+
+    private boolean isValidTarget(LivingEntity caster, LivingEntity target) {
+        return target != caster
+                && target.isAlive()
+                && !target.isSpectator()
+                && !DamageSources.isFriendlyFireBetween(caster, target)
+                && !target.isAlliedTo(caster);
     }
 
     private void spawnRainClouds(Level world, LivingEntity caster, Vec3 center, double height, float radius, int amount,
@@ -359,7 +433,7 @@ public class CrimsonRainBathesMoonSpell extends AbstractUniqueSpell {
     }
 
     public float getDamage(int spellLevel, LivingEntity caster) {
-        return 5.0F + this.getSpellPower(spellLevel, caster) * 5.0F;
+        return 2.0F + this.getSpellPower(spellLevel, caster) * 5.0F;
     }
 
     private float getRange() {

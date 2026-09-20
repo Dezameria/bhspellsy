@@ -24,7 +24,7 @@ This directory is the required source of detailed design and implementation note
 ### 🌿 Nature
 - [Wings of Tempest](nature/wings_of_tempest.md)
 - [Venomous Blossomfall](nature/venomous_blossomfall.md)
-- [Wind Arrow](nature/wind_arrow.md)
+- [Gale Piercer](nature/gale_piercer.md)
 
 ### 🌊 Aqua
 - [Crimson Rain Bathes Moon](aqua/crimson_rain_bathes_moon.md)

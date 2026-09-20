@@ -64,7 +64,7 @@ modId="minecraft"
     ordering="AFTER"
     side="BOTH"
 [[dependencies.${mod_id}]]
-    modId="aaaparticles"
+    modId="aaa_particles"
     mandatory=false
     versionRange="[0.0,)"
     ordering="AFTER"
@@ -73,5 +73,17 @@ modId="minecraft"
     modId="epicfight"
     mandatory=false
     versionRange="[20.14.17,)"
+    ordering="AFTER"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="epic_fight_avalon"
+    mandatory=false
+    versionRange="[0.0,)"
+    ordering="AFTER"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="efn"
+    mandatory=false
+    versionRange="[3.3.4,)"
     ordering="AFTER"
     side="BOTH"

@@ -16,6 +16,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class CrimsonSpearEntity extends ExtendedWaterSpearEntity {
 
     public CrimsonSpearEntity(EntityType<? extends Water_Spear_Entity> entityType, Level level) {
@@ -28,6 +31,63 @@ public class CrimsonSpearEntity extends ExtendedWaterSpearEntity {
 
     public CrimsonSpearEntity(EntityType<? extends Water_Spear_Entity> entityType, LivingEntity shooter, double x, double y, double z, Vec3 direction, float damage, Level level) {
         super(entityType, shooter, x, y, z, direction, damage, level);
+    }
+
+    private LivingEntity homingTarget;
+    private int lifeTicks = 0;
+    private static final int MAX_LIFE_TICKS = 80; // 4 seconds max lifetime to prevent lag
+    private int hitCount = 0;
+    private static final int MAX_HITS = 3; // 1 spear can hit entities up to 3 times
+    private final Map<Integer, Integer> hitCooldowns = new HashMap<>();
+
+    public void setHomingTarget(LivingEntity target) {
+        this.homingTarget = target;
+    }
+
+    public LivingEntity getHomingTarget() {
+        return this.homingTarget;
+    }
+
+    @Override
+    protected boolean canHitEntity(Entity entity) {
+        if (!this.level().isClientSide && this.hitCooldowns.containsKey(entity.getId())) {
+            return false;
+        }
+        return super.canHitEntity(entity);
+    }
+
+    @Override
+    public void tick() {
+        if (!this.level().isClientSide) {
+            this.lifeTicks++;
+            if (this.lifeTicks >= MAX_LIFE_TICKS) {
+                this.discard();
+                return;
+            }
+
+            if (!this.hitCooldowns.isEmpty()) {
+                this.hitCooldowns.entrySet().removeIf(entry -> entry.getValue() <= 1);
+                this.hitCooldowns.replaceAll((id, cd) -> cd - 1);
+            }
+
+            if (this.homingTarget != null) {
+                if (this.homingTarget.isAlive() && !this.homingTarget.isRemoved()) {
+                    Vec3 targetCenter = this.homingTarget.getBoundingBox().getCenter();
+                    Vec3 currentPos = this.position();
+                    Vec3 currentMotion = this.getDeltaMovement();
+                    double currentSpeed = currentMotion.length();
+                    if (currentSpeed > 0.05D) {
+                        Vec3 desiredDir = targetCenter.subtract(currentPos).normalize();
+                        double turnRate = 0.22D;
+                        Vec3 newDir = currentMotion.normalize().scale(1.0 - turnRate).add(desiredDir.scale(turnRate)).normalize();
+                        this.setDeltaMovement(newDir.scale(currentSpeed));
+                    }
+                } else {
+                    this.homingTarget = null;
+                }
+            }
+        }
+        super.tick();
     }
 
     @Override
@@ -64,16 +124,25 @@ public class CrimsonSpearEntity extends ExtendedWaterSpearEntity {
             hitTarget = true;
         }
 
-        if (hitTarget && hitEntity instanceof LivingEntity livingTarget) {
-            MobEffectInstance effect = livingTarget.getEffect(TravelopticsEffects.WET.get());
-            if (effect != null) {
-                if (this.random.nextBoolean()) {
-                    livingTarget.addEffect(new MobEffectInstance(TravelopticsEffects.WET.get(), effect.getDuration() + 40, effect.getAmplifier(), false, false, true));
+        if (hitTarget) {
+            this.hitCooldowns.put(hitEntity.getId(), 8); // 8 ticks cooldown before hitting the same entity again
+            this.hitCount++;
+            if (this.hitCount >= MAX_HITS) {
+                this.discard();
+                return;
+            }
+
+            if (hitEntity instanceof LivingEntity livingTarget) {
+                MobEffectInstance effect = livingTarget.getEffect(TravelopticsEffects.WET.get());
+                if (effect != null) {
+                    if (this.random.nextBoolean()) {
+                        livingTarget.addEffect(new MobEffectInstance(TravelopticsEffects.WET.get(), effect.getDuration() + 40, effect.getAmplifier(), false, false, true));
+                    } else {
+                        livingTarget.addEffect(new MobEffectInstance(TravelopticsEffects.WET.get(), effect.getDuration(), Math.min(10, effect.getAmplifier() + 1), false, false, true));
+                    }
                 } else {
-                    livingTarget.addEffect(new MobEffectInstance(TravelopticsEffects.WET.get(), effect.getDuration(), Math.min(10, effect.getAmplifier() + 1), false, false, true));
+                    livingTarget.addEffect(new MobEffectInstance(TravelopticsEffects.WET.get(), 40, 0, false, false, true));
                 }
-            } else {
-                livingTarget.addEffect(new MobEffectInstance(TravelopticsEffects.WET.get(), 40, 0, false, false, true));
             }
         }
     }

@@ -146,6 +146,32 @@ io.redspace.ironspell_more
 | โมดูล / ไลบรารี | บทบาทในโปรเจกต์ | ตัวอย่างการเรียกใช้งาน |
 | :--- | :--- | :--- |
 | **Iron's Spells 'n Spellbooks** | ระบบแกนกลางเวทมนตร์, มานา, การร่าย, Sound, Cooldown | `AbstractSpell`, `MagicData`, `SchoolRegistry`, `DamageSources` |
-| **Epic Fight** | อนิเมชั่นพื้นแตกร้าว (Ground Slam Fractures) | `LevelUtil.circleSlamFracture(...)` ใน PureWhiteFlameBurst |
-| **AAA Particles (Effekseer)** | ตัวโหลดและแสดงผลเอฟเฟกต์ 3D Effekseer (`.efkefc`) | `AAALevel.addParticle(...)`, `ParticleEmitterInfo` |
+| **Epic Fight** | อนิเมชั่นคอมแบท, ท่าทางคัสตอม, Hitbox Colliders, Ground Fractures | `EpicFightCompat`, `IronSpellAnimations`, `IronSpellColliders` |
+| **Epic Fight — Avalon** | เอฟเฟกต์การเขย่าจอ (Camera Shake) และคอมแบท VFX | `AvalonCompat`, `AvalonVfx` |
+| **AAA Particles (Effekseer)** | ตัวโหลดและแสดงผลเอฟเฟกต์ 3D Effekseer (`.efkefc`) | `AaaParticlesCompat`, `AAALevel.addParticle(...)` |
 | **GeckoLib & Player Animator** | เอนิเมชั่นโมเดลและการร่ายเวทของตัวละคร | `SpellAnimations`, `AnimationHolder` |
+
+> 📖 **รายละเอียดสถาปัตยกรรมชั้น Compatibility ฉบับเต็ม:** ดูได้ที่ [docs/compat_architecture.md](compat_architecture.md)
+
+
+---
+
+### 3.4 ระบบต่อสู้และแอนิเมชัน Epic Fight (Epic Fight Combat & Modular VFX Subsystem)
+
+ระบบเชื่อมต่อกับ Epic Fight ถูกปรับปรุงให้เป็นแบบ **Clean Modular Architecture (Codex Standard)**:
+
+1. **สถาปัตยกรรมแบบแยกส่วน (Modular Separation)**:
+   - **nimation/**: แยกคลาส Builder ตามตระกูลอาวุธ/เวทมนตร์ เช่น MeenLanceAnimations สำหรับชุดหอก Meen ทำให้ IronSpellAnimations กลายเป็น Registry Orchestrator ที่สั้น กระชับ และเป็นระเบียบ
+   - **particle/ (VFX)**: แยกโมดูลแสดงผลภาพออกเป็น 3 หน่วยย่อย:
+     - WeaponAuraVfx: เรนเดอร์วงแหวนเวท 5 ชั้นที่พื้น, ประกายไฟและสายฟ้าวนรอบมือ/ตัวผู้เล่น, และเงาร่างติดตา (WHITE_AFTERIMAGE)
+     - FractureVfx: ตรวจจับพื้นแข็งเพื่อทำพื้นแตก (circleSlamFracture) ร่วมกับระบบสั่นหน้าจอ (CameraShakeManager)
+     - ShockwaveVfx: ปล่อยคลื่นไฟ 4 วงแหวนขยายตัว 10-18 บล็อก, ลาวาปะทุตรงกลาง, และเอฟเฟกต์ประกายฟันดาบด้านหน้า (FLASH + SWEEP_ATTACK)
+   - **collider/**: รวบรวม Hitbox OBB สำหรับคำนวณการโจมตีอย่างแม่นยำ
+
+2. **การปรับจังหวะให้สมบูรณ์ (Frame-Accurate Synchronization)**:
+   - ปรับแก้ปัญหา Desync ของคลื่นระเบิด ให้สอดคล้องกับเฟรมลงสู่พื้นของโมเดลกระดูกจริงที่วินาทีที่ **1.15s (เฟรม 70/60)**
+   - คำนวณความเร็วในการเล่น (PLAY_SPEED_MODIFIER) โดยกำหนดขอบเขต clamp(0.85F, 1.45F) ป้องกันปัญหาอนิเมชันเร่งเร็วผิดปกติ
+
+3. **คำสั่งควบคุมและทดสอบในเกม**:
+   - /ism test_meen_charge3: ทดสอบรันชุดแอนิเมชัน Meen Charge 3 พร้อม VFX, เสียง และพื้นแตกแบบครบวงจร
+   - /ism play_animation meen_charge_3: สั่งเล่นแอนิเมชันผ่านตัวถอดรหัส AnimationCue

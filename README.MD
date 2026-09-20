@@ -28,7 +28,7 @@ For comprehensive documentation, see [docs/all_spells.md](docs/all_spells.md) (T
 | :--- | :--- | :--- | :--- |
 | **Wings of Tempest** | Rare | Long | Summons an orbiting tempest that travels with the caster, continuously spinning and sweeping enemies in a violent vortex while inflicting Nausea II, Blight V, and Slowness III. |
 | **Venomous Blossomfall** | Legendary | Long / Charge | Multi-stage charged azure venom needle shot from FPS crosshair (30m / 60m / 90m range) with continuous collision sweep, custom audio stages, and lethal damage scaling. |
-| **Wind Arrow** | Uncommon | Long / Charge | Releases a homing wind arrow with target highlight tracking, or hold for a 10-second Full Charge into a blazing Gale Fire Arrow with predictive lead aiming and guaranteed hit. |
+| **Gale Piercer** | Common | Instant | Fires a high-velocity piercing gale needle that punctures smoothly through enemies in a line with custom aerodynamic physics and wind burst. |
 
 ### 🌊 Aqua / Ice
 | Spell | Rarity | Type | Description |
@@ -51,6 +51,24 @@ For comprehensive documentation, see [docs/all_spells.md](docs/all_spells.md) (T
 - **Physical Suction & Momentum Physics**: Fluid suction, smooth dash collisions, and vortex tethering mechanics without jitter or rubber-banding.
 - **Epic Fight Compatibility**: Optional compatibility hooks for combat animations, fracture effects, and sound bridges.
 - **Detailed Documentation**: Every spell has dedicated balance and implementation documentation inside `docs/spells/<school>/`.
+
+---
+
+## ⚔️ Epic Fight & Combat Integration
+
+Full modular compatibility designed under **Codex Clean Architecture** standards:
+- **Modular Animation Registry**: Category-based builders (compat/epicfight/animation/) decoupled from core logic. Seamlessly supports both pure Epic Fight and Avalon extensions with zero hard dependency.
+- **Reconstructed Meen Charge 3 (efn:biped/nf_meen/nf_meen_charge3)**:
+  - **Frame-Synced Impact Timing**: Accurate 1.15s impact synchronization with 0.1s transition time and root-joint OBB collider (IronSpellColliders.MEEN_LANCE_CHARGE3).
+  - **Authentic Combat Properties**: 100% Armor Negation, Knockdown Stun, 10 max strikes, HIT_BLADE strike particle, and clamped speed modifier.
+  - **Modular VFX Subsystem**:
+    - **Weapon Aura & Charge FX** (WeaponAuraVfx): 5 concentric floor rings, 120 ambient ember particles, body/right-hand ELECTRIC_SPARK and FLAME swirls, and WHITE_AFTERIMAGE.
+    - **Ground Fracture & Screen Shake** (FractureVfx): Solid-block collision check triggering LevelUtil.circleSlamFracture and Iron's Spellbooks native CameraShakeManager.
+    - **Quad-Ring Shockwave Burst** (ShockwaveVfx): 4 spiral expanding flame/smoke shockwave rings (10–18m radius), violent central lava eruption, and frontal sweep flash.
+- **In-Game Testing Commands**:
+  - /ism test_meen_charge3 — Triggers the complete reconstructed animation, VFX, and audio chain.
+  - /ism play_animation meen_charge_3 — Plays the animation via the synchronized cue dispatcher.
+- **Comprehensive Documentation**: Complete guide for adding new animations, trail assets, and VFX in [docs/compat_architecture.md](docs/compat_architecture.md).
 
 ---
 

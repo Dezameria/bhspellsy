@@ -29,6 +29,8 @@ minecraft {
             property 'forge.logging.markers', 'REGISTRIES' //SCAN, REGISTRYDUMP
             property 'forge.logging.console.level', 'debug'
             property 'forge.enabledGameTestNamespaces', mod_id
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             mods { "${mod_id}" { source sourceSets.main } }
         }
 
@@ -37,6 +39,8 @@ minecraft {
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             property 'forge.enabledGameTestNamespaces', mod_id
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             mods { "${mod_id}" { source sourceSets.main } }
         }
 
@@ -156,6 +160,9 @@ dependencies {
     runtimeOnly fg.deobf("curse.maven:apotheosis-${apotheosis_version}")
 
     // ADDITIONAL DEPENDENCIES
+    // MmmMmmMmmMmm (Target Dummy) patched with refmap for runClient
+    implementation fg.deobf("local:dummmmmmy-1.20:2.0.12-forge")
+    implementation fg.deobf("curse.maven:selene-499980:8820589")
     implementation fg.deobf("curse.maven:to-tweaks-irons-spells-1046916:7424522")
     implementation fg.deobf("curse.maven:alexs-caves-924854:5848216")
 

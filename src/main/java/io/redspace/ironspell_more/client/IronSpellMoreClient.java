@@ -11,7 +11,6 @@ import io.redspace.ironspell_more.entity.spells.gold_chain.GoldChainRenderer;
 import io.redspace.ironspell_more.registry.EntityRegistry;
 import io.redspace.ironspell_more.entity.spells.venomous_blossomfall.AzureVenomNeedleModel;
 import io.redspace.ironspell_more.entity.spells.venomous_blossomfall.AzureVenomNeedleRenderer;
-import io.redspace.ironspell_more.entity.spells.wind_arrow.WindArrowRenderer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
@@ -38,11 +37,13 @@ public class IronSpellMoreClient {
         event.registerEntityRenderer(EntityRegistry.CRIMSON_SPEAR.get(), io.redspace.ironspell_more.entity.spells.crimson_rain_bathes_moon.CrimsonSpearRenderer::new);
         event.registerEntityRenderer(EntityRegistry.GALE_DRIVE_VORTEX.get(), io.redspace.ironspell_more.entity.spells.gale_drive.GaleDriveVortexRenderer::new);
         event.registerEntityRenderer(EntityRegistry.AZURE_VENOM_NEEDLE.get(), AzureVenomNeedleRenderer::new);
-        event.registerEntityRenderer(EntityRegistry.WIND_ARROW.get(), WindArrowRenderer::new);
+        event.registerEntityRenderer(EntityRegistry.WIND_ARROW.get(), io.redspace.ironspell_more.entity.spells.gale_piercer.WindArrowRenderer::new);
+        event.registerEntityRenderer(EntityRegistry.GALE_ARROW.get(), io.redspace.ironspell_more.entity.spells.gale_piercer.GaleArrowRenderer::new);
     }
 
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(AzureVenomNeedleModel.LAYER_LOCATION, AzureVenomNeedleModel::createBodyLayer);
+        event.registerLayerDefinition(io.redspace.ironspell_more.entity.spells.gale_piercer.GalePiercerArrowModel.LAYER_LOCATION, io.redspace.ironspell_more.entity.spells.gale_piercer.GalePiercerArrowModel::createBodyLayer);
     }
 }

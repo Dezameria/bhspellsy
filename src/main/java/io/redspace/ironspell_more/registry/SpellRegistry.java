@@ -17,6 +17,7 @@ public class SpellRegistry {
             .create(io.redspace.ironsspellbooks.api.registry.SpellRegistry.SPELL_REGISTRY_KEY, IronSpellMore.MODID);
 
     // FIRE
+    public static final RegistryObject<AbstractSpell> BLAZING_CHAKRA_SPELL = registerSpell(new io.redspace.ironspell_more.spells.fire.BlazingChakraSpell());
     public static final RegistryObject<AbstractSpell> SPIN_STRIKE_SPELL = registerSpell(new SpinStrikeSpell());
     public static final RegistryObject<AbstractSpell> PURE_WHITE_FLAME_BURST_SPELL = registerSpell(new PureWhiteFlameBurstSpell());
     public static final RegistryObject<AbstractSpell> GALE_DRIVE_SPELL = registerSpell(new io.redspace.ironspell_more.spells.fire.GaleDriveSpell());
@@ -31,7 +32,7 @@ public class SpellRegistry {
     // NATURE
     public static final RegistryObject<AbstractSpell> WINGS_OF_TEMPEST_SPELL = registerSpell(new io.redspace.ironspell_more.spells.nature.WingsofTempestSpell());
     public static final RegistryObject<AbstractSpell> VENOMOUS_BLOSSOMFALL_SPELL = registerSpell(new VenomousBlossomfallSpell());
-    public static final RegistryObject<AbstractSpell> WIND_ARROW_SPELL = registerSpell(new io.redspace.ironspell_more.spells.nature.WindArrowSpell());
+    public static final RegistryObject<AbstractSpell> GALE_PIERCER_SPELL = registerSpell(new io.redspace.ironspell_more.spells.nature.GalePiercerSpell());
 
     // AQUA
     public static final RegistryObject<AbstractSpell> CRIMSON_RAIN_BATHES_MOON_SPELL = registerSpell(new io.redspace.ironspell_more.spells.aqua.CrimsonRainBathesMoonSpell());

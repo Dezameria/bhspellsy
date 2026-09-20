@@ -1,38 +1,47 @@
 package io.redspace.ironspell_more.compat.epicfight;
 
-import net.minecraft.core.BlockPos;
+import io.redspace.ironspell_more.compat.api.AnimationRequest;
+import io.redspace.ironspell_more.compat.api.CompatResult;
+import io.redspace.ironspell_more.compat.api.VfxRequest;
+import io.redspace.ironspell_more.compat.epicfight.common.animation.EpicFightAnimationPlayer;
+import io.redspace.ironspell_more.compat.epicfight.common.animation.IronSpellAnimations;
+import io.redspace.ironspell_more.compat.epicfight.common.particle.EpicFightVfx;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import yesman.epicfight.api.utils.LevelUtil;
+import net.minecraftforge.eventbus.api.IEventBus;
+import yesman.epicfight.api.animation.AnimationManager;
 
-/** Loaded only after the facade confirms that Epic Fight is present. */
+/**
+ * Internal loaded bridge for direct Epic Fight interactions.
+ * Loaded ONLY after confirming epicfight is present in ModList.
+ */
 final class EpicFightLoadedBridge {
     private EpicFightLoadedBridge() {
     }
 
+    static void registerModEvents(IEventBus modEventBus) {
+        modEventBus.addListener(IronSpellAnimations::registerAnimations);
+    }
+
+    static CompatResult playAnimation(AnimationRequest request) {
+        return EpicFightAnimationPlayer.play(request);
+    }
+
     static boolean trySpawnFracture(LivingEntity source, Level level, Vec3 samplePosition,
             int searchUp, int searchDown, double radius) {
-        int x = (int) Math.floor(samplePosition.x);
-        int z = (int) Math.floor(samplePosition.z);
-        int baseY = (int) Math.floor(samplePosition.y);
+        return EpicFightVfx.trySpawnFracture(source, level, samplePosition, searchUp, searchDown, radius);
+    }
 
-        for (int dy = searchUp; dy >= -searchDown; dy--) {
-            BlockPos position = new BlockPos(x, baseY + dy, z);
-            BlockState state = level.getBlockState(position);
-            if (LevelUtil.canTransferShockWave(level, position, state)) {
-                Vec3 fracturePosition = new Vec3(position.getX() + 0.5D, position.getY(), position.getZ() + 0.5D);
-                boolean spawned = LevelUtil.circleSlamFracture(source, level, fracturePosition, radius, true, false, false);
-                if (spawned) {
-                    level.playSound(null, fracturePosition.x, fracturePosition.y, fracturePosition.z,
-                            yesman.epicfight.gameasset.EpicFightSounds.SLAM_LIGHT.get(),
-                            net.minecraft.sounds.SoundSource.BLOCKS,
-                            0.2F, 1.0F + (level.random.nextFloat() - 0.5F) * 0.2F);
-                }
-                return spawned;
-            }
-        }
-        return false;
+    static CompatResult spawnVfx(VfxRequest request) {
+        return EpicFightVfx.spawnVfx(request);
+    }
+
+    static void spawnScatterParticles(net.minecraft.server.level.ServerLevel level, LivingEntity entity) {
+        EpicFightVfx.spawnScatterParticles(level, entity);
+    }
+
+    static void spawnScatterParticles(net.minecraft.server.level.ServerLevel level, double x, double y, double z) {
+        EpicFightVfx.spawnScatterParticles(level, x, y, z);
     }
 }

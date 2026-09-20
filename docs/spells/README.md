@@ -14,6 +14,7 @@ This directory is the required source of detailed design and implementation note
 
 ### 🔥 Fire
 - [Pure White Flame Burst](fire/pure_white_flame_burst.md)
+- [Blazing Chakra](fire/blazing_chakra.md)
 - [Spin Strike](fire/spin_strike.md)
 - [Gale Drive](fire/gale_drive.md)
 

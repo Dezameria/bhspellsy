@@ -14,6 +14,7 @@ For comprehensive documentation, see [docs/all_spells.md](docs/all_spells.md) (T
 | Spell | Rarity | Type | Description |
 | :--- | :--- | :--- | :--- |
 | **Pure White Flame Burst** | Legendary | Continuous | Charges a suction flame zone pulling enemies in, followed by a devastating white flame explosion (`pure_white_flame.efkefc`), heavy knockback, and a sweeping 20-block rushing firestorm corridor (20m x 7m x 7m). |
+| **Blazing Chakra** | Epic | Instant | Leaps into the air with afterimages, slamming down with a 4x4x4m melee strike and an expansive 12m concentric flame shockwave with proximity damage falloff, radial knockback, and unconditional fire ignition. Synchronized with Epic Fight animations. |
 | **Spin Strike** | Common | Instant | Charges forward in a fiery spin attack (Riptide animation), piercing smoothly through enemies, dealing fire damage and knocking them aside. |
 | **Gale Drive** | Rare | Instant | Dashes forward at gale speed granting Speed II & Strength I, locking onto the first target and summoning a violent vortex that suspends them 6 blocks high for 7 seconds before slamming them to the ground. |
 
@@ -49,7 +50,8 @@ For comprehensive documentation, see [docs/all_spells.md](docs/all_spells.md) (T
 - **Custom 3D GeckoLib Entities & Renderers**: Custom animated models for projectiles, chains, needles, and vortexes (`CrimsonSpear`, `GaleDriveVortex`, `AzureVenomNeedle`, `GoldChain`).
 - **Predictive Aiming & Target Tracking**: Advanced projectile physics with predictive lead aiming, crosshair line-of-sight tracking, and custom turn rates.
 - **Physical Suction & Momentum Physics**: Fluid suction, smooth dash collisions, and vortex tethering mechanics without jitter or rubber-banding.
-- **Epic Fight Compatibility**: Optional compatibility hooks for combat animations, fracture effects, and sound bridges.
+- **Feature-Based Epic Fight Compatibility**: Modular architecture separating reusable engine components from isolated skill packages (`common/` vs `skills/<skill_name>/`).
+- **Frame-Accurate Animation Synchronization**: Direct frame-event integration ensuring attack colliders, camera shakes, particle waves, and server damage/fire happen in perfect unison.
 - **Detailed Documentation**: Every spell has dedicated balance and implementation documentation inside `docs/spells/<school>/`.
 
 ---
@@ -57,18 +59,18 @@ For comprehensive documentation, see [docs/all_spells.md](docs/all_spells.md) (T
 ## ⚔️ Epic Fight & Combat Integration
 
 Full modular compatibility designed under **Codex Clean Architecture** standards:
-- **Modular Animation Registry**: Category-based builders (compat/epicfight/animation/) decoupled from core logic. Seamlessly supports both pure Epic Fight and Avalon extensions with zero hard dependency.
-- **Reconstructed Meen Charge 3 (efn:biped/nf_meen/nf_meen_charge3)**:
-  - **Frame-Synced Impact Timing**: Accurate 1.15s impact synchronization with 0.1s transition time and root-joint OBB collider (IronSpellColliders.MEEN_LANCE_CHARGE3).
-  - **Authentic Combat Properties**: 100% Armor Negation, Knockdown Stun, 10 max strikes, HIT_BLADE strike particle, and clamped speed modifier.
-  - **Modular VFX Subsystem**:
-    - **Weapon Aura & Charge FX** (WeaponAuraVfx): 5 concentric floor rings, 120 ambient ember particles, body/right-hand ELECTRIC_SPARK and FLAME swirls, and WHITE_AFTERIMAGE.
-    - **Ground Fracture & Screen Shake** (FractureVfx): Solid-block collision check triggering LevelUtil.circleSlamFracture and Iron's Spellbooks native CameraShakeManager.
-    - **Quad-Ring Shockwave Burst** (ShockwaveVfx): 4 spiral expanding flame/smoke shockwave rings (10–18m radius), violent central lava eruption, and frontal sweep flash.
+- **Feature-Based Architecture**:
+  - `compat/epicfight/common/`: Shared runtime infrastructure (`animation/`, `collider/`, `particle/` for afterimages, fracture, and ground shockwaves).
+  - `compat/epicfight/skills/<skill>/`: Isolated skill domain containing its own animations, builders, colliders, and VFX (e.g. `blazing_chakra`).
+- **Blazing Chakra Combat Integration**:
+  - **Frame 59 Impact Synchronization (~0.983s)**: Perfect 1-frame alignment of melee strike collider (`BlazingChakraColliders.IMPACT`), camera shake, ground split fracture, explosion sound, client flame ripples, and server damage/fire.
+  - **Authentic Combat Properties**: 100% Armor Negation, Knockdown Stun, max strikes modifier, `HIT_BLADE` strike particle, and attack speed cap.
+  - **Proximity Damage Falloff & 12m Fire Shockwave**: Deals 100% heavy damage ($\le 3$m), scaling down to 25% at 12m, with unconditional fire ignition for all targets within range.
+  - **Secondary Expanding Shockwave (1.85s)**: 4-ring expanding spiral flame and smoke wave.
+  - **Zero-Dependency Fallback**: Gracefully falls back to standard Iron's Spells overhead swing and 20-tick shockwave when Epic Fight is not present.
 - **In-Game Testing Commands**:
-  - /ism test_meen_charge3 — Triggers the complete reconstructed animation, VFX, and audio chain.
-  - /ism play_animation meen_charge_3 — Plays the animation via the synchronized cue dispatcher.
-- **Comprehensive Documentation**: Complete guide for adding new animations, trail assets, and VFX in [docs/compat_architecture.md](docs/compat_architecture.md).
+  - `/ism play_animation blazing_chakra` — Triggers the complete synchronized animation, VFX, audio, and shockwave chain.
+- **Comprehensive Documentation**: Complete guide for architecture, animations, and VFX in [docs/compat_architecture.md](docs/compat_architecture.md).
 
 ---
 
@@ -81,6 +83,12 @@ Full modular compatibility designed under **Codex Clean Architecture** standards
 - **[Player Animator](https://curseforge.com/minecraft/mc-mods/playeranimator)**: `1.0.2+`
 - **[AAA Particles](https://modrinth.com/mod/aaa-particles)**: `1.20.1+` (Effekseer Loader)
 - **[Curios API](https://curseforge.com/minecraft/mc-mods/curios)**: `5.14.1+`
+
+### 🔌 Optional Compatibilities
+- **[Epic Fight Mod](https://curseforge.com/minecraft/mc-mods/epic-fight-mod)**: `1.20.1-20.9.11+`
+- **[Epic Fight - Avalon](https://curseforge.com/minecraft/mc-mods/epic-fight-avalon)**: `1.20.1+`
+- **[Moonlight Lib](https://curseforge.com/minecraft/mc-mods/selene)**: `1.20-2.16.19+`
+- **[MmmMmmMmmMmm (Target Dummy)](https://curseforge.com/minecraft/mc-mods/mmmmmmmmmmmm)**: `1.20-2.0.12+`
 
 ---
 

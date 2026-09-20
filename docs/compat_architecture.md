@@ -23,20 +23,24 @@ io.redspace.ironspell_more.compat.epicfight/
 ├── EpicFightLoadedBridge.java           # ตัวเชื่อมต่อ Forge EventBus (โหลดเมื่อมี Epic Fight เท่านั้น)
 ├── EpicFightFractureHelper.java         # ตัวช่วยจัดการพิกัดพื้นแตก
 │
-├── collider/
-│   └── IronSpellColliders.java          # ศูนย์รวม OBB/Box Colliders ที่ใช้ซ้ำได้
+├── common/                              # ทรัพยากรและระบบกลางที่ใช้ร่วมกัน
+│   ├── animation/
+│   │   ├── EpicFightAnimationPlayer.java
+│   │   └── IronSpellAnimations.java
+│   ├── collider/
+│   │   └── IronSpellColliders.java      # ศูนย์รวม Colliders ทั่วไป
+│   └── particle/                        # VFX กลาง (Afterimage, Fracture, Ground Shockwave)
+│       ├── AfterimageVfx.java
+│       ├── FractureVfx.java
+│       ├── GroundShockwaveVfx.java
+│       └── EpicFightVfx.java
 │
-├── particle/                            # ระบบ VFX และการกระจาย Particles แบบแยกโมดูล
-│   ├── ShockwaveVfx.java                # คลื่นไฟระเบิด 4 วงแหวน (10-18 บล็อก) + ลาวาตรงกลาง + Frontal Sweep
-│   ├── WeaponAuraVfx.java               # วงแหวนไฟที่เท้า 5 ชั้น + ละอองไฟ/ไฟฟ้าวนรอบตัวและมือ + Afterimage
-│   ├── FractureVfx.java                 # ตรวจจับพื้นแตก (Circle Slam) + หน้าจอสั่น (CameraShakeManager)
-│   └── EpicFightVfx.java                # Facade รวมระบบ VFX ให้คลาสอื่นเรียกใช้ได้ง่าย
-│
-└── animation/                           # ระบบแอนิเมชัน แยกตามประเภทอาวุธ/เวทมนตร์
-    ├── IronSpellAnimations.java         # Registry Orchestrator หลัก + แมปปิ้ง AnimationCue
-    ├── MeenLanceAnimations.java         # ตัวสร้างท่าโจมตีชุดหอก Meen (Charge 3 + Event Timing)
-    ├── AvalonMeenAnimationBuilder.java  # ตัวสร้างท่าแบบพิเศษเมื่อมีม็อด Avalon ติดตั้งอยู่
-    └── EpicFightAnimationPlayer.java    # สั่งเล่นแอนิเมชันแบบ Server-Client Synchronized
+└── skills/                              # สกิลแยกตาม Feature (Feature-Based Isolation)
+    └── blazing_chakra/                  # ระบบสกิล Blazing Chakra (Meen Charge 3)
+        ├── BlazingChakraAnimations.java
+        ├── AvalonBlazingChakraAnimationBuilder.java
+        ├── BlazingChakraColliders.java  # OBB Collider 4x4x4m
+        └── BlazingChakraVfx.java        # คลื่นกระแทก 12m, Proximity Falloff, Fire
 ```
 
 ---

@@ -39,11 +39,15 @@ public class IronSpellMoreClient {
         event.registerEntityRenderer(EntityRegistry.AZURE_VENOM_NEEDLE.get(), AzureVenomNeedleRenderer::new);
         event.registerEntityRenderer(EntityRegistry.WIND_ARROW.get(), io.redspace.ironspell_more.entity.spells.gale_piercer.WindArrowRenderer::new);
         event.registerEntityRenderer(EntityRegistry.GALE_ARROW.get(), io.redspace.ironspell_more.entity.spells.gale_piercer.GaleArrowRenderer::new);
+        event.registerEntityRenderer(EntityRegistry.GLACIAL_SPIKE.get(), io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialSpikeRenderer::new);
+        event.registerEntityRenderer(EntityRegistry.GLACIAL_TOMB.get(), io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialTombRenderer::new);
     }
 
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(AzureVenomNeedleModel.LAYER_LOCATION, AzureVenomNeedleModel::createBodyLayer);
         event.registerLayerDefinition(io.redspace.ironspell_more.entity.spells.gale_piercer.GalePiercerArrowModel.LAYER_LOCATION, io.redspace.ironspell_more.entity.spells.gale_piercer.GalePiercerArrowModel::createBodyLayer);
+        event.registerLayerDefinition(io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialSpikeRenderer.GlacialSpikeModel.LAYER_LOCATION, io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialSpikeRenderer.GlacialSpikeModel::createBodyLayer);
+        event.registerLayerDefinition(io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialTombRenderer.GlacialTombModel.LAYER_LOCATION, io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialTombRenderer.GlacialTombModel::createBodyLayer);
     }
 }

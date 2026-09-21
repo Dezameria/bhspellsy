@@ -30,10 +30,14 @@ This directory is the required source of detailed design and implementation note
 ### 🌊 Aqua
 - [Crimson Rain Bathes Moon](aqua/crimson_rain_bathes_moon.md)
 - [Glacial Veil](aqua/glacial_veil.md)
+- [Glacial Firmament](aqua/glacial_firmament.md)
 
 
 ### 🪙 Gold
 - [Shackle of Fear](gold/shackle_of_fear.md)
+
+### ⛰️ Ground
+- [Tigershade Terrabreak](ground/tigershade_terrabreak.md)
 
 
 ## Required workflow

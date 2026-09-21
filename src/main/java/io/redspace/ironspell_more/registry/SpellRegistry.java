@@ -29,6 +29,9 @@ public class SpellRegistry {
     // GOLD
     public static final RegistryObject<AbstractSpell> SHACKLE_OF_FEAR_SPELL = registerSpell(new ShackleofFearSpell());
 
+    // GROUND
+    public static final RegistryObject<AbstractSpell> TIGERSHADE_TERRABREAK_SPELL = registerSpell(new io.redspace.ironspell_more.spells.ground.TigershadeTerrabreakSpell());
+
     // NATURE
     public static final RegistryObject<AbstractSpell> WINGS_OF_TEMPEST_SPELL = registerSpell(new io.redspace.ironspell_more.spells.nature.WingsofTempestSpell());
     public static final RegistryObject<AbstractSpell> VENOMOUS_BLOSSOMFALL_SPELL = registerSpell(new VenomousBlossomfallSpell());
@@ -37,6 +40,7 @@ public class SpellRegistry {
     // AQUA
     public static final RegistryObject<AbstractSpell> CRIMSON_RAIN_BATHES_MOON_SPELL = registerSpell(new io.redspace.ironspell_more.spells.aqua.CrimsonRainBathesMoonSpell());
     public static final RegistryObject<AbstractSpell> GLACIAL_VEIL_SPELL = registerSpell(new io.redspace.ironspell_more.spells.aqua.GlacialVeilSpell());
+    public static final RegistryObject<AbstractSpell> GLACIAL_FIRMAMENT_SPELL = registerSpell(new io.redspace.ironspell_more.spells.aqua.GlacialFirmamentSpell());
 
     public static RegistryObject<AbstractSpell> registerSpell(AbstractSpell spell) {
         return SPELLS.register(spell.getSpellName(), () -> spell);

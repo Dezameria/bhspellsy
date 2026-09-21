@@ -39,6 +39,10 @@
   "ui.ironspell_more.azure_venom_damage": "Azure Venom: %s damage/sec for %s sec",
   "spell.ironspell_more.glacial_veil": "Glacial Veil",
   "spell.ironspell_more.glacial_veil.guide": "Unleashes an expanding wave of frost and erupts ice spikes in 8 directions around the caster up to 10 blocks, dealing 20 damage and inflicting Frostbite for 10 seconds.",
+  "spell.ironspell_more.glacial_firmament": "Glacial Firmament",
+  "spell.ironspell_more.glacial_firmament.guide": "Unleash glacial power to create an ice domain of 15 blocks. Deals 35 damage and inflicts Slowness II for 3 seconds to enemies, while granting Speed II for 2 seconds to the caster, erupting concentric rings of glacial spikes and glacial tombs from the ground.",
+  "entity.ironspell_more.glacial_spike": "Glacial Spike",
+  "entity.ironspell_more.glacial_tomb": "Glacial Tomb",
   "item.ironspell_more.example_magic_sword": "Example Magic Sword",
   "spell.ironspell_more.gale_piercer": "Gale Piercer",
   "spell.ironspell_more.gale_piercer.guide": "Infuse wind into your bow, locking onto a target in line of sight. Release early to fire a high-speed wind arrow with limited homing, or hold for 10 seconds to unleash a wall-piercing, perfectly homing gale arrow that ignites and slows the target.",
@@ -47,5 +51,13 @@
   "ui.ironspell_more.gale_piercer_full_charge": "Gale Piercer: Full Charge — Release to fire Gale Arrow",
   "ui.ironspell_more.gale_piercer_damage_normal": "Normal Arrow Damage: %s",
   "ui.ironspell_more.gale_piercer_damage_full": "Full Charge Arrow Damage: %s",
-  "ui.ironspell_more.gale_piercer_lock_range": "Max Lock-on Range: %s blocks"
+  "ui.ironspell_more.gale_piercer_lock_range": "Max Lock-on Range: %s blocks",
+  "spell.ironspell_more.tigershade_terrabreak": "Tigershade Terrabreak",
+  "spell.ironspell_more.tigershade_terrabreak.guide": "Lock onto an enemy in sight to mark them for 60 seconds, gaining Speed II, Strength I, an energy wave aura, and revealing the target's position with a glowing outline visible only to you. If the marked target is within 5 blocks and their health drops below 10%, recast to lunge and slam them into the ground, instantly executing them and restoring 50 HP.",
+  "effect.ironspell_more.tigershade_stance": "Tigershade Stance",
+  "effect.ironspell_more.tigershade_mark": "Tigershade Mark",
+  "ui.ironspell_more.tigershade_no_target": "No valid target in sight.",
+  "ui.ironspell_more.tigershade_target_lost": "Marked target is dead or unavailable.",
+  "ui.ironspell_more.tigershade_too_far": "Target is too far! Must be within 5 blocks to execute.",
+  "ui.ironspell_more.tigershade_hp_too_high": "Target health must be 10% or lower to execute."
 }

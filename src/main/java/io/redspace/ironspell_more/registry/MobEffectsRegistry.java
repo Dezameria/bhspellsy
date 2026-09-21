@@ -32,6 +32,12 @@ public class MobEffectsRegistry {
     public static final RegistryObject<MobEffect> COOLDOWN = MOB_EFFECTS.register("cooldown",
             () -> new CooldownEffect(MobEffectCategory.NEUTRAL, 0x16E6C1));
 
+    public static final RegistryObject<MobEffect> TIGERSHADE_STANCE = MOB_EFFECTS.register("tigershade_stance",
+            () -> new io.redspace.ironspell_more.effect.TigershadeStanceEffect(MobEffectCategory.BENEFICIAL, 0x8B5A2B));
+
+    public static final RegistryObject<MobEffect> TIGERSHADE_MARK = MOB_EFFECTS.register("tigershade_mark",
+            () -> new io.redspace.ironspell_more.effect.TigershadeMarkEffect(MobEffectCategory.HARMFUL, 0xD2691E));
+
     public static void register(IEventBus eventBus) {
         MOB_EFFECTS.register(eventBus);
     }

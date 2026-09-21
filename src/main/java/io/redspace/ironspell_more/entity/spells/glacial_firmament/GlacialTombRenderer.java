@@ -1,0 +1,86 @@
+package io.redspace.ironspell_more.entity.spells.glacial_firmament;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
+import io.redspace.ironspell_more.IronSpellMore;
+import io.redspace.ironsspellbooks.IronsSpellbooks;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.ResourceLocation;
+
+public class GlacialTombRenderer extends EntityRenderer<GlacialTombEntity> {
+
+    public static final ResourceLocation NOCULL = IronsSpellbooks.id("textures/entity/ice_tomb/ice_tomb.png");
+    public static final ResourceLocation CULL = IronsSpellbooks.id("textures/entity/ice_tomb/ice_tomb_cull.png");
+    private final GlacialTombModel model;
+
+    public GlacialTombRenderer(EntityRendererProvider.Context pContext) {
+        super(pContext);
+        this.model = new GlacialTombModel(pContext.bakeLayer(GlacialTombModel.LAYER_LOCATION));
+    }
+
+    @Override
+    public void render(GlacialTombEntity entity, float yaw, float partialTicks, PoseStack poseStack, MultiBufferSource multiBufferSource, int light) {
+        if (entity.tickCount < entity.getWaitTime())
+            return;
+        poseStack.pushPose();
+        poseStack.mulPose(Axis.YP.rotationDegrees(-entity.getYRot()));
+        poseStack.mulPose(Axis.XP.rotationDegrees(entity.getXRot()));
+        float anim = entity.getPositionOffset(partialTicks);
+        float scale = entity.getTombSize();
+        poseStack.scale(scale, -scale, -scale);
+        poseStack.translate(0, -1.501 - (anim * 2.5f), 0);
+        this.model.setupAnim(entity, partialTicks, 0.0F, 0.0F, entity.getYRot(), entity.getXRot());
+        VertexConsumer vertexconsumer = multiBufferSource.getBuffer(RenderType.entityTranslucent(NOCULL));
+        this.model.renderToBuffer(poseStack, vertexconsumer, light, OverlayTexture.NO_OVERLAY, 1f, 1f, 1f, 1f);
+        vertexconsumer = multiBufferSource.getBuffer(RenderType.entityTranslucentCull(CULL));
+        this.model.renderToBuffer(poseStack, vertexconsumer, light, OverlayTexture.NO_OVERLAY, 1f, 1f, 1f, 1f);
+        poseStack.popPose();
+    }
+
+    @Override
+    public ResourceLocation getTextureLocation(GlacialTombEntity pEntity) {
+        return NOCULL;
+    }
+
+    public static class GlacialTombModel extends EntityModel<GlacialTombEntity> {
+        public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(IronSpellMore.MODID, "glacial_tomb"), "main");
+        private final ModelPart model;
+
+        public GlacialTombModel(ModelPart root) {
+            this.model = root.getChild("model");
+        }
+
+        public static LayerDefinition createBodyLayer() {
+            MeshDefinition meshdefinition = new MeshDefinition();
+            PartDefinition partdefinition = meshdefinition.getRoot();
+
+            partdefinition.addOrReplaceChild("model", CubeListBuilder.create().texOffs(0, 0).addBox(-8.0F, -36.0F, -8.0F, 16.0F, 36.0F, 16.0F, new CubeDeformation(0.0F))
+                    .texOffs(40, 67).addBox(4.0F, -9.0F, 4.0F, 6.0F, 9.0F, 6.0F, new CubeDeformation(0.0F))
+                    .texOffs(0, 52).addBox(1.0F, -24.0F, -11.0F, 10.0F, 24.0F, 10.0F, new CubeDeformation(0.0F))
+                    .texOffs(64, 0).addBox(-8.0F, -36.0F, -8.0F, 16.0F, 36.0F, 16.0F, new CubeDeformation(-0.01F))
+                    .texOffs(40, 52).addBox(-10.0F, -9.0F, -10.0F, 6.0F, 9.0F, 6.0F, new CubeDeformation(0.0F))
+                    .texOffs(0, 86).addBox(-11.0F, -24.0F, 1.0F, 10.0F, 24.0F, 10.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 24.0F, 0.0F));
+
+            return LayerDefinition.create(meshdefinition, 128, 128);
+        }
+
+        @Override
+        public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, float r, float g, float b, float a) {
+            model.render(poseStack, vertexConsumer, packedLight, packedOverlay, r, g, b, a);
+        }
+
+        @Override
+        public void setupAnim(GlacialTombEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        }
+    }
+}

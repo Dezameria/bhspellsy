@@ -66,6 +66,18 @@ public class EntityRegistry {
                     .updateInterval(1)
                     .build(IronSpellMore.MODID + ":gale_arrow"));
 
+    public static final RegistryObject<EntityType<io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialSpikeEntity>> GLACIAL_SPIKE = ENTITIES.register("glacial_spike",
+            () -> EntityType.Builder.<io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialSpikeEntity>of(io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialSpikeEntity::new, MobCategory.MISC)
+                    .sized(0.8F, 2.0F)
+                    .clientTrackingRange(64)
+                    .build(IronSpellMore.MODID + ":glacial_spike"));
+
+    public static final RegistryObject<EntityType<io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialTombEntity>> GLACIAL_TOMB = ENTITIES.register("glacial_tomb",
+            () -> EntityType.Builder.<io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialTombEntity>of(io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialTombEntity::new, MobCategory.MISC)
+                    .sized(1.2F, 2.5F)
+                    .clientTrackingRange(64)
+                    .build(IronSpellMore.MODID + ":glacial_tomb"));
+
     public static void register(IEventBus eventBus) {
         ENTITIES.register(eventBus);
     }

@@ -5,12 +5,13 @@ import io.redspace.ironspell_more.client.particle.ShockwaveParticleCustom;
 import io.redspace.ironspell_more.client.particle.WhiteEmberParticle;
 import io.redspace.ironspell_more.client.particle.WhiteFireParticle;
 import io.redspace.ironspell_more.client.particle.ZapParticleCustom;
-import io.redspace.ironspell_more.registry.ParticleRegistry;
+import io.redspace.ironspell_more.client.renderer.ResonantKnellDomeRenderer;
 import io.redspace.ironspell_more.entity.spells.gold_chain.ArcaneShackleRenderer;
 import io.redspace.ironspell_more.entity.spells.gold_chain.GoldChainRenderer;
-import io.redspace.ironspell_more.registry.EntityRegistry;
 import io.redspace.ironspell_more.entity.spells.venomous_blossomfall.AzureVenomNeedleModel;
 import io.redspace.ironspell_more.entity.spells.venomous_blossomfall.AzureVenomNeedleRenderer;
+import io.redspace.ironspell_more.registry.EntityRegistry;
+import io.redspace.ironspell_more.registry.ParticleRegistry;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
@@ -41,6 +42,7 @@ public class IronSpellMoreClient {
         event.registerEntityRenderer(EntityRegistry.GALE_ARROW.get(), io.redspace.ironspell_more.entity.spells.gale_piercer.GaleArrowRenderer::new);
         event.registerEntityRenderer(EntityRegistry.GLACIAL_SPIKE.get(), io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialSpikeRenderer::new);
         event.registerEntityRenderer(EntityRegistry.GLACIAL_TOMB.get(), io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialTombRenderer::new);
+        event.registerEntityRenderer(EntityRegistry.RESONANT_KNELL_DOME.get(), ResonantKnellDomeRenderer::new);
     }
 
     @SubscribeEvent

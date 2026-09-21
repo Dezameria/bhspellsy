@@ -1,39 +1,36 @@
-# 📚 เอกสารคู่มือระบบ IronSpell More (Documentation)
+# เอกสารระบบ IronSpell More
 
-ยินดีต้อนรับสู่เอกสารโครงสร้างระบบและการทำงานของ Mod **IronSpell More** (Minecraft Forge 1.20.1)
+เอกสารชุดนี้อธิบายโครงสร้างและพฤติกรรมปัจจุบันของ IronSpell More สำหรับ Minecraft Forge 1.20.1
 
-เอกสารฉบับนี้ถูกจัดแบ่งออกเป็น 3 ส่วนหลักเพื่อให้ง่ายต่อการศึกษาและพัฒนาต่อ:
+ปัจจุบัน `SpellRegistry` ลงทะเบียนเวททั้งหมด **15 เวทใน 6 สายเวท** ได้แก่ Fire 5, Lightning 2, Nature 3, Aqua 3, Gold 1 และ Ground 1
 
----
+## แผนที่เอกสาร
 
-## 📑 สารบัญเอกสาร
+- [รายการเวททั้งหมด](all_spells.md) — สรุปเวททั้ง 15 รายการตาม registry พร้อมลิงก์ไปยัง specification ของแต่ละเวท
+- [เอกสารรายสกิล](spells/README.md) — สารบัญและกฎการดูแลเอกสารรายเวท
+- [กลไกการร่ายและวงจรชีวิต](spell_mechanics.md) — flow ของ Instant, Long, Continuous, Recast และความรับผิดชอบของ server/client
+- [สถาปัตยกรรมระบบ](system_architecture.md) — registry, package, entity, renderer, particle และ subsystem หลัก
+- [สถาปัตยกรรม compatibility](compat_architecture.md) — การเชื่อมต่อกับม็อดและ API ภายนอก
 
-### 1. [รายการเวทมนตร์ทั้งหมด (All Spells Overview)](all_spells.md)
-* รวบรวมเวทมนตร์ทั้งหมด 5 สกิลใน Mod:
-  - **Pure White Flame Burst** (เพลิงขาวบริสุทธิ์)
-  - **Spin Strike** (หมุนตัวพุ่งทะลวงเพลิง)
-  - **Lightning Strike** (อัสนีบาตทะลวงเงา)
-  - **Thunder Step** (ก้าวย่างอัสนี)
-  - **Shackle of Fear** (โซ่ตรวนแห่งความกลัว)
-* รายละเอียดสายเวท (School), ระดับความหายาก (Rarity), ค่ามานา, คูลดาวน์ และความสามารถของแต่ละสกิล
+## Source of truth
 
----
+เมื่อตรวจสอบค่าหรือพฤติกรรม ให้ใช้ลำดับความน่าเชื่อถือดังนี้:
 
-### 2. [โครงสร้างการทำงานและขั้นตอนการร่ายเวท (Spell Mechanics & Execution Flow)](spell_mechanics.md)
-* แผนผัง Flowchart การทำงานของแต่ละ Spell ตั้งแต่เริ่มร่ายจนจบ
-* วงจรชีวิตของการร่าย (Cast Lifecycle): `checkCanCast` -> `onServerCastTick` -> `onCast`
-* สิ่งที่แต่ละ Spell เรียกใช้:
-  - การคำนวณเวกเตอร์และระยะทาง (Raycasting, Oriented Bounding Box)
-  - การเรียกใช้ **Effekseer VFX** (`pure_white_flame.efkefc`) ผ่าน AAA Particles
-  - การเรียกใช้พื้นแตกร้าวผ่าน **Epic Fight API** (`LevelUtil.circleSlamFracture`)
-  - กลไกสถานะ **White Flame Burn** และ **Spin Strike Dash**
+1. Implementation และ registry ใน `src/main/java`
+2. เอกสารรายสกิลใน `docs/spells/<school>/<spell_id>.md`
+3. เอกสารสรุประดับระบบในโฟลเดอร์ `docs`
 
----
+`docs/all_spells.md` เป็นสารบัญภาพรวม ไม่ใช้แทน specification รายสกิล
 
-### 3. [โครงสร้างระบบทั้งหมด (Overall System Architecture)](system_architecture.md)
-* สถาปัตยกรรมระดับภาพรวมของ Mod (System Architecture Diagram)
-* ผังโฟลเดอร์และแพ็กเกจของโปรเจกต์ (`io.redspace.ironspell_more`)
-* ระบบ DeferredRegister (Spells, MobEffects, Particles, Entities, Items)
-* ระบบ Client Rendering (Particle Providers, Entity Renderers)
-* รายละเอียดระบบนิเวศอนุภาคเพลิงขาว (White Fire, White Fire Emitter, White Ember)
-* การเชื่อมต่อและผสานรวมกับ Mod ภายนอก (Iron's Spells, Epic Fight, AAA Particles, GeckoLib)
+## การดูแลเอกสาร
+
+- การเพิ่ม ลบ ปรับสมดุล หรือเปลี่ยนพฤติกรรมของเวท ต้องอัปเดตเอกสารรายสกิลใน change เดียวกัน
+- การเพิ่มหรือลบเวทต้องซิงก์ `SpellRegistry`, `docs/spells/README.md` และ `docs/all_spells.md`
+- การเปลี่ยน entity, renderer, packet หรือเส้นแบ่ง server/client ต้องอัปเดต `spell_mechanics.md` และ `system_architecture.md` เมื่อภาพรวมระบบเปลี่ยน
+- ต้องรัน build/test ที่เกี่ยวข้องและระบุ runtime behavior ที่ยังต้องตรวจในเกม
+
+## การอัปเดตล่าสุด: Resonant Knell
+
+ระบบ Resonant Knell ใช้ entity ที่ติดตามผู้ร่ายและสลับระหว่าง Open, Inactive และ Exploding ตลอดสามรอบของ recast ภาพโดมจะยกตัวและกางขึ้นทุกครั้งที่เปิด ขณะที่วงพลังบนพื้นหดเข้าหาเท้าผู้ร่าย เมื่อระเบิด วงนำและวงตามจะขยายออกไปถึงรัศมี gameplay 15, 20 หรือ 30 บล็อก
+
+รายละเอียดทั้งหมดอยู่ที่ [Resonant Knell specification](spells/fire/resonant_knell.md)

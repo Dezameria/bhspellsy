@@ -175,3 +175,49 @@ io.redspace.ironspell_more
 3. **คำสั่งควบคุมและทดสอบในเกม**:
    - /ism test_meen_charge3: ทดสอบรันชุดแอนิเมชัน Meen Charge 3 พร้อม VFX, เสียง และพื้นแตกแบบครบวงจร
    - /ism play_animation meen_charge_3: สั่งเล่นแอนิเมชันผ่านตัวถอดรหัส AnimationCue
+
+---
+
+## 4. สถานะสถาปัตยกรรมเวทปัจจุบัน
+
+`SpellRegistry` ลงทะเบียนเวท 15 รายการ แบ่งเป็น Fire 5, Lightning 2, Nature 3, Aqua 3, Gold 1 และ Ground 1 รายการที่ซิงก์กับ registry อยู่ใน [all_spells.md](all_spells.md) และ specification แยกรายเวทอยู่ใน [spells/README.md](spells/README.md)
+
+ระบบเวทปัจจุบันใช้ component หลักร่วมกันดังนี้:
+
+```text
+SpellRegistry
+  ├─ spell implementation
+  ├─ MobEffectsRegistry
+  ├─ EntityRegistry
+  ├─ ParticleRegistry
+  └─ client registration
+       ├─ entity renderer
+       ├─ particle provider
+       └─ model layer
+```
+
+Gameplay result เป็น server-authoritative ส่วน entity data, packet และ event ที่ sync จะส่ง state ขั้นต่ำมายัง client เพื่อแสดง renderer, particle, sound และ animation
+
+### 4.1 Resonant Knell subsystem
+
+Resonant Knell เชื่อม component ต่อไปนี้:
+
+| Component | หน้าที่ |
+| --- | --- |
+| `ResonantKnellSpell` | จัดการ recast 6 ครั้ง, buff, damage, launch, cooldown และคำสั่งเปลี่ยน state ของโดม |
+| `ResonantKnellDomeAoe` | ติดตาม owner และ sync state, stage, shockwave start/radius ระหว่าง server กับ client |
+| `ResonantKnellDomeRenderer` | สร้าง shell, talisman, spirit wisp, ground ring และ shockwave geometry ฝั่ง client |
+| `ResonantKnellDomeVisuals` | รวมค่าปรับแต่ง mesh, สี, alpha, opening motion, ring timing และระยะ render |
+| `IronSpellMoreClient` | ลงทะเบียน renderer ให้กับ `ironspell_more:resonant_knell_dome` |
+
+```text
+Cast/Recast on server
+  → update ResonantKnellDomeAoe synchronized data
+  → client observes STATE_OPEN or STATE_EXPLODING
+  → renderer starts local opening/shockwave timeline
+  → gameplay remains authoritative on server
+```
+
+ช่วงเปิดโดม renderer ใช้ motion 12 ticks จาก scale 0.22 และตำแหน่งต่ำกว่าเท้า 1.4 บล็อก พร้อม overshoot เบา ๆ โดยวงพื้นยังยึดกับเท้าผู้ร่าย ช่วงระเบิด shell และวงพื้นขยายตามรัศมี gameplay 15, 20 หรือ 30 บล็อกภายใน 24 ticks
+
+รายละเอียดเชิงพฤติกรรมและค่าปรับแต่งอยู่ที่ [Resonant Knell specification](spells/fire/resonant_knell.md)

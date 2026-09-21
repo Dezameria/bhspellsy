@@ -3,6 +3,7 @@ package io.redspace.ironspell_more.registry;
 import io.redspace.ironspell_more.IronSpellMore;
 import io.redspace.ironspell_more.entity.spells.gold_chain.ArcaneShackleProjectile;
 import io.redspace.ironspell_more.entity.spells.gold_chain.GoldChain;
+import io.redspace.ironspell_more.entity.spells.resonant_knell.ResonantKnellDomeAoe;
 import io.redspace.ironspell_more.entity.spells.venomous_blossomfall.AzureVenomNeedleEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -77,6 +78,13 @@ public class EntityRegistry {
                     .sized(1.2F, 2.5F)
                     .clientTrackingRange(64)
                     .build(IronSpellMore.MODID + ":glacial_tomb"));
+
+    public static final RegistryObject<EntityType<ResonantKnellDomeAoe>> RESONANT_KNELL_DOME = ENTITIES.register("resonant_knell_dome",
+            () -> EntityType.Builder.<ResonantKnellDomeAoe>of(ResonantKnellDomeAoe::new, MobCategory.MISC)
+                    .sized(16.0F, 10.0F)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(IronSpellMore.MODID + ":resonant_knell_dome"));
 
     public static void register(IEventBus eventBus) {
         ENTITIES.register(eventBus);

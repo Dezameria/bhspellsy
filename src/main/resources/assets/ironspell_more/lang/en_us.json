@@ -60,4 +60,9 @@
   "ui.ironspell_more.tigershade_target_lost": "Marked target is dead or unavailable.",
   "ui.ironspell_more.tigershade_too_far": "Target is too far! Must be within 5 blocks to execute.",
   "ui.ironspell_more.tigershade_hp_too_high": "Target health must be 10% or lower to execute."
+,
+  "spell.ironspell_more.resonant_knell": "Resonant Knell",
+  "spell.ironspell_more.resonant_knell.guide": "Strike your weapon with a resonating chime to manifest a fiery gold-red barrier following you. Recast up to 6 times across 3 cycles to alternate between summoning the protective barrier and detonating outward nuclear shockwaves (15, 20, and 30 block radius) that launch enemies high into the air.",
+  "entity.ironspell_more.resonant_knell_dome": "Resonant Knell Barrier",
+  "ui.ironspell_more.spell_on_cooldown": "Resonant Knell is currently on cooldown."
 }

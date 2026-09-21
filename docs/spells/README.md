@@ -17,6 +17,7 @@ This directory is the required source of detailed design and implementation note
 - [Blazing Chakra](fire/blazing_chakra.md)
 - [Spin Strike](fire/spin_strike.md)
 - [Gale Drive](fire/gale_drive.md)
+- [Resonant Knell](fire/resonant_knell.md)
 
 ### ⚡ Lightning
 - [Lightning Strike](lightning/lightning_strike.md)

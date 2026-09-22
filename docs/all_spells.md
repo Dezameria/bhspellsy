@@ -1,6 +1,6 @@
 # รายการเวททั้งหมด
 
-รายการนี้ซิงก์กับ `src/main/java/io/redspace/ironspell_more/registry/SpellRegistry.java` ปัจจุบันมี **15 เวทใน 6 สายเวท** รายละเอียดค่าพลัง ระยะเวลา damage, cooldown, entity, asset และ edge case ให้ยึดเอกสารรายสกิลที่ลิงก์ไว้
+รายการนี้ซิงก์กับ `src/main/java/io/redspace/ironspell_more/registry/SpellRegistry.java` ปัจจุบันมี **16 เวทใน 6 สายเวท** รายละเอียดค่าพลัง ระยะเวลา damage, cooldown, entity, asset และ edge case ให้ยึดเอกสารรายสกิลที่ลิงก์ไว้
 
 ## Fire
 
@@ -26,6 +26,7 @@
 | Wings of Tempest | `ironspell_more:wings_of_tempest` | AoE ติดตามผู้ร่าย หมุนศัตรูรอบพายุและใส่ debuff | [เปิดเอกสาร](spells/nature/wings_of_tempest.md) |
 | Venomous Blossomfall | `ironspell_more:venomous_blossomfall` | ชาร์จเข็มพิษสามระดับและยิงไปยัง crosshair | [เปิดเอกสาร](spells/nature/venomous_blossomfall.md) |
 | Gale Piercer | `ironspell_more:gale_piercer` | ชาร์จลูกศรลมแบบ homing; full charge ทะลุกำแพงและติดสถานะ | [เปิดเอกสาร](spells/nature/gale_piercer.md) |
+| Rapturous Bloom | `ironspell_more:rapturous_bloom` | สร้างดอกไม้พิษใต้เป้าหมาย ใส่สถานะเป็นระยะ และระเบิดกลีบดอกเมื่อครบเวลา | [เปิดเอกสาร](spells/nature/rapturous_bloom.md) |
 
 ## Aqua
 

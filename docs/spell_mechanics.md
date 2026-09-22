@@ -4,7 +4,7 @@
 
 ## ภาพรวมการลงทะเบียน
 
-`SpellRegistry` ใช้ Forge `DeferredRegister<AbstractSpell>` ลงทะเบียนเวท 15 รายการ เวทแต่ละคลาสกำหนด registry ID, school, rarity, level, mana, cooldown, cast type และ callback ตาม lifecycle ของ Iron's Spells 'n Spellbooks
+`SpellRegistry` ใช้ Forge `DeferredRegister<AbstractSpell>` ลงทะเบียนเวท 16 รายการ เวทแต่ละคลาสกำหนด registry ID, school, rarity, level, mana, cooldown, cast type และ callback ตาม lifecycle ของ Iron's Spells 'n Spellbooks
 
 ```text
 SpellRegistry
@@ -20,7 +20,7 @@ SpellRegistry
 
 ### Instant
 
-เวท Instant ทำงานทันทีหลังผ่านเงื่อนไขการร่าย โดย server เป็นผู้คำนวณ target, damage, effect, movement และการ spawn entity ตัวอย่างได้แก่ Blazing Chakra, Spin Strike, Lightning Strike, Thunder Step, Gale Drive, Glacial Veil และ Glacial Firmament
+เวท Instant ทำงานทันทีหลังผ่านเงื่อนไขการร่าย โดย server เป็นผู้คำนวณ target, damage, effect, movement และการ spawn entity ตัวอย่างได้แก่ Blazing Chakra, Spin Strike, Lightning Strike, Thunder Step, Gale Drive, Glacial Veil, Glacial Firmament และ Rapturous Bloom
 
 ### Long และ Continuous
 
@@ -67,6 +67,7 @@ Client รับข้อมูลที่ sync แล้วเพื่อแ�
 | Following AoE | Wings of Tempest, Resonant Knell | ติดตาม owner, เก็บ state/radius/duration และเป็น anchor ของ VFX |
 | Projectile | Shackle of Fear, Venomous Blossomfall, Gale Piercer | เคลื่อนที่ ตรวจ hit และ resolve ผลเมื่อชนหรือหมดระยะ |
 | Persistent control | Gold Chain, Gale Drive Vortex | ตรึง/ดูด/ควบคุมเป้าหมายตาม tick และ lifecycle |
+| Persistent ground AoE | Rapturous Bloom | เก็บ phase/duration, ใส่ debuff ตาม tick และ resolve burst damage ก่อนคง visual shell ชั่วคราว |
 | Terrain eruption | Glacial Veil, Glacial Firmament | วาง entity น้ำแข็งตามทิศหรือวงแหวนและแสดง renderer เฉพาะ |
 
 ## Resonant Knell lifecycle
@@ -89,6 +90,26 @@ Cast 6: Blast radius 30 → Discard + cooldown
 - หลัง blast ของ stage 3 entity ถูก discard
 
 รายละเอียดค่าทั้งหมดอยู่ที่ [Resonant Knell](spells/fire/resonant_knell.md)
+
+## Rapturous Bloom lifecycle
+
+```text
+Cast validation: target + line of sight + ground + active/overlap limits
+  → Ticks 0–40: ripple and closed bud (no gameplay effect)
+  → Ticks 40–120: bloom and apply Poison/Wither/Slowness every 20 ticks
+  → Tick 120: server resolves one burst hit and marks the bloom inactive
+  → Ticks 120–130: client-facing shatter shell, then discard
+```
+
+`RapturousBloomEntity` เป็นเจ้าของ phase และผล gameplay ฝั่ง server ขณะที่ renderer และ `RedPlumParticle` ใช้ state ที่ sync เพื่อแสดงผลเท่านั้น การถูก anti-magic จะยกเลิก entity ทันทีโดยไม่ทำ burst damage
+
+รายละเอียดค่าทั้งหมดอยู่ที่ [Rapturous Bloom](spells/nature/rapturous_bloom.md)
+
+## Tigershade target synchronization
+
+Tigershade Terrabreak ตัดสิน mark, stance, recast และ execute ฝั่ง server แล้วส่ง target UUID ผ่าน `SyncTigershadeTargetPacket` เพื่อให้ client แสดง HUD/VFX ให้ตรงกัน การตาย disconnect เปลี่ยนมิติ หรือ effect หมดจะล้าง state ทั้งสองฝั่งผ่าน lifecycle event โดย packet ไม่ได้มีสิทธิ์ตัดสิน damage หรือ execute
+
+รายละเอียดค่าทั้งหมดอยู่ที่ [Tigershade Terrabreak](spells/ground/tigershade_terrabreak.md)
 
 ## การตรวจสอบเมื่อแก้ระบบเวท
 

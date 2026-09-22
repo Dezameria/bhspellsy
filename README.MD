@@ -2,13 +2,13 @@
 
 An addon mod for **[Iron's Spells 'n Spellbooks](https://github.com/iron431/Irons-Spells-n-Spellbooks)** for Minecraft **1.20.1 (Forge)**.
 
-Adds **15 spells across 6 magic schools**, custom 3D entity models and animations, Effekseer integration, custom projectile physics, Epic Fight compatibility, and cinematic combat mechanics to expand the magical arsenal.
+Adds **16 spells across 6 magic schools**, custom entities and animations, Effekseer integration, custom projectile physics, Epic Fight compatibility, and cinematic combat mechanics to expand the magical arsenal.
 
 ---
 
 ## 🔮 Spell Catalog
 
-The current registry contains 15 spells. See [the complete spell overview](docs/all_spells.md) and [per-spell technical specifications](docs/spells/README.md) for balance values, lifecycle details, assets, and verification notes.
+The current registry contains 16 spells. See [the complete spell overview](docs/all_spells.md) and [per-spell technical specifications](docs/spells/README.md) for balance values, lifecycle details, assets, and verification notes.
 
 | School | Spell | Core mechanic | Specification |
 | :--- | :--- | :--- | :--- |
@@ -22,6 +22,7 @@ The current registry contains 15 spells. See [the complete spell overview](docs/
 | Nature | **Wings of Tempest** | Caster-following storm that orbits and debuffs nearby enemies | [Details](docs/spells/nature/wings_of_tempest.md) |
 | Nature | **Venomous Blossomfall** | Three-stage charged azure venom projectile fired at the crosshair | [Details](docs/spells/nature/venomous_blossomfall.md) |
 | Nature | **Gale Piercer** | Charged homing wind arrow with a wall-piercing full-charge form | [Details](docs/spells/nature/gale_piercer.md) |
+| Nature | **Rapturous Bloom** | Target-anchored toxic flower that blooms, applies debuffs, and bursts for damage | [Details](docs/spells/nature/rapturous_bloom.md) |
 | Aqua | **Crimson Rain Bathes Moon** | Channeled crimson storm and timed spear barrage | [Details](docs/spells/aqua/crimson_rain_bathes_moon.md) |
 | Aqua | **Glacial Veil** | Frostwave and eight-directional ice-spike eruption | [Details](docs/spells/aqua/glacial_veil.md) |
 | Aqua | **Glacial Firmament** | Fifteen-block ice domain with concentric spike and tomb eruptions | [Details](docs/spells/aqua/glacial_firmament.md) |
@@ -36,6 +37,7 @@ The current registry contains 15 spells. See [the complete spell overview](docs/
 - **Custom 3D GeckoLib Entities & Renderers**: Custom animated models for projectiles, chains, needles, and vortexes (`CrimsonSpear`, `GaleDriveVortex`, `AzureVenomNeedle`, `GoldChain`).
 - **Predictive Aiming & Target Tracking**: Advanced projectile physics with predictive lead aiming, crosshair line-of-sight tracking, and custom turn rates.
 - **Physical Suction & Momentum Physics**: Fluid suction, smooth dash collisions, and vortex tethering mechanics without jitter or rubber-banding.
+- **Procedural Spell Rendering**: Rapturous Bloom uses a server-authoritative three-phase lifecycle with a custom layered flower renderer, expanding ground sigils, and directional petal-burst particles.
 - **State-Synchronized Recast VFX**: Resonant Knell synchronizes a three-stage mobile dome with side-safe lifecycle cleanup and spam-resistant 24-tick blast transitions, while client rendering provides a rising open motion, overlapping golden energy ribbons flowing upward into the crown, inward-gathering ground rings, and outward shockwaves matching the 15/20/30-block gameplay radii.
 - **Feature-Based Epic Fight Compatibility**: Modular architecture separating reusable engine components from isolated skill packages (`common/` vs `skills/<skill_name>/`).
 - **Frame-Accurate Animation Synchronization**: Direct frame-event integration ensuring attack colliders, camera shakes, particle waves, and server damage/fire happen in perfect unison.
@@ -85,8 +87,8 @@ Full modular compatibility designed under **Codex Clean Architecture** standards
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/Deizyn/ironspell_more.git
-cd ironspell_more
+git clone https://github.com/Dezameria/bhspellsy.git
+cd bhspellsy
 ```
 
 ### 2. Setup Workspace & Run Client
@@ -111,4 +113,4 @@ The compiled mod JAR will be located in `build/libs/`.
 ---
 
 ## 📄 License
-Distributed under the project repository terms. See [Iron's Spells 'n Spellbooks](https://github.com/iron431/Irons-Spells-n-Spellbooks) for core mod API licensing.
+This project is distributed as **All Rights Reserved**, as declared by the mod metadata. See [Iron's Spells 'n Spellbooks](https://github.com/iron431/Irons-Spells-n-Spellbooks) for the upstream mod and API licensing.

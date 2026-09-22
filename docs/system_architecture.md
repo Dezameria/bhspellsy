@@ -22,15 +22,15 @@ graph TB
     end
 
     subgraph "Gameplay Logic"
-        Spells[Spells Layer: fire, lightning, gold]
-        Effects[Effects Layer: WhiteFlameBurn, SpinStrike]
-        Entities[Entities Layer: ArcaneShackle, GoldChain]
+        Spells[Spells Layer: fire, lightning, nature, aqua, gold, ground]
+        Effects[Effects Layer: combat, movement, venom, cooldown, Tigershade]
+        Entities[Entities Layer: projectiles, persistent AoEs, control entities]
     end
 
     subgraph "Client Rendering (IronSpellMoreClient)"
         ClientBus[Client Mod Bus]
-        ParticleProviders[Particle Providers: WhiteFire, WhiteEmitter, WhiteEmber, Zap, Shockwave]
-        EntityRenderers[Entity Renderers: ArcaneShackleRenderer, GoldChainRenderer]
+        ParticleProviders[Particle Providers: WhiteFire, RedPlum, Zap, Shockwave]
+        EntityRenderers[Entity Renderers: projectiles, ice, dome, Rapturous Bloom]
     end
 
     subgraph "External Integrations"
@@ -69,42 +69,33 @@ io.redspace.ironspell_more
 │
 ├── IronSpellMore.java                      # จุดเริ่มต้นของ Mod (Main Entry Point)
 │
-├── client/                                 # ระบบการแสดงผลฝั่ง Client
-│   ├── IronSpellMoreClient.java            # ลงทะเบียน Particle Providers & Entity Renderers
-│   └── particle/                           # ตรรกะของ Particle แต่ละตัว
-│       ├── WhiteFireParticle.java          # เปลวไฟสีขาวแบบอนิเมชั่น 8 เฟรม
-│       ├── WhiteFireEmitterParticle.java   # เปลวไฟสีขาวต่อเนื่อง + ทิ้งสะเก็ดไฟตามหลัง
-│       ├── WhiteEmberParticle.java         # สะเก็ดไฟสีขาว
-│       ├── ZapParticleCustom.java          # ประกายสายฟ้าแบบคัสตอม
-│       └── ShockwaveParticleCustom.java    # วงแหวนช็อคเวฟ 3D ปรับทิศทางได้
+├── client/                                 # renderer, particle provider และ client event
+│   ├── IronSpellMoreClient.java            # ลงทะเบียน particle, renderer และ model layer
+│   ├── event/                              # input/HUD/client lifecycle เช่น Tigershade
+│   ├── particle/                           # WhiteFire, RedPlum, Zap และ Shockwave
+│   └── renderer/                           # renderer ที่แชร์หรือแยกจาก package ของ entity
 │
-├── effect/                                 # สถานะและเอฟเฟกต์ (MobEffects)
-│   ├── WhiteFlameBurnEffect.java           # สถานะเผาไหม้ไฟสีขาว (ลบล้างไฟส้ม + ดาเมจไฟ)
-│   └── SpinStrikeEffect.java               # สถานะหมุนตัวพุ่งทะลวง
-│
-├── entity/spells/gold_chain/               # เอนทิตีเวทมนตร์
-│   ├── ArcaneShackleProjectile.java        # กระสุนโซ่เวทมนตร์
-│   ├── ArcaneShackleRenderer.java          # ตัวเรนเดอร์กระสุนโซ่
-│   ├── GoldChain.java                      # เสาตรวนโซ่ทองคำ
-│   ├── GoldChainPart.java                  # ข้อต่อโซ่แบบ Multi-part
-│   └── GoldChainRenderer.java              # ตัวเรนเดอร์โซ่ทองคำ
+├── compat/                                 # integration กับ Epic Fight, Avalon และ AAA Particles
+├── effect/                                 # MobEffect ของ combat, movement, venom และ Tigershade
+├── entity/spells/                          # projectile, persistent AoE และ control entity ของแต่ละเวท
+├── event/                                  # server/gameplay lifecycle event
+├── network/                                # packet และ SimpleChannel เฉพาะระบบที่ต้อง sync เพิ่มเติม
 │
 ├── registry/                               # ระบบลงทะเบียน DeferredRegister
 │   ├── SpellRegistry.java                  # ลงทะเบียนเวทมนตร์ทั้งหมด
 │   ├── MobEffectsRegistry.java             # ลงทะเบียนสถานะเอฟเฟกต์
 │   ├── ParticleRegistry.java               # ลงทะเบียน ParticleType
 │   ├── EntityRegistry.java                 # ลงทะเบียน EntityType
-│   └── ItemRegistry.java                   # ลงทะเบียน Items
+│   ├── ItemRegistry.java                   # ลงทะเบียน Items
+│   └── SoundRegistry.java                  # ลงทะเบียน SoundEvent
 │
 └── spells/                                 # โค้ดของเวทมนตร์แต่ละสาย
     ├── fire/
-    │   ├── PureWhiteFlameBurstSpell.java   # ระเบิดเพลิงขาวบริสุทธิ์
-    │   └── SpinStrikeSpell.java            # หมุนตัวพุ่งทะลวงเพลิง
     ├── lightning/
-    │   ├── LightningStrikeSpell.java       # อัสนีบาตทะลวงเงา
-    │   └── ThunderStepSpell.java           # ก้าวย่างอัสนี
-    └── gold/
-        └── ShackleofFearSpell.java         # โซ่ตรวนแห่งความกลัว
+    ├── nature/
+    ├── aqua/
+    ├── gold/
+    └── ground/
 ```
 
 ---
@@ -125,6 +116,8 @@ io.redspace.ironspell_more
    - สะเก็ดไฟขนาดเล็ก มีแรงเสียดทานหน่วงการลอย (`friction = 0.85`) ให้ตกลงสู่พื้นใกล้จุดปล่อย
 4. **`WHITE_SPARKS` (`SparkParticleOptions`)**:
    - ละอองประกายไฟเส้นสีขาวล้วน (`Vector3f(1.0, 1.0, 1.0)`) พุ่งกระจายความเร็วสูง
+5. **`RED_PLUM` (`RedPlumParticle`)**:
+   - กลีบดอกสีแดงแบบ full-bright ที่หมุน พลิ้ว และค่อย ๆ จาง ใช้ทั้งวงโคจรรอบ Rapturous Bloom และการระเบิดกลีบดอกในเฟสสุดท้าย
 
 ---
 
@@ -161,7 +154,7 @@ io.redspace.ironspell_more
 ระบบเชื่อมต่อกับ Epic Fight ถูกปรับปรุงให้เป็นแบบ **Clean Modular Architecture (Codex Standard)**:
 
 1. **สถาปัตยกรรมแบบแยกส่วน (Modular Separation)**:
-   - **nimation/**: แยกคลาส Builder ตามตระกูลอาวุธ/เวทมนตร์ เช่น MeenLanceAnimations สำหรับชุดหอก Meen ทำให้ IronSpellAnimations กลายเป็น Registry Orchestrator ที่สั้น กระชับ และเป็นระเบียบ
+   - **animation/**: แยกคลาส Builder ตามตระกูลอาวุธ/เวทมนตร์ เช่น MeenLanceAnimations สำหรับชุดหอก Meen ทำให้ IronSpellAnimations กลายเป็น Registry Orchestrator ที่สั้น กระชับ และเป็นระเบียบ
    - **particle/ (VFX)**: แยกโมดูลแสดงผลภาพออกเป็น 3 หน่วยย่อย:
      - WeaponAuraVfx: เรนเดอร์วงแหวนเวท 5 ชั้นที่พื้น, ประกายไฟและสายฟ้าวนรอบมือ/ตัวผู้เล่น, และเงาร่างติดตา (WHITE_AFTERIMAGE)
      - FractureVfx: ตรวจจับพื้นแข็งเพื่อทำพื้นแตก (circleSlamFracture) ร่วมกับระบบสั่นหน้าจอ (CameraShakeManager)
@@ -180,7 +173,7 @@ io.redspace.ironspell_more
 
 ## 4. สถานะสถาปัตยกรรมเวทปัจจุบัน
 
-`SpellRegistry` ลงทะเบียนเวท 15 รายการ แบ่งเป็น Fire 5, Lightning 2, Nature 3, Aqua 3, Gold 1 และ Ground 1 รายการที่ซิงก์กับ registry อยู่ใน [all_spells.md](all_spells.md) และ specification แยกรายเวทอยู่ใน [spells/README.md](spells/README.md)
+`SpellRegistry` ลงทะเบียนเวท 16 รายการ แบ่งเป็น Fire 5, Lightning 2, Nature 4, Aqua 3, Gold 1 และ Ground 1 รายการที่ซิงก์กับ registry อยู่ใน [all_spells.md](all_spells.md) และ specification แยกรายเวทอยู่ใน [spells/README.md](spells/README.md)
 
 ระบบเวทปัจจุบันใช้ component หลักร่วมกันดังนี้:
 
@@ -221,3 +214,31 @@ Cast/Recast on server
 ช่วงเปิดโดม renderer ใช้ motion 12 ticks จาก scale 0.22 และตำแหน่งต่ำกว่าเท้า 1.4 บล็อก พร้อม overshoot เบา ๆ โดยวงพื้นยังยึดกับเท้าผู้ร่าย ช่วงระเบิด shell และวงพื้นขยายตามรัศมี gameplay 15, 20 หรือ 30 บล็อกภายใน 24 ticks
 
 รายละเอียดเชิงพฤติกรรมและค่าปรับแต่งอยู่ที่ [Resonant Knell specification](spells/fire/resonant_knell.md)
+
+### 4.2 Rapturous Bloom subsystem
+
+Rapturous Bloom เชื่อม component ต่อไปนี้:
+
+| Component | หน้าที่ |
+| --- | --- |
+| `RapturousBloomSpell` | ตรวจเป้าหมาย ระยะ line of sight ตำแหน่งพื้น จำนวนดอกสูงสุด และพื้นที่ซ้อนทับก่อน spawn |
+| `RapturousBloomEntity` | คุม phase, radius, debuff รายวินาที, burst damage, anti-magic และ active-bloom tracking ฝั่ง server |
+| `RapturousBloomRenderer` / `RapturousBloomVisuals` | วาดดอกไม้แบบ procedural, ground sigil, bloom animation และ petal shatter ฝั่ง client |
+| `RedPlumParticle` | แสดงกลีบดอกแบบหมุน/พลิ้วระหว่าง lifecycle และกระจายออกในช่วง burst |
+| `IronSpellMoreClient` | ลงทะเบียน renderer และ particle provider ของ `rapturous_bloom` / `red_plum` |
+
+```text
+Server validates target and ground
+  → spawn RapturousBloomEntity and sync phase
+  → apply periodic debuffs during bloom
+  → resolve burst damage at tick 120
+  → client renders geometry and particles from synchronized state
+```
+
+รายละเอียด lifecycle และค่าทั้งหมดอยู่ที่ [Rapturous Bloom specification](spells/nature/rapturous_bloom.md)
+
+### 4.3 Tigershade target synchronization
+
+Tigershade Terrabreak เก็บผล combat และเงื่อนไข execute ไว้ฝั่ง server ส่วน `TigershadeNetwork` ส่ง `SyncTigershadeTargetPacket` เพื่อให้ client ทราบ target UUID ที่ต้องใช้กับ HUD/VFX เท่านั้น `TigershadeLifecycleEvents` ดูแลการล้าง state เมื่อ effect หมด ผู้เล่นตาย disconnect หรือเปลี่ยนมิติ เพื่อไม่ให้ target state ค้างข้าม lifecycle
+
+รายละเอียดพฤติกรรมอยู่ที่ [Tigershade Terrabreak specification](spells/ground/tigershade_terrabreak.md)

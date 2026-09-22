@@ -53,6 +53,8 @@
 - ใช้ `compat/epicfight/EpicFightFractureHelper` เป็น optional integration boundary ก่อนเรียก
   `LevelUtil.circleSlamFracture` สำหรับพื้นแตกร้าวที่จุดกระแทกและคลื่น 5 จุด หากไม่มี Epic Fight
   ส่วน fracture จะเป็น no-op โดยไม่กระทบ damage หรือเอฟเฟกต์หลักของสกิล
+- helper จะหา supporting ground ก่อนเรียก fracture ด้วย `noSound = true`, `noParticle = false`,
+  `hurtEntities = false` และเล่น `SLAM_LIGHT` ที่ระดับเสียง 0.2 แทน จึงมีเฉพาะภาพพื้นแตกโดยไม่เพิ่ม damage
 - ใช้เสียง Blaze, explosion, dragon fireball และ wither ตามแต่ละช่วง
 
 ## การตรวจสอบ

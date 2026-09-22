@@ -40,6 +40,9 @@ public class ParticleRegistry {
     public static final RegistryObject<net.minecraft.core.particles.SimpleParticleType> WHITE_FIRE_EMITTER = PARTICLE_TYPES.register("white_fire_emitter",
             () -> new net.minecraft.core.particles.SimpleParticleType(false));
 
+    public static final RegistryObject<net.minecraft.core.particles.SimpleParticleType> RED_PLUM = PARTICLE_TYPES.register("red_plum",
+            () -> new net.minecraft.core.particles.SimpleParticleType(false));
+
     public static void register(IEventBus eventBus) {
         PARTICLE_TYPES.register(eventBus);
     }

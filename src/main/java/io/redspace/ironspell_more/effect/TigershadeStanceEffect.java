@@ -1,5 +1,6 @@
 package io.redspace.ironspell_more.effect;
 
+import io.redspace.ironspell_more.spells.ground.TigershadeTerrabreakSpell;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffect;
@@ -55,7 +56,6 @@ public class TigershadeStanceEffect extends MobEffect {
     @Override
     public void removeAttributeModifiers(LivingEntity entity, AttributeMap attributeMap, int amplifier) {
         super.removeAttributeModifiers(entity, attributeMap, amplifier);
-        entity.getPersistentData().remove(TARGET_UUID_TAG);
-        entity.getPersistentData().remove(TARGET_DIM_TAG);
+        TigershadeTerrabreakSpell.onStanceRemoved(entity);
     }
 }

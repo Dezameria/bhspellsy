@@ -3,6 +3,7 @@ package io.redspace.ironspell_more.registry;
 import io.redspace.ironspell_more.IronSpellMore;
 import io.redspace.ironspell_more.entity.spells.gold_chain.ArcaneShackleProjectile;
 import io.redspace.ironspell_more.entity.spells.gold_chain.GoldChain;
+import io.redspace.ironspell_more.entity.spells.rapturous_bloom.RapturousBloomEntity;
 import io.redspace.ironspell_more.entity.spells.resonant_knell.ResonantKnellDomeAoe;
 import io.redspace.ironspell_more.entity.spells.venomous_blossomfall.AzureVenomNeedleEntity;
 import net.minecraft.world.entity.EntityType;
@@ -85,6 +86,13 @@ public class EntityRegistry {
                     .clientTrackingRange(64)
                     .updateInterval(1)
                     .build(IronSpellMore.MODID + ":resonant_knell_dome"));
+
+    public static final RegistryObject<EntityType<RapturousBloomEntity>> RAPTUROUS_BLOOM = ENTITIES.register("rapturous_bloom",
+            () -> EntityType.Builder.<RapturousBloomEntity>of(RapturousBloomEntity::new, MobCategory.MISC)
+                    .sized(6.0F, 2.0F)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(IronSpellMore.MODID + ":rapturous_bloom"));
 
     public static void register(IEventBus eventBus) {
         ENTITIES.register(eventBus);

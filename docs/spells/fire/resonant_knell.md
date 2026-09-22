@@ -27,9 +27,11 @@
 5. The fifth cast reopens the dome at stage 3.
 6. The sixth cast immediately damages and launches enemies within 30 blocks, starts the final visual shockwave, and applies cooldown.
 
+After each blast cast, the next recast is locked until the current 24-tick shockwave finishes. Rejected rapid inputs do not advance the recast sequence, replay sounds, or interrupt the expanding visual.
+
 The first, second, and final blasts deal 6, 10, and 16 direct spell damage respectively. Targets must be alive, hostile to the caster, not the caster, and not an armor stand. The horizontal and vertical launch strengths are `1.8/1.2`, `2.5/1.5`, and `3.8/2.0` respectively. Normal fall damage may occur after the launch.
 
-Each cast refreshes Strength II, Resistance II, and Fire Resistance I on the caster for 300 ticks. If the recast sequence expires or finishes, the cooldown effect is applied and any non-exploding dome is removed.
+Each accepted cast refreshes Strength II, Resistance II, and Fire Resistance I on the caster for 300 ticks. If the recast sequence expires or finishes, the cooldown effect is applied. A non-exploding dome is removed immediately; an exploding dome is marked for removal as soon as its current 24-tick shockwave completes.
 
 ## Entity lifecycle and synchronization
 
@@ -37,7 +39,10 @@ Each cast refreshes Strength II, Resistance II, and Fire Resistance I on the cas
 
 - `STATE_OPEN`: follows the living caster and renders the open dome.
 - `STATE_EXPLODING`: renders for 24 ticks. Stages 1 and 2 then become inactive; stage 3 discards the entity.
-- `STATE_INACTIVE`: remains attached to the caster but renders nothing until the next open cast.
+- `STATE_INACTIVE`: remains attached to the caster but renders nothing until the next open cast, provided the recast sequence is still active.
+- Active-dome lookup is restricted to the caster's exact `Level`, preventing an integrated client's copy from being selected by server spell logic. If stale duplicates exist on that same side, the newest entity is used.
+- Starting a fresh sequence removes all same-level stale domes owned by that caster before the stage-1 dome is spawned.
+- When the recast sequence ends during a blast, every matching dome completes its current visual before being discarded instead of returning to an orphaned inactive state.
 - The entity is not saved and discards itself when it no longer has a living owner.
 - Gameplay damage and knockback happen immediately on the server when the blast cast is performed; the expanding shockwave is client-side visual feedback.
 
@@ -50,7 +55,7 @@ While the dome is open:
 - Every time a stage opens, the shell, talismans, and spirit wisps begin at `0.22` scale and `1.4` blocks below the caster's feet, then rise and unfold over 12 ticks. A light ease-out overshoot prevents the opening from looking rigid, while alpha fades in over the first 6 ticks.
 - The perimeter sigil expands on the ground with the opening shell but remains anchored beneath the caster.
 - Four golden ground rings continuously contract from radius 7.6 to radius 0.45 beneath the caster over a 36-tick loop, visually gathering energy at the caster's feet.
-- Once fully open, the perimeter sigil remains at radius 8 while 24 plasma streaks, 22 orbiting talismans, and 16 spirit wisps supplement the dome.
+- Once fully open, the perimeter sigil remains at radius 8. Twenty-eight long golden energy ribbons begin around the lower shell, spiral in both directions along its curvature, cross over one another, and narrow into a bright convergence around the crown. Moving alpha pulses travel upward along each ribbon to make the energy visibly flow rather than appear as static bands. Twenty-two orbiting talismans and 16 spirit wisps supplement the dome.
 
 During each 24-tick blast:
 
@@ -66,14 +71,18 @@ The renderer stops drawing beyond 64 blocks from the entity center. Additional c
 - Opening: bell and amethyst chime sounds.
 - Normal blasts: generic explosion and dragon fireball explosion sounds.
 - Final blast: lower-pitched explosion layers plus bell resonance.
-- Language keys: `spell.ironspell_more.resonant_knell`, `.guide`, and `entity.ironspell_more.resonant_knell_dome`.
+- Language keys: `spell.ironspell_more.resonant_knell`, `.guide`, `entity.ironspell_more.resonant_knell_dome`, `ui.ironspell_more.spell_on_cooldown`, and `ui.ironspell_more.resonant_knell_shockwave_active`.
 - Spell icon: `textures/gui/spell_icons/resonant_knell.png`.
 
 ## Verification
 
 - Compile the main source set after renderer changes.
 - Verify that the 12-tick rise-and-unfold animation replays on stages 1, 2, and 3, including the light overshoot, while the ground effects remain anchored beneath the caster.
+- Verify that the 28 shell ribbons flow upward, overlap without obvious discontinuities, and converge brightly near the crown without excessive additive overexposure.
 - In game, verify the inward rings remain centered below a moving caster while the dome is open.
 - Verify all three blasts expand their ground rings to 15, 20, and 30 blocks respectively.
-- Verify stage transitions, recast expiry, and cooldown behavior.
+- Verify stage transitions, recast expiry, and cooldown behavior across at least two complete sequences without reloading the world.
+- Rapidly press the spell during each blast and verify the recast count does not advance, no extra blast sound plays, and the ring completes its 24-tick expansion before the next open stage can start.
+- Let the recast window expire during a stage-1 or stage-2 blast and verify the ring finishes before the dome entity disappears without leaving an inactive visual or stale entity.
+- In integrated singleplayer, verify server casts never select the client-side mirror entity and that a new sequence removes any same-side stale dome.
 - Verify that gameplay damage remains immediate and is not delayed until the visual ring reaches a target.

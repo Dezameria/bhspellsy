@@ -4,13 +4,15 @@ import io.redspace.ironsspellbooks.api.util.CameraShakeData;
 import io.redspace.ironsspellbooks.api.util.CameraShakeManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import yesman.epicfight.api.animation.property.AnimationEvent;
-import yesman.epicfight.particle.EpicFightParticles;
+import yesman.epicfight.api.utils.LevelUtil;
+import yesman.epicfight.gameasset.EpicFightSounds;
 
 /**
  * Common block fracture and ground collision visual effects.
@@ -36,19 +38,17 @@ public final class FractureVfx {
             return false;
         }
 
-        serverLevel.sendParticles(
-            EpicFightParticles.GROUND_SLAM.get(),
-            surface.getX() + 0.5D,
-            surface.getY() + 1.05D,
-            surface.getZ() + 0.5D,
-            0,
-            0.0D,
-            0.0D,
-            0.0D,
-            0.0D
-        );
+        Vec3 fractureCenter = Vec3.atCenterOf(surface);
+        boolean spawned = LevelUtil.circleSlamFracture(source, serverLevel, fractureCenter, radius,
+                true, false, false);
+        if (!spawned) {
+            return false;
+        }
 
-        return true;
+        serverLevel.playSound(null, fractureCenter.x, surface.getY() + 1.0D, fractureCenter.z,
+                EpicFightSounds.SLAM_LIGHT.get(), SoundSource.BLOCKS, 0.2F,
+                0.95F + serverLevel.getRandom().nextFloat() * 0.1F);
+        return spawned;
     }
 
     public static void triggerCameraShake(LivingEntity entity, int durationTicks, float radius) {

@@ -88,6 +88,16 @@ public class ResonantKnellSpell extends AbstractSpell {
             }
             return false;
         }
+
+        ResonantKnellDomeAoe activeDome = ResonantKnellDomeAoe.getActiveDomeFor(entity);
+        if (activeDome != null && activeDome.isExploding()) {
+            if (entity instanceof ServerPlayer serverPlayer) {
+                serverPlayer.displayClientMessage(
+                        Component.translatable("ui.ironspell_more.resonant_knell_shockwave_active")
+                                .withStyle(ChatFormatting.GOLD), true);
+            }
+            return false;
+        }
         return true;
     }
 
@@ -101,6 +111,7 @@ public class ResonantKnellSpell extends AbstractSpell {
 
         if (!hasRecast) {
             // === Press 1: Cycle 1 Open ===
+            ResonantKnellDomeAoe.discardActiveDomesFor(entity);
             playChimeSound(level, entity);
 
             // Spawn barrier dome following caster
@@ -248,10 +259,7 @@ public class ResonantKnellSpell extends AbstractSpell {
         // When recast window times out without finishing or when finished
         applyCooldownEffect(serverPlayer);
 
-        ResonantKnellDomeAoe dome = ResonantKnellDomeAoe.getActiveDomeFor(serverPlayer);
-        if (dome != null && !dome.isExploding()) {
-            dome.discard();
-        }
+        ResonantKnellDomeAoe.finishActiveDomesFor(serverPlayer);
         super.onRecastFinished(serverPlayer, recastInstance, recastResult, castData);
     }
 }

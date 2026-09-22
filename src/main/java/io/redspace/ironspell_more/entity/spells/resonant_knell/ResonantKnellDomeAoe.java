@@ -28,6 +28,7 @@ public class ResonantKnellDomeAoe extends AoeEntity {
     public static final int STATE_INACTIVE = 0;
     public static final int STATE_OPEN = 1;
     public static final int STATE_EXPLODING = 2;
+    public static final int SHOCKWAVE_DURATION_TICKS = 24;
 
     private static final EntityDataAccessor<Integer> DATA_DOME_STATE =
             SynchedEntityData.defineId(ResonantKnellDomeAoe.class, EntityDataSerializers.INT);
@@ -44,12 +45,12 @@ public class ResonantKnellDomeAoe extends AoeEntity {
     // Client-side tracking
     private int clientShockwaveStartTick = -100;
     private int clientDomeOpenStartTick = 0;
+    private boolean discardAfterShockwave;
 
     public ResonantKnellDomeAoe(EntityType<? extends Projectile> entityType, Level level) {
         super(entityType, level);
         this.setNoGravity(true);
         this.setRadius(8.0f);
-        ACTIVE_DOMES.add(this);
     }
 
     public ResonantKnellDomeAoe(Level level) {
@@ -81,16 +82,41 @@ public class ResonantKnellDomeAoe extends AoeEntity {
 
     public static ResonantKnellDomeAoe getActiveDomeFor(LivingEntity caster) {
         if (caster == null) return null;
-        UUID casterId = caster.getUUID();
+        ResonantKnellDomeAoe newestDome = null;
         for (ResonantKnellDomeAoe dome : ACTIVE_DOMES) {
-            if (!dome.isRemoved() && dome.isAlive()) {
-                Entity owner = dome.getOwner();
-                if (owner == caster || (owner != null && casterId.equals(owner.getUUID()))) {
-                    return dome;
-                }
+            if (isActiveDomeFor(dome, caster)
+                    && (newestDome == null || dome.getId() > newestDome.getId())) {
+                newestDome = dome;
             }
         }
-        return null;
+        return newestDome;
+    }
+
+    public static void discardActiveDomesFor(LivingEntity caster) {
+        if (caster == null) return;
+        for (ResonantKnellDomeAoe dome : ACTIVE_DOMES) {
+            if (isActiveDomeFor(dome, caster)) {
+                dome.discard();
+            }
+        }
+    }
+
+    public static void finishActiveDomesFor(LivingEntity caster) {
+        if (caster == null) return;
+        for (ResonantKnellDomeAoe dome : ACTIVE_DOMES) {
+            if (isActiveDomeFor(dome, caster)) {
+                dome.finishOrDiscard();
+            }
+        }
+    }
+
+    private static boolean isActiveDomeFor(ResonantKnellDomeAoe dome, LivingEntity caster) {
+        if (dome.level() != caster.level() || dome.isRemoved() || !dome.isAlive()) {
+            return false;
+        }
+        UUID casterId = caster.getUUID();
+        Entity owner = dome.getOwner();
+        return owner == caster || (owner != null && casterId.equals(owner.getUUID()));
     }
 
     public void activateDome(int stage) {
@@ -108,6 +134,14 @@ public class ResonantKnellDomeAoe extends AoeEntity {
         this.entityData.set(DATA_DOME_STATE, STATE_EXPLODING);
         if (this.level().isClientSide()) {
             this.clientShockwaveStartTick = this.tickCount;
+        }
+    }
+
+    public void finishOrDiscard() {
+        if (isExploding()) {
+            this.discardAfterShockwave = true;
+        } else {
+            this.discard();
         }
     }
 
@@ -191,8 +225,8 @@ public class ResonantKnellDomeAoe extends AoeEntity {
             if (state == STATE_EXPLODING) {
                 int startTick = this.entityData.get(DATA_SHOCKWAVE_TICK);
                 int elapsed = this.tickCount - startTick;
-                if (elapsed >= 24) {
-                    if (getStage() >= 3) {
+                if (elapsed >= SHOCKWAVE_DURATION_TICKS) {
+                    if (this.discardAfterShockwave || getStage() >= 3) {
                         this.discard();
                         return;
                     } else {

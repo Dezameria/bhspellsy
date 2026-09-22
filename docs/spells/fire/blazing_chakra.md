@@ -24,7 +24,7 @@ Blazing Chakra combines Epic Fight attack animations with Iron's Spells fire mag
   - Temporary damage resistance buff (DAMAGE_RESISTANCE V for 6 seconds) ensures uninterrupted execution.
 - **Ground Impact (Frame 59 / ~0.983s)**:
   - **Melee Strike**: Hits in a 4x4x4m oriented bounding box (BlazingChakraColliders.IMPACT) with 100% armor negation and knockdown stun.
-  - **Camera Shake & Fracture**: Ground splits (AvalonEventUtils.simpleGroundSplit) and camera shakes with strength 4.0.
+  - **Camera Shake & Fracture**: The shared Epic Fight helper finds supporting ground and calls `LevelUtil.circleSlamFracture` with a 5-block radius, particles enabled, sound suppressed, and entity damage disabled. It plays `SLAM_LIGHT` at 0.2 volume instead, while the camera shakes with strength 4.0.
   - **Concentric Flame Shockwave**: Concentric fiery ripple waves and orange/red particle bursts scatter up to 12 blocks (BlazingChakraVfx.spawnImpactClientVfx).
   - **Explosion Sound**: SoundEvents.GENERIC_EXPLODE at impact origin.
   - **Proximity Damage Falloff**:

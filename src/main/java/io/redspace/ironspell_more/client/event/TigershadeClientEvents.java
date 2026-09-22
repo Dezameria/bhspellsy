@@ -7,21 +7,32 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import javax.annotation.Nullable;
+import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = IronSpellMore.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class TigershadeClientEvents {
-    private static final Set<Integer> GLOWING_ENTITY_IDS = new HashSet<>();
+    @Nullable
+    private static UUID markedTargetUuid;
+    @Nullable
+    private static Entity glowingEntity;
+    @Nullable
+    private static ClientLevel activeLevel;
+    private static boolean appliedGlow;
 
     private TigershadeClientEvents() {
+    }
+
+    public static void setMarkedTarget(@Nullable UUID targetUuid) {
+        if (targetUuid == null || !targetUuid.equals(markedTargetUuid)) {
+            clearAppliedGlow();
+        }
+        markedTargetUuid = targetUuid;
     }
 
     @SubscribeEvent
@@ -35,36 +46,50 @@ public final class TigershadeClientEvents {
         ClientLevel level = minecraft.level;
 
         if (player == null || level == null) {
-            GLOWING_ENTITY_IDS.clear();
+            clearAppliedGlow();
+            markedTargetUuid = null;
+            activeLevel = null;
             return;
         }
 
-        boolean hasStance = player.hasEffect(MobEffectsRegistry.TIGERSHADE_STANCE.get());
-        Set<Integer> activeGlowing = new HashSet<>();
+        if (activeLevel != level) {
+            clearAppliedGlow();
+            activeLevel = level;
+        }
 
-        if (hasStance) {
-            // Search for marked entities within tracking distance (up to 40 blocks)
-            AABB searchBox = player.getBoundingBox().inflate(40.0D);
-            List<LivingEntity> markedEntities = level.getEntitiesOfClass(LivingEntity.class, searchBox,
-                    e -> e != player && e.isAlive() && e.hasEffect(MobEffectsRegistry.TIGERSHADE_MARK.get()));
+        if (!player.hasEffect(MobEffectsRegistry.TIGERSHADE_STANCE.get()) || markedTargetUuid == null) {
+            clearAppliedGlow();
+            return;
+        }
 
-            for (LivingEntity marked : markedEntities) {
-                marked.setGlowingTag(true);
-                activeGlowing.add(marked.getId());
+        LivingEntity markedTarget = null;
+        for (Entity candidate : level.entitiesForRendering()) {
+            if (candidate instanceof LivingEntity living
+                    && candidate.getUUID().equals(markedTargetUuid)
+                    && living.isAlive()) {
+                markedTarget = living;
+                break;
             }
         }
 
-        // Clean up glowing flag on entities that are no longer marked or when stance is lost
-        for (Integer id : GLOWING_ENTITY_IDS) {
-            if (!activeGlowing.contains(id)) {
-                Entity entity = level.getEntity(id);
-                if (entity != null) {
-                    entity.setGlowingTag(false);
-                }
-            }
+        if (glowingEntity != markedTarget) {
+            clearAppliedGlow();
         }
 
-        GLOWING_ENTITY_IDS.clear();
-        GLOWING_ENTITY_IDS.addAll(activeGlowing);
+        if (markedTarget != null) {
+            glowingEntity = markedTarget;
+            if (!markedTarget.isCurrentlyGlowing()) {
+                markedTarget.setGlowingTag(true);
+                appliedGlow = true;
+            }
+        }
+    }
+
+    private static void clearAppliedGlow() {
+        if (appliedGlow && glowingEntity != null && !glowingEntity.isRemoved()) {
+            glowingEntity.setGlowingTag(false);
+        }
+        glowingEntity = null;
+        appliedGlow = false;
     }
 }

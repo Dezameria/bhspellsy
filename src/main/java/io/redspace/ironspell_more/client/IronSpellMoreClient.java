@@ -2,6 +2,7 @@ package io.redspace.ironspell_more.client;
 
 import io.redspace.ironspell_more.IronSpellMore;
 import io.redspace.ironspell_more.client.particle.ShockwaveParticleCustom;
+import io.redspace.ironspell_more.client.particle.RedPlumParticle;
 import io.redspace.ironspell_more.client.particle.WhiteEmberParticle;
 import io.redspace.ironspell_more.client.particle.WhiteFireParticle;
 import io.redspace.ironspell_more.client.particle.ZapParticleCustom;
@@ -28,6 +29,7 @@ public class IronSpellMoreClient {
         event.registerSpriteSet(ParticleRegistry.WHITE_FIRE.get(), WhiteFireParticle.Provider::new);
         event.registerSpriteSet(ParticleRegistry.WHITE_EMBER.get(), WhiteEmberParticle.Provider::new);
         event.registerSpriteSet(ParticleRegistry.WHITE_FIRE_EMITTER.get(), io.redspace.ironspell_more.client.particle.WhiteFireEmitterParticle.Provider::new);
+        event.registerSpriteSet(ParticleRegistry.RED_PLUM.get(), RedPlumParticle.Provider::new);
     }
 
     @SubscribeEvent
@@ -43,6 +45,7 @@ public class IronSpellMoreClient {
         event.registerEntityRenderer(EntityRegistry.GLACIAL_SPIKE.get(), io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialSpikeRenderer::new);
         event.registerEntityRenderer(EntityRegistry.GLACIAL_TOMB.get(), io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialTombRenderer::new);
         event.registerEntityRenderer(EntityRegistry.RESONANT_KNELL_DOME.get(), ResonantKnellDomeRenderer::new);
+        event.registerEntityRenderer(EntityRegistry.RAPTUROUS_BLOOM.get(), io.redspace.ironspell_more.entity.spells.rapturous_bloom.RapturousBloomRenderer::new);
     }
 
     @SubscribeEvent

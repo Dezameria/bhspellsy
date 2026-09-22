@@ -10,6 +10,7 @@ import io.redspace.ironspell_more.spells.gold.ShackleofFearSpell;
 import io.redspace.ironspell_more.spells.lightning.LightningStrikeSpell;
 import io.redspace.ironspell_more.spells.lightning.ThunderStepSpell;
 import io.redspace.ironspell_more.spells.nature.GalePiercerSpell;
+import io.redspace.ironspell_more.spells.nature.RapturousBloomSpell;
 import io.redspace.ironspell_more.spells.nature.VenomousBlossomfallSpell;
 import io.redspace.ironspell_more.spells.nature.WingsofTempestSpell;
 import io.redspace.ironspell_more.spells.aqua.CrimsonRainBathesMoonSpell;
@@ -46,6 +47,7 @@ public class SpellRegistry {
     public static final RegistryObject<AbstractSpell> WINGS_OF_TEMPEST_SPELL = registerSpell(new WingsofTempestSpell());
     public static final RegistryObject<AbstractSpell> VENOMOUS_BLOSSOMFALL_SPELL = registerSpell(new VenomousBlossomfallSpell());
     public static final RegistryObject<AbstractSpell> GALE_PIERCER_SPELL = registerSpell(new GalePiercerSpell());
+    public static final RegistryObject<AbstractSpell> RAPTUROUS_BLOOM_SPELL = registerSpell(new RapturousBloomSpell());
 
     // AQUA
     public static final RegistryObject<AbstractSpell> CRIMSON_RAIN_BATHES_MOON_SPELL = registerSpell(new CrimsonRainBathesMoonSpell());

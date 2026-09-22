@@ -5,6 +5,7 @@ import io.redspace.ironspell_more.registry.ItemRegistry;
 import io.redspace.ironspell_more.registry.MobEffectsRegistry;
 import io.redspace.ironspell_more.registry.ParticleRegistry;
 import io.redspace.ironspell_more.registry.SpellRegistry;
+import io.redspace.ironspell_more.network.TigershadeNetwork;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -38,6 +39,7 @@ public class IronSpellMore {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
+        event.enqueueWork(TigershadeNetwork::register);
         LOGGER.info("IronSpellMore COMMON SETUP");
     }
 

@@ -451,17 +451,28 @@ public class ResonantKnellDomeRenderer extends EntityRenderer<ResonantKnellDomeA
         if (alpha <= 0.0f) return;
         float radius = (BASE_RADIUS + STREAK_SURFACE_OFFSET) * scale;
         for (int i = 0; i < STREAK_COUNT; i++) {
-            float local = time / STREAK_CYCLE_TICKS + hash(seed, i, 47, 0);
-            int cycle = Mth.floor(local);
-            float life = Mth.sin((local - cycle) * Mth.PI);
+            float phaseOffset = hash(seed, i, 47, 0);
+            float local = time / STREAK_CYCLE_TICKS + phaseOffset;
+            float lifePhase = local - Mth.floor(local);
+            float life = 0.55f + 0.45f * Mth.sin(lifePhase * Mth.PI);
             float a = alpha * life * STREAK_ALPHA;
             if (a <= 0.005f) continue;
 
-            float height = Mth.lerp(hash(seed, i, cycle, 48), STREAK_MIN_HEIGHT, STREAK_MAX_HEIGHT);
-            float span = Mth.lerp(hash(seed, i, cycle, 49), STREAK_MIN_SPAN_DEG, STREAK_MAX_SPAN_DEG) * Mth.DEG_TO_RAD;
-            float start = hash(seed, i, cycle, 50) * Mth.TWO_PI + time * STREAK_SPEED_DEG * Mth.DEG_TO_RAD;
-            surfaceStreak(radius, (float) Math.acos(height), start, span, STREAK_WIDTH / radius,
-                    0.04f, 3.0f, hash(seed, i, cycle, 51) * Mth.TWO_PI + time * 0.05f, STREAK_SEGMENTS,
+            float startPhi = Mth.lerp(hash(seed, i, 48, 0),
+                    STREAK_MIN_START_PHI_DEG, STREAK_MAX_START_PHI_DEG) * Mth.DEG_TO_RAD;
+            float endPhi = Mth.lerp(hash(seed, i, 49, 0),
+                    STREAK_MIN_END_PHI_DEG, STREAK_MAX_END_PHI_DEG) * Mth.DEG_TO_RAD;
+            float direction = hash(seed, i, 50, 0) < 0.5f ? -1.0f : 1.0f;
+            float twist = Mth.lerp(hash(seed, i, 51, 0),
+                    STREAK_MIN_TWIST_DEG, STREAK_MAX_TWIST_DEG) * Mth.DEG_TO_RAD * direction;
+            float startTheta = (float) i / STREAK_COUNT * Mth.TWO_PI
+                    + (hash(seed, i, 52, 0) - 0.5f) * 0.7f
+                    + time * STREAK_ORBIT_SPEED_DEG * Mth.DEG_TO_RAD * direction;
+            float wavePhase = hash(seed, i, 53, 0) * Mth.TWO_PI;
+            float flowPhase = time / STREAK_FLOW_CYCLE_TICKS + phaseOffset;
+
+            surfaceFlowStreak(radius, startPhi, endPhi, startTheta, twist, STREAK_WIDTH / radius,
+                    wavePhase, flowPhase, STREAK_SEGMENTS,
                     STREAK_R, STREAK_G, STREAK_B, a, position, normal, consumer);
         }
     }
@@ -501,23 +512,39 @@ public class ResonantKnellDomeRenderer extends EntityRenderer<ResonantKnellDomeA
         }
     }
 
-    private static void surfaceStreak(float radius, float phi0, float start, float span, float halfWidthRad,
-                                      float waveAmp, float waveFreq, float wavePhase, int segments,
-                                      float r, float g, float b, float alpha,
-                                      Matrix4f position, Matrix3f normal, VertexConsumer consumer) {
+    private static void surfaceFlowStreak(float radius, float startPhi, float endPhi,
+                                          float startTheta, float twist, float halfWidthRad,
+                                          float wavePhase, float flowPhase, int segments,
+                                          float r, float g, float b, float alpha,
+                                          Matrix4f position, Matrix3f normal, VertexConsumer consumer) {
+        float phiMax = (float) Math.acos(-LOWER_EXTENT);
         for (int s = 0; s < segments; s++) {
             for (int side = 0; side < 2; side++) {
                 for (int corner = 0; corner < 4; corner++) {
                     float f = (s + (corner >= 2 ? 1.0f : 0.0f)) / segments;
                     int col = side + (corner == 1 || corner == 2 ? 1 : 0);
-                    float taper = Mth.sin(f * Mth.PI);
-                    float theta = start + span * f;
-                    float phi = phi0 + waveAmp * Mth.sin(theta * waveFreq + wavePhase)
-                            + (col - 1) * halfWidthRad * taper;
-                    phi = Mth.clamp(phi, 0.03f, Mth.HALF_PI);
+
+                    float bodyGlow = 0.22f + 0.78f * Mth.sin(f * Mth.PI);
+                    float crownProgress = Mth.clamp((f - 0.72f) / 0.28f, 0.0f, 1.0f);
+                    crownProgress = crownProgress * crownProgress * (3.0f - 2.0f * crownProgress);
+                    float convergenceGlow = Math.min(1.0f, bodyGlow + crownProgress * STREAK_CROWN_GLOW);
+
+                    float pulseWave = 0.5f + 0.5f * Mth.sin(Mth.TWO_PI
+                            * (f * STREAK_FLOW_PULSES - flowPhase));
+                    float pulse = pulseWave * pulseWave * pulseWave;
+                    float streamAlpha = alpha * convergenceGlow * (0.34f + 0.66f * pulse);
+
+                    float widthTaper = 0.28f + 0.72f * Mth.sin(f * Mth.PI);
+                    float theta = startTheta + twist * f
+                            + 0.08f * Mth.sin(f * Mth.TWO_PI * STREAK_WAVE_FREQUENCY + wavePhase);
+                    float phi = Mth.lerp(f, startPhi, endPhi)
+                            + STREAK_WAVE_AMPLITUDE * Mth.sin(f * Mth.TWO_PI * STREAK_WAVE_FREQUENCY
+                            + wavePhase + flowPhase * 0.35f) * Mth.sin(f * Mth.PI)
+                            + (col - 1) * halfWidthRad * widthTaper;
+                    phi = Mth.clamp(phi, 0.015f, phiMax);
                     float sinPhi = Mth.sin(phi);
                     vertex(consumer, position, normal, radius * sinPhi * Mth.cos(theta), radius * Mth.cos(phi),
-                            radius * sinPhi * Mth.sin(theta), r, g, b, col == 1 ? alpha * taper : 0.0f);
+                            radius * sinPhi * Mth.sin(theta), r, g, b, col == 1 ? streamAlpha : 0.0f);
                 }
             }
         }

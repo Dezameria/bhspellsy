@@ -36,7 +36,7 @@ The current registry contains 15 spells. See [the complete spell overview](docs/
 - **Custom 3D GeckoLib Entities & Renderers**: Custom animated models for projectiles, chains, needles, and vortexes (`CrimsonSpear`, `GaleDriveVortex`, `AzureVenomNeedle`, `GoldChain`).
 - **Predictive Aiming & Target Tracking**: Advanced projectile physics with predictive lead aiming, crosshair line-of-sight tracking, and custom turn rates.
 - **Physical Suction & Momentum Physics**: Fluid suction, smooth dash collisions, and vortex tethering mechanics without jitter or rubber-banding.
-- **State-Synchronized Recast VFX**: Resonant Knell synchronizes a three-stage mobile dome while client rendering provides a rising open motion, inward-gathering ground rings, and outward shockwaves matching the 15/20/30-block gameplay radii.
+- **State-Synchronized Recast VFX**: Resonant Knell synchronizes a three-stage mobile dome with side-safe lifecycle cleanup and spam-resistant 24-tick blast transitions, while client rendering provides a rising open motion, overlapping golden energy ribbons flowing upward into the crown, inward-gathering ground rings, and outward shockwaves matching the 15/20/30-block gameplay radii.
 - **Feature-Based Epic Fight Compatibility**: Modular architecture separating reusable engine components from isolated skill packages (`common/` vs `skills/<skill_name>/`).
 - **Frame-Accurate Animation Synchronization**: Direct frame-event integration ensuring attack colliders, camera shakes, particle waves, and server damage/fire happen in perfect unison.
 - **Detailed Documentation**: Every spell has dedicated balance and implementation documentation inside `docs/spells/<school>/`.

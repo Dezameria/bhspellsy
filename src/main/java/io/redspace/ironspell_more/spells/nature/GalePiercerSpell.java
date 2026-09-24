@@ -27,32 +27,50 @@ import net.minecraft.world.phys.Vec3;
 import java.util.List;
 import java.util.Optional;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 @AutoSpellConfig
 public class GalePiercerSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float NORMAL_BASE_DAMAGE = 12.0F;
+    public static final float NORMAL_DAMAGE_PER_LEVEL = 2.0F;
+    public static final float FULL_BASE_DAMAGE = 28.0F;
+    public static final float FULL_DAMAGE_PER_LEVEL = 4.0F;
+    public static final int BASE_MANA_COST = 40;
+    public static final int MANA_COST_PER_LEVEL = 5;
+    public static final double COOLDOWN_SECONDS = 20.0D;
+
     public static final ResourceLocation SPELL_ID = IronSpellMore.id("gale_piercer");
 
     public static final int FULL_CHARGE_TICKS = 200; // 10 seconds
     public static final int NATIVE_HOLD_CAST_TICKS = 1_000_000_000;
     public static final float MAX_LOCK_RANGE = 48.0F;
 
-    public static final float NORMAL_BASE_DAMAGE = 12.0F;
-    public static final float NORMAL_DAMAGE_PER_LEVEL = 2.0F;
-    public static final float FULL_BASE_DAMAGE = 28.0F;
-    public static final float FULL_DAMAGE_PER_LEVEL = 4.0F;
-
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.RARE)
             .setSchoolResource(SchoolRegistry.NATURE_RESOURCE)
-            .setMaxLevel(5)
-            .setCooldownSeconds(20)
+            .setMaxLevel(1)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public GalePiercerSpell() {
-        this.baseManaCost = 40;
-        this.manaCostPerLevel = 5;
+        this.baseManaCost = BASE_MANA_COST;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
         this.baseSpellPower = (int) NORMAL_BASE_DAMAGE;
         this.spellPowerPerLevel = (int) NORMAL_DAMAGE_PER_LEVEL;
         this.castTime = FULL_CHARGE_TICKS;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.GalePiercer.getBaseMana() + (spellLevel - 1) * SpellConfig.GalePiercer.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.GalePiercer.getCooldown() * 20);
     }
 
     @Override
@@ -239,13 +257,15 @@ public class GalePiercerSpell extends AbstractSpell {
     }
 
     public float getNormalDamage(int spellLevel, LivingEntity caster) {
-        float powerMultiplier = getSpellPower(spellLevel, caster) / Math.max(1.0F, (float) baseSpellPower);
-        return (NORMAL_BASE_DAMAGE + (spellLevel - 1) * NORMAL_DAMAGE_PER_LEVEL) * powerMultiplier;
+        float base = SpellConfig.GalePiercer.getNormalBaseDamage();
+        float perLevel = SpellConfig.GalePiercer.getNormalDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(caster);
     }
 
     public float getFullChargeDamage(int spellLevel, LivingEntity caster) {
-        float powerMultiplier = getSpellPower(spellLevel, caster) / Math.max(1.0F, (float) baseSpellPower);
-        return (FULL_BASE_DAMAGE + (spellLevel - 1) * FULL_DAMAGE_PER_LEVEL) * powerMultiplier;
+        float base = SpellConfig.GalePiercer.getFullBaseDamage();
+        float perLevel = SpellConfig.GalePiercer.getFullDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(caster);
     }
 
     @Override

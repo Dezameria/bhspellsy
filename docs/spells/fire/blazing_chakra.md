@@ -5,7 +5,7 @@
 - Registry ID: ironspell_more:blazing_chakra
 - School: Fire (SchoolRegistry.FIRE_RESOURCE)
 - Rarity: Epic (SpellRarity.EPIC)
-- Maximum Level: 5
+- Maximum Level: 1 (Every scroll in-game exists as 1 tier at Level 1; level scaling is available via `/cast <player> <spell> <level>` command and server configuration `ironspell_more-server.toml`)
 - Cast Type: INSTANT
 - Cast Time: 0
 - Base Mana Cost: 50

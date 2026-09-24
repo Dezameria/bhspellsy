@@ -5,7 +5,7 @@
 - **Registry ID**: `ironspell_more:jade_aura`
 - **School**: Ground (`bhspells:ground`, with dynamic fallback to `SchoolRegistry.EVOCATION` when BHSpells is absent)
 - **Rarity**: Rare (`SpellRarity.RARE`)
-- **Maximum Level**: 3
+- **Maximum Level**: 1 (Every scroll in-game exists as 1 tier at Level 1; level scaling is available via `/cast <player> <spell> <level>` command and server configuration `ironspell_more-server.toml`)
 - **Cast Type**: Instant (`CastType.INSTANT`)
 - **Cast Time**: 0
 - **Base Mana Cost**: 50

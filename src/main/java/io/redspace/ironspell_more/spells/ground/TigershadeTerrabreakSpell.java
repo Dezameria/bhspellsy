@@ -47,8 +47,19 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 @AutoSpellConfig
 public class TigershadeTerrabreakSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_DAMAGE = 30.0F;
+    public static final float DAMAGE_PER_LEVEL = 3.0F;
+    public static final int BASE_MANA_COST = 40;
+    public static final int MANA_COST_PER_LEVEL = 0;
+    public static final double COOLDOWN_SECONDS = 30.0D;
+
     public static final ResourceLocation SPELL_RESOURCE = IronSpellMore.id("tigershade_terrabreak");
 
     // This is BHSchoolRegistry.GROUND_RESOURCE. Keeping the resource location here avoids
@@ -62,26 +73,38 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
     public static final float HEAL_ON_DEFEAT = 10.0F;
     public static final float HEAL_ON_EXECUTE = HEAL_ON_DEFEAT;
     public static final int MARK_DURATION_TICKS = 1200;
-    public static final int SLAM_COOLDOWN_TICKS = 600;
+    public static final int SLAM_COOLDOWN_TICKS = (int) (COOLDOWN_SECONDS * 20);
     public static final int EXECUTE_COOLDOWN_TICKS = SLAM_COOLDOWN_TICKS;
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.EPIC)
             .setSchoolResource(GROUND_SCHOOL_RESOURCE)
             .setMaxLevel(1)
-            .setCooldownSeconds(SLAM_COOLDOWN_TICKS / 20.0D)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public TigershadeTerrabreakSpell() {
-        this.baseSpellPower = 10;
-        this.spellPowerPerLevel = 1;
-        this.baseManaCost = 40;
-        this.manaCostPerLevel = 0;
+        this.baseSpellPower = (int) BASE_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
+        this.baseManaCost = BASE_MANA_COST;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
         this.castTime = 0;
     }
 
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.TigershadeTerrabreak.getBaseMana() + (spellLevel - 1) * SpellConfig.TigershadeTerrabreak.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.TigershadeTerrabreak.getCooldown() * 20);
+    }
+
     public float getDamage(int spellLevel, LivingEntity caster) {
-        return 20.0F + getSpellPower(spellLevel, caster);
+        float base = SpellConfig.TigershadeTerrabreak.getBaseDamage();
+        float perLevel = SpellConfig.TigershadeTerrabreak.getDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(caster);
     }
 
     @Override

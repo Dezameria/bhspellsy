@@ -31,8 +31,21 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.List;
 import java.util.Optional;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 @AutoSpellConfig
 public class VenomousBlossomfallSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float SHORT_DIRECT_DAMAGE = 15.0F;
+    public static final float MEDIUM_DIRECT_DAMAGE = 35.0F;
+    public static final float FULL_DIRECT_DAMAGE = 50.0F;
+    public static final float DAMAGE_PER_LEVEL = 5.0F;
+    public static final int BASE_MANA_COST = 40;
+    public static final int MANA_COST_PER_LEVEL = 5;
+    public static final double COOLDOWN_SECONDS = 20.0D;
+
     private static final ResourceLocation SPELL_ID = IronSpellMore.id("venomous_blossomfall");
 
     public enum ChargeStage {
@@ -45,10 +58,6 @@ public class VenomousBlossomfallSpell extends AbstractSpell {
     public static final float SHORT_PROJECTILE_RANGE = 30.0F;
     public static final float MEDIUM_PROJECTILE_RANGE = 60.0F;
     public static final float FULL_PROJECTILE_RANGE = 90.0F;
-
-    public static final float SHORT_DIRECT_DAMAGE = 15.0F;
-    public static final float MEDIUM_DIRECT_DAMAGE = 35.0F;
-    public static final float FULL_DIRECT_DAMAGE = 50.0F;
 
     public static final int MEDIUM_CHARGE_TICKS = 5 * 20;
     public static final int FULL_CHARGE_TICKS = 15 * 20;
@@ -89,15 +98,25 @@ public class VenomousBlossomfallSpell extends AbstractSpell {
             .setMinRarity(SpellRarity.LEGENDARY)
             .setSchoolResource(SchoolRegistry.NATURE_RESOURCE)
             .setMaxLevel(1)
-            .setCooldownSeconds(MISS_COOLDOWN_SECONDS)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public VenomousBlossomfallSpell() {
-        baseManaCost = 100;
-        manaCostPerLevel = 0;
+        baseManaCost = BASE_MANA_COST;
+        manaCostPerLevel = MANA_COST_PER_LEVEL;
         baseSpellPower = (int) FULL_DIRECT_DAMAGE;
-        spellPowerPerLevel = 0;
+        spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
         castTime = FULL_CHARGE_TICKS;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.VenomousBlossomfall.getBaseMana() + (spellLevel - 1) * SpellConfig.VenomousBlossomfall.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.VenomousBlossomfall.getCooldown() * 20);
     }
 
     @Override
@@ -221,7 +240,7 @@ public class VenomousBlossomfallSpell extends AbstractSpell {
         AzureVenomNeedleEntity needle = new AzureVenomNeedleEntity(level, caster);
         Vec3 spawnPosition = caster.getEyePosition().add(direction.scale(0.85D));
         needle.setPos(spawnPosition.x, spawnPosition.y - needle.getBbHeight() * 0.5D, spawnPosition.z);
-        needle.configure(direction, projectileSpeed(chargeProgress), chargeProgress);
+        needle.configure(direction, projectileSpeed(chargeProgress), chargeProgress, spellLevel);
         level.addFreshEntity(needle);
 
         // เสียงตอนปล่อยเวทไล่ระดับตาม stage
@@ -349,10 +368,15 @@ public class VenomousBlossomfallSpell extends AbstractSpell {
     }
 
     public static float directDamage(float chargeProgress) {
+        return directDamage(chargeProgress, 1);
+    }
+
+    public static float directDamage(float chargeProgress, int spellLevel) {
+        float bonus = (spellLevel - 1) * SpellConfig.VenomousBlossomfall.getDamagePerLevel();
         return switch (chargeStage(chargeProgress)) {
-            case SHORT -> SHORT_DIRECT_DAMAGE;
-            case MEDIUM -> MEDIUM_DIRECT_DAMAGE;
-            case FULL -> FULL_DIRECT_DAMAGE;
+            case SHORT -> SpellConfig.VenomousBlossomfall.getShortDamage() + bonus;
+            case MEDIUM -> SpellConfig.VenomousBlossomfall.getMediumDamage() + bonus;
+            case FULL -> SpellConfig.VenomousBlossomfall.getFullDamage() + bonus;
         };
     }
 

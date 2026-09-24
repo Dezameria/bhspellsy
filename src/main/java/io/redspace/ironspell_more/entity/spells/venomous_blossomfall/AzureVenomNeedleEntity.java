@@ -78,7 +78,14 @@ public class AzureVenomNeedleEntity extends AbstractMagicProjectile {
         setOwner(owner);
     }
 
+    private int spellLevel = 1;
+
     public void configure(Vec3 direction, double speed, float chargeProgress) {
+        configure(direction, speed, chargeProgress, 1);
+    }
+
+    public void configure(Vec3 direction, double speed, float chargeProgress, int spellLevel) {
+        this.spellLevel = spellLevel;
         Vec3 normalizedDirection = direction.lengthSqr() < 1.0E-8D ? new Vec3(0.0D, 0.0D, 1.0D)
                 : direction.normalize();
         setDirection(normalizedDirection);
@@ -281,7 +288,7 @@ public class AzureVenomNeedleEntity extends AbstractMagicProjectile {
 
         Entity hitEntity = result.getEntity();
         LivingEntity effectTarget = getLivingTarget(hitEntity);
-        DamageSources.applyDamage(hitEntity, VenomousBlossomfallSpell.directDamage(getChargeProgress()),
+        DamageSources.applyDamage(hitEntity, VenomousBlossomfallSpell.directDamage(getChargeProgress(), this.spellLevel),
                 SpellRegistry.VENOMOUS_BLOSSOMFALL_SPELL.get().getDamageSource(this, getOwner()));
 
         if (effectTarget != null) {

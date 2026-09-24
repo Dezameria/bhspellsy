@@ -23,32 +23,53 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 import java.util.List;
 import java.util.Optional;
 
 @AutoSpellConfig
 public class ThunderStepSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_DAMAGE = 10.0F;
+    public static final float DAMAGE_PER_LEVEL = 2.0F;
+    public static final int BASE_MANA_COST = 75;
+    public static final int MANA_COST_PER_LEVEL = 15;
+    public static final double COOLDOWN_SECONDS = 8.0;
+
     private final ResourceLocation spellId = new ResourceLocation(IronSpellMore.MODID, "thunder_step");
 
     @Override
     public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
         return List.of(Component.translatable("ui.irons_spellbooks.damage",
-                Utils.stringTruncation(getSpellPower(spellLevel, caster), 1)));
+                Utils.stringTruncation(getDamage(spellLevel, caster), 1)));
     }
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.UNCOMMON)
             .setSchoolResource(SchoolRegistry.LIGHTNING_RESOURCE)
             .setMaxLevel(1)
-            .setCooldownSeconds(8)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public ThunderStepSpell() {
-        this.manaCostPerLevel = 15;
-        this.baseSpellPower = 10;
-        this.spellPowerPerLevel = 2;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) BASE_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
         this.castTime = 0;
-        this.baseManaCost = 75;
+        this.baseManaCost = BASE_MANA_COST;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.ThunderStep.getBaseMana() + (spellLevel - 1) * SpellConfig.ThunderStep.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.ThunderStep.getCooldown() * 20);
     }
 
     @Override
@@ -143,7 +164,8 @@ public class ThunderStepSpell extends AbstractSpell {
     }
 
     private float getDamage(int spellLevel, LivingEntity sourceEntity) {
-        return getSpellPower(spellLevel, sourceEntity);
+        float base = SpellConfig.ThunderStep.getBaseDamage();
+        float perLevel = SpellConfig.ThunderStep.getDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(sourceEntity);
     }
-
 }

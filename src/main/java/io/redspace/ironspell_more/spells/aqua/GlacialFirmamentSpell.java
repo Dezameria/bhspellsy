@@ -42,23 +42,44 @@ import net.minecraft.world.phys.Vec3;
 import java.util.List;
 import java.util.Optional;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 @AutoSpellConfig
 public class GlacialFirmamentSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_DAMAGE = 35.0F;
+    public static final float DAMAGE_PER_LEVEL = 5.0F;
+    public static final int BASE_MANA_COST = 60;
+    public static final int MANA_COST_PER_LEVEL = 15;
+    public static final double COOLDOWN_SECONDS = 25.0D;
+
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IronSpellMore.MODID, "glacial_firmament");
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.EPIC)
             .setSchoolResource(TravelopticsSchools.AQUA_RESOURCE)
-            .setMaxLevel(5)
-            .setCooldownSeconds(25)
+            .setMaxLevel(1)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public GlacialFirmamentSpell() {
-        this.manaCostPerLevel = 15;
-        this.baseSpellPower = 35;
-        this.spellPowerPerLevel = 5;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) BASE_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
         this.castTime = 0;
-        this.baseManaCost = 60;
+        this.baseManaCost = BASE_MANA_COST;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.GlacialFirmament.getBaseMana() + (spellLevel - 1) * SpellConfig.GlacialFirmament.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.GlacialFirmament.getCooldown() * 20);
     }
 
     @Override
@@ -220,8 +241,10 @@ public class GlacialFirmamentSpell extends AbstractSpell {
         }
     }
 
-    private float getDamage(int spellLevel, LivingEntity entity) {
-        return getSpellPower(spellLevel, entity);
+    public float getDamage(int spellLevel, LivingEntity entity) {
+        float base = SpellConfig.GlacialFirmament.getBaseDamage();
+        float perLevel = SpellConfig.GlacialFirmament.getDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(entity);
     }
 
     @Override

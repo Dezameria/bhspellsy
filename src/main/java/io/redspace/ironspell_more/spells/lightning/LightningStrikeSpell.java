@@ -32,10 +32,21 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
 import java.util.List;
+import io.redspace.ironspell_more.config.SpellConfig;
+
 import java.util.Optional;
 
 @AutoSpellConfig
 public class LightningStrikeSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_DAMAGE = 10.0F;
+    public static final float DAMAGE_PER_LEVEL = 2.0F;
+    public static final int BASE_MANA_COST = 50;
+    public static final int MANA_COST_PER_LEVEL = 5;
+    public static final double COOLDOWN_SECONDS = 15.0;
+
     private final ResourceLocation spellId = new ResourceLocation(IronSpellMore.MODID, "lightning_strike");
 
     @Override
@@ -51,15 +62,25 @@ public class LightningStrikeSpell extends AbstractSpell {
             .setMinRarity(SpellRarity.COMMON)
             .setSchoolResource(SchoolRegistry.LIGHTNING_RESOURCE)
             .setMaxLevel(1)
-            .setCooldownSeconds(15)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public LightningStrikeSpell() {
-        this.manaCostPerLevel = 5;
-        this.baseSpellPower = 8;
-        this.spellPowerPerLevel = 1;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) BASE_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
         this.castTime = 0;
-        this.baseManaCost = 50;
+        this.baseManaCost = BASE_MANA_COST;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.LightningStrike.getBaseMana() + (spellLevel - 1) * SpellConfig.LightningStrike.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.LightningStrike.getCooldown() * 20);
     }
 
     @Override
@@ -221,7 +242,9 @@ public class LightningStrikeSpell extends AbstractSpell {
     }
 
     public float getDamage(int spellLevel, LivingEntity caster) {
-        return 4 + (getSpellPower(spellLevel, caster) * .75f);
+        float base = SpellConfig.LightningStrike.getBaseDamage();
+        float perLevel = SpellConfig.LightningStrike.getDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(caster);
     }
 
     @Override

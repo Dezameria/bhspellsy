@@ -8,7 +8,7 @@
 | Class | `spells/fire/PureWhiteFlameBurstSpell.java` |
 | School | Fire |
 | Rarity | Rare |
-| Max level | 5 |
+| Max level | 1 (ทุก scroll มี 1 เลเวล; scale ต่อได้ด้วยคำสั่ง /cast และปรับแต่งได้ผ่าน ironspell_more-server.toml) |
 | Cast type | Long |
 | Cast time | 25 ticks (1.25 วินาที) |
 | Cooldown | 15 วินาที |

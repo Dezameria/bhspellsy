@@ -9,6 +9,7 @@ public class GildedHareMarkEffect extends MobEffect {
     public static final String OWNER_UUID_TAG = "GildedHareOwnerUUID";
     public static final String COMBO_COUNT_TAG = "GildedHareComboCount";
     public static final String LAST_HIT_TICK_TAG = "GildedHareLastHitTick";
+    public static final String FINISHER_COOLDOWN_TICK_TAG = "GildedHareFinisherCooldownTick";
 
     public GildedHareMarkEffect(MobEffectCategory category, int color) {
         super(category, color);

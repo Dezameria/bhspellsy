@@ -9,7 +9,7 @@
 | Class | `spells/fire/GaleDriveSpell.java` |
 | School | Fire |
 | Rarity | Rare |
-| Max level | 5 |
+| Max level | 1 (ทุก scroll มี 1 เลเวล; scale ต่อได้ด้วยคำสั่ง /cast และปรับแต่งได้ผ่าน ironspell_more-server.toml) |
 | Cast type | Instant |
 | Cast time | 0 ticks |
 | Cooldown | 20 วินาที |

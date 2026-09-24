@@ -27,24 +27,47 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 import java.util.Optional;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 @AutoSpellConfig
 public class WingsofTempestSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_DURATION_SECONDS = 14.25F;
+    public static final float DURATION_PER_LEVEL_SECONDS = 2.25F;
+    public static final float BASE_RADIUS = 8.0F;
+    public static final int BASE_MANA_COST = 40;
+    public static final int MANA_COST_PER_LEVEL = 10;
+    public static final double COOLDOWN_SECONDS = 22.0D;
+    public static final int CAST_TIME_TICKS = 25;
+
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IronSpellMore.MODID,
             "wings_of_tempest");
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.RARE)
             .setSchoolResource(SchoolRegistry.NATURE_RESOURCE)
-            .setMaxLevel(8)
-            .setCooldownSeconds(22)
+            .setMaxLevel(1)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public WingsofTempestSpell() {
-        this.manaCostPerLevel = 10;
-        this.baseSpellPower = 12;
-        this.spellPowerPerLevel = 3;
-        this.castTime = 25;
-        this.baseManaCost = 40;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) BASE_DURATION_SECONDS;
+        this.spellPowerPerLevel = (int) DURATION_PER_LEVEL_SECONDS;
+        this.castTime = CAST_TIME_TICKS;
+        this.baseManaCost = BASE_MANA_COST;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.WingsofTempest.getBaseMana() + (spellLevel - 1) * SpellConfig.WingsofTempest.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.WingsofTempest.getCooldown() * 20);
     }
 
     @Override
@@ -124,11 +147,13 @@ public class WingsofTempestSpell extends AbstractSpell {
     }
 
     private int getDurationTicks(int spellLevel, LivingEntity caster) {
-        return (int) (20 * (12 + 2.25f * spellLevel));
+        float base = SpellConfig.WingsofTempest.getBaseDuration();
+        float perLevel = SpellConfig.WingsofTempest.getDurationPerLevel();
+        return (int) (20 * (base + (spellLevel - 1) * perLevel));
     }
 
     private float getRadius(int spellLevel, LivingEntity caster) {
-        return 8f + 4f * getEntityPowerMultiplier(caster);
+        return SpellConfig.WingsofTempest.getBaseRadius() + 4f * getEntityPowerMultiplier(caster);
     }
 
     @Override

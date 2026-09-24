@@ -26,13 +26,23 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 import java.util.Optional;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 @AutoSpellConfig
 public class GildedHareSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final int BASE_MANA_COST = 80;
+    public static final int MANA_COST_PER_LEVEL = 0;
+    public static final double COOLDOWN_SECONDS = 60.0D;
+
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IronSpellMore.MODID, "gilded_hare");
     private static final ResourceLocation GOLD_SCHOOL_RESOURCE = ResourceLocation.fromNamespaceAndPath("bhspells", "gold");
 
     public static final int BUFF_DURATION_TICKS = 2400; // 2 minutes (120 seconds)
-    public static final int COMBO_WINDOW_TICKS = 40;     // 2 seconds window between consecutive hits
+    public static final int COMBO_WINDOW_TICKS = 100;    // 5 seconds window between consecutive hits
+    public static final int FINISHER_COOLDOWN_TICKS = 200; // 10 seconds immunity/cooldown after completing full combo
     public static final int SLOWNESS_DURATION_TICKS = 20; // 1 second slowness per kick
     public static final int STUN_DURATION_TICKS = 20;    // 1 second complete stun on 5 hits
     public static final int BLINDNESS_DURATION_TICKS = 60; // 3 seconds blindness on 5 hits
@@ -41,15 +51,25 @@ public class GildedHareSpell extends AbstractSpell {
             .setMinRarity(SpellRarity.RARE)
             .setSchoolResource(GOLD_SCHOOL_RESOURCE)
             .setMaxLevel(1)
-            .setCooldownSeconds(60.0D)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public GildedHareSpell() {
         this.baseSpellPower = 1;
         this.spellPowerPerLevel = 1;
-        this.baseManaCost = 80;
-        this.manaCostPerLevel = 0;
+        this.baseManaCost = BASE_MANA_COST;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
         this.castTime = 0; // Instant cast
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.GildedHare.getBaseMana() + (spellLevel - 1) * SpellConfig.GildedHare.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.GildedHare.getCooldown() * 20);
     }
 
     @Override

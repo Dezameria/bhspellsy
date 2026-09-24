@@ -5,7 +5,7 @@
 - Registry ID: `ironspell_more:gale_piercer`
 - School: Nature
 - Rarity: Rare
-- Maximum level: 5
+- Maximum level: 1 (Every scroll in-game exists as 1 tier at Level 1; level scaling is available via `/cast <player> <spell> <level>` command and server configuration `ironspell_more-server.toml`)
 - Cast type: `LONG` (Hold-to-charge, release-to-shoot)
 - Full charge threshold ("ศรวายุ"): 200 ticks (10.0 seconds)
 - Mana cost: Base 40, +5 per level

@@ -9,7 +9,7 @@
 | Class | `spells/aqua/CrimsonRainBathesMoonSpell.java` |
 | School | Aqua (`TravelopticsSchools.AQUA_RESOURCE`) |
 | Rarity | Epic |
-| Max level | 3 |
+| Max level | 1 (ทุก scroll มี 1 เลเวล; scale ต่อได้ด้วยคำสั่ง /cast และปรับแต่งได้ผ่าน ironspell_more-server.toml) |
 | Cast type | Continuous (ร่ายค้างต่อเนื่อง) |
 | Cast time | 200 ticks (10 วินาที) |
 | Cooldown | 60 วินาที |

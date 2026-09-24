@@ -5,7 +5,7 @@
 - Registry ID: `ironspell_more:rapturous_bloom`
 - School: Nature
 - Rarity: Rare
-- Maximum level: 5
+- Maximum level: 1 (Every scroll in-game exists as 1 tier at Level 1; level scaling is available via `/cast <player> <spell> <level>` command and server configuration `ironspell_more-server.toml`)
 - Cast type: `INSTANT`
 - Mana cost: 45 base (+5 per level)
 - Base cooldown: 16 seconds

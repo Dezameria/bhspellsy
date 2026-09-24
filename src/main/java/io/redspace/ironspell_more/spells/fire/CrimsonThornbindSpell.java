@@ -11,9 +11,12 @@ import io.redspace.ironsspellbooks.api.util.Utils;
 import io.redspace.ironsspellbooks.damage.DamageSources;
 import io.redspace.ironsspellbooks.registries.SoundRegistry;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -22,18 +25,33 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 @AutoSpellConfig
 public class CrimsonThornbindSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_DAMAGE = 12.0F;
+    public static final float DAMAGE_PER_LEVEL = 2.5F;
+    public static final float REND_BASE_DAMAGE = 6.0F;
+    public static final float REND_DAMAGE_PER_LEVEL = 1.5F;
+    public static final int BASE_MANA_COST = 40;
+    public static final int MANA_COST_PER_LEVEL = 5;
+    public static final double COOLDOWN_SECONDS = 25.0;
+
     private final ResourceLocation spellId = new ResourceLocation(IronSpellMore.MODID, "crimson_thornbind");
 
     public static final int ROOT_SEGMENTS = CrimsonRootEntity.MAX_PATH_SEGMENTS;
@@ -44,16 +62,26 @@ public class CrimsonThornbindSpell extends AbstractSpell {
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.RARE)
             .setSchoolResource(SchoolRegistry.FIRE_RESOURCE)
-            .setMaxLevel(5)
-            .setCooldownSeconds(25)
+            .setMaxLevel(1)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public CrimsonThornbindSpell() {
-        this.manaCostPerLevel = 5;
-        this.baseSpellPower = 10;
-        this.spellPowerPerLevel = 2;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) BASE_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
         this.castTime = 0;
-        this.baseManaCost = 40;
+        this.baseManaCost = BASE_MANA_COST;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.CrimsonThornbind.getBaseMana() + (spellLevel - 1) * SpellConfig.CrimsonThornbind.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.CrimsonThornbind.getCooldown() * 20);
     }
 
     @Override
@@ -97,11 +125,15 @@ public class CrimsonThornbindSpell extends AbstractSpell {
     }
 
     public float getDamage(int spellLevel, LivingEntity caster) {
-        return 12.0F + (spellLevel - 1) * 2.5F + (getSpellPower(spellLevel, caster) - 1.0F) * 1.5F;
+        float base = SpellConfig.CrimsonThornbind.getBaseDamage();
+        float perLevel = SpellConfig.CrimsonThornbind.getDamagePerLevel();
+        return base + (spellLevel - 1) * perLevel + (getSpellPower(spellLevel, caster) - 1.0F) * 1.5F;
     }
 
     public float getRendDamage(int spellLevel, LivingEntity caster) {
-        return 6.0F + (spellLevel - 1) * 1.5F + (getSpellPower(spellLevel, caster) - 1.0F) * 0.8F;
+        float base = SpellConfig.CrimsonThornbind.getRendBaseDamage();
+        float perLevel = SpellConfig.CrimsonThornbind.getRendDamagePerLevel();
+        return base + (spellLevel - 1) * perLevel + (getSpellPower(spellLevel, caster) - 1.0F) * 0.8F;
     }
 
     @Override
@@ -112,27 +144,44 @@ public class CrimsonThornbindSpell extends AbstractSpell {
     @Override
     public void onCast(Level level, int spellLevel, LivingEntity entity, CastSource castSource, MagicData playerMagicData) {
         if (!level.isClientSide) {
-            Vec3 look = entity.getLookAngle();
-            Vec3 flatDir = new Vec3(look.x, 0, look.z).normalize();
-            if (flatDir.lengthSqr() < 1e-4) {
+            Vec3 lookDir = entity.getLookAngle().normalize();
+            if (lookDir.lengthSqr() < 1e-4) {
                 float yawRadians = entity.getYRot() * Mth.DEG_TO_RAD;
-                flatDir = new Vec3(-Mth.sin(yawRadians), 0.0D, Mth.cos(yawRadians));
+                float pitchRadians = entity.getXRot() * Mth.DEG_TO_RAD;
+                lookDir = new Vec3(
+                        -Mth.sin(yawRadians) * Mth.cos(pitchRadians),
+                        -Mth.sin(pitchRadians),
+                        Mth.cos(yawRadians) * Mth.cos(pitchRadians)
+                ).normalize();
             }
 
-            Vec3 start = getHandOrigin(entity, flatDir);
-            float baseYaw = (float) (Mth.atan2(flatDir.z, flatDir.x) * (180.0D / Math.PI)) - 90.0F;
+            Vec3 start = getHandOrigin(entity, lookDir);
+
+            double horizDist = Math.sqrt(lookDir.x * lookDir.x + lookDir.z * lookDir.z);
+            float baseYaw = horizDist > 1e-4
+                    ? (float) (Mth.atan2(-lookDir.x, lookDir.z) * (180.0D / Math.PI))
+                    : entity.getYRot();
+            float basePitch = (float) (-Mth.atan2(lookDir.y, horizDist) * (180.0D / Math.PI));
+
             float damage = getDamage(spellLevel, entity);
             float rendDamage = getRendDamage(spellLevel, entity);
 
             CrimsonRootEntity coordinator = new CrimsonRootEntity(level, entity);
             coordinator.setMode(CrimsonRootEntity.RootMode.PATH);
-            coordinator.moveTo(start.x, start.y, start.z, baseYaw, 0.0F);
+            coordinator.moveTo(start.x, start.y, start.z, baseYaw, basePitch);
+            coordinator.setPathYaw(baseYaw);
+            coordinator.setPathPitch(basePitch);
             coordinator.setWarmup(0);
             coordinator.setBaseScale(CrimsonRootEntity.DEFAULT_PATH_SCALE);
             coordinator.setDamage(damage);
             coordinator.setRendDamage(rendDamage);
-            coordinator.initCoordinator(start, ROOT_SEGMENTS, damage, rendDamage);
+            coordinator.setIsOrigin(true);
+            coordinator.initCoordinator(start, lookDir, ROOT_SEGMENTS, damage, rendDamage);
             level.addFreshEntity(coordinator);
+
+            if (level instanceof ServerLevel serverLevel) {
+                spawnOriginBurst(serverLevel, start);
+            }
 
             level.playSound(null, entity.getX(), entity.getY(), entity.getZ(), SoundRegistry.ROOT_EMERGE.get(), SoundSource.PLAYERS, 1.2F, 0.8F);
             level.playSound(null, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES, SoundSource.PLAYERS, 1.2F, 0.8F);
@@ -140,12 +189,28 @@ public class CrimsonThornbindSpell extends AbstractSpell {
         super.onCast(level, spellLevel, entity, castSource, playerMagicData);
     }
 
-    private static Vec3 getHandOrigin(LivingEntity caster, Vec3 flatDirection) {
-        Vec3 right = new Vec3(-flatDirection.z, 0.0D, flatDirection.x);
+    public static void spawnOriginBurst(ServerLevel level, Vec3 pos) {
+        // Ambient crimson spores floating around the fanned-out origin sheet
+        level.sendParticles(ParticleTypes.CRIMSON_SPORE,
+                pos.x, pos.y, pos.z, 20, 0.35D, 0.35D, 0.35D, 0.02D);
+        // Bright crimson red magical dust
+        level.sendParticles(new DustParticleOptions(new Vector3f(0.85F, 0.08F, 0.15F), 1.4F),
+                pos.x, pos.y, pos.z, 16, 0.35D, 0.35D, 0.35D, 0.04D);
+    }
+
+    private static Vec3 getHandOrigin(LivingEntity caster, Vec3 direction) {
+        double horizLen = Math.sqrt(direction.x * direction.x + direction.z * direction.z);
+        Vec3 right;
+        if (horizLen > 1e-4) {
+            right = new Vec3(-direction.z / horizLen, 0.0D, direction.x / horizLen);
+        } else {
+            float yawRadians = caster.getYRot() * Mth.DEG_TO_RAD;
+            right = new Vec3(Mth.cos(yawRadians), 0.0D, Mth.sin(yawRadians));
+        }
         double handSide = caster.getMainArm() == HumanoidArm.RIGHT ? 0.32D : -0.32D;
         return caster.getEyePosition()
-                .add(0.0D, -0.45D, 0.0D)
-                .add(flatDirection.scale(0.45D))
+                .add(0.0D, -0.35D, 0.0D)
+                .add(direction.scale(0.45D))
                 .add(right.scale(handSide));
     }
 

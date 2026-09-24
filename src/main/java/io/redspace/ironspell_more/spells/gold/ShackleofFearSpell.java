@@ -16,11 +16,23 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 import java.util.List;
 import java.util.Optional;
 
 @AutoSpellConfig
 public class ShackleofFearSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float CHAIN_HEALTH = 15.0F;
+    public static final float CHAIN_HEALTH_PER_LEVEL = 3.0F;
+    public static final int BASE_MANA_COST = 40;
+    public static final int MANA_COST_PER_LEVEL = 8;
+    public static final double COOLDOWN_SECONDS = 0.0;
+    public static final int CAST_TIME_TICKS = 10;
+
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IronSpellMore.MODID,
             "shackle_of_fear");
 
@@ -33,7 +45,7 @@ public class ShackleofFearSpell extends AbstractSpell {
             .setMinRarity(SpellRarity.RARE)
             .setSchoolResource(GOLD_SCHOOL_RESOURCE)
             .setMaxLevel(1)
-            .setCooldownSeconds(0.0)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     @Override
@@ -57,11 +69,21 @@ public class ShackleofFearSpell extends AbstractSpell {
     }
 
     public ShackleofFearSpell() {
-        this.baseSpellPower = 6;
-        this.spellPowerPerLevel = 1;
-        this.baseManaCost = 40;
-        this.manaCostPerLevel = 8;
-        this.castTime = 10;
+        this.baseSpellPower = (int) CHAIN_HEALTH;
+        this.spellPowerPerLevel = (int) CHAIN_HEALTH_PER_LEVEL;
+        this.baseManaCost = BASE_MANA_COST;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.castTime = CAST_TIME_TICKS;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.ShackleofFear.getBaseMana() + (spellLevel - 1) * SpellConfig.ShackleofFear.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.ShackleofFear.getCooldown() * 20);
     }
 
     @Override
@@ -108,7 +130,9 @@ public class ShackleofFearSpell extends AbstractSpell {
     }
 
     private float getChainHealth(int spellLevel, LivingEntity entity) {
-        return 15 * getEntityPowerMultiplier(entity);
+        float base = SpellConfig.ShackleofFear.getChainHealth();
+        float perLevel = SpellConfig.ShackleofFear.getChainHealthPerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(entity);
     }
 
     private int getChainDuration(int spellLevel, LivingEntity entity) {

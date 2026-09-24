@@ -5,7 +5,7 @@
 - **Registry ID:** `ironspell_more:glacial_veil`
 - **School:** Aqua (`TravelopticsSchools.AQUA_RESOURCE`)
 - **Rarity:** RARE
-- **Max Level:** 5
+- **Max Level:** 1 (ทุก scroll มี 1 เลเวล; scale ต่อได้ด้วยคำสั่ง /cast และปรับแต่งได้ผ่าน ironspell_more-server.toml)
 - **Cast Type:** INSTANT
 - **Cast Time:** 0 ticks
 - **Base Mana Cost:** 50 (+10 ต่อเลเวล)

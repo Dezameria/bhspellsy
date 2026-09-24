@@ -27,27 +27,47 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import io.redspace.ironspell_more.config.SpellConfig;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 
 @AutoSpellConfig
 public class BlazingChakraSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_DAMAGE = 20.0F;
+    public static final float DAMAGE_PER_LEVEL = 4.0F;
+    public static final int BASE_MANA_COST = 50;
+    public static final int MANA_COST_PER_LEVEL = 10;
+    public static final double COOLDOWN_SECONDS = 15.0;
+
     private final ResourceLocation spellId = new ResourceLocation(IronSpellMore.MODID, "blazing_chakra");
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.EPIC)
             .setSchoolResource(SchoolRegistry.FIRE_RESOURCE)
-            .setMaxLevel(5)
-            .setCooldownSeconds(15)
+            .setMaxLevel(1)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public BlazingChakraSpell() {
-        this.manaCostPerLevel = 10;
-        this.baseSpellPower = 20;
-        this.spellPowerPerLevel = 4;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) BASE_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
         this.castTime = 0;
-        this.baseManaCost = 50;
+        this.baseManaCost = BASE_MANA_COST;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.BlazingChakra.getBaseMana() + (spellLevel - 1) * SpellConfig.BlazingChakra.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.BlazingChakra.getCooldown() * 20);
     }
 
     @Override
@@ -80,7 +100,9 @@ public class BlazingChakraSpell extends AbstractSpell {
     }
 
     public float getDamage(int spellLevel, LivingEntity caster) {
-        return getSpellPower(spellLevel, caster);
+        float base = SpellConfig.BlazingChakra.getBaseDamage();
+        float perLevel = SpellConfig.BlazingChakra.getDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(caster);
     }
 
     public float getRadius(int spellLevel, LivingEntity caster) {

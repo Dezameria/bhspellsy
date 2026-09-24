@@ -5,7 +5,7 @@
 - **Registry ID:** `ironspell_more:glacial_firmament`
 - **School:** Aqua (`TravelopticsSchools.AQUA_RESOURCE`)
 - **Rarity:** EPIC
-- **Max Level:** 5
+- **Max Level:** 1 (ทุก scroll มี 1 เลเวล; scale ต่อได้ด้วยคำสั่ง /cast และปรับแต่งได้ผ่าน ironspell_more-server.toml)
 - **Cast Type:** INSTANT
 - **Cast Time:** 0 ticks
 - **Base Mana Cost:** 60 (+15 ต่อเลเวล)

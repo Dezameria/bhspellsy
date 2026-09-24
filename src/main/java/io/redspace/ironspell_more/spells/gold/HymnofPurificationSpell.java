@@ -28,8 +28,19 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 import java.util.Optional;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 @AutoSpellConfig
 public class HymnofPurificationSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_HEAL = 1.0F;
+    public static final float HEAL_PER_LEVEL = 0.5F;
+    public static final int BASE_MANA_COST = 80;
+    public static final int MANA_COST_PER_LEVEL = 0;
+    public static final double COOLDOWN_SECONDS = 60.0D;
+
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IronSpellMore.MODID, "hymn_of_purification");
     private static final ResourceLocation GOLD_SCHOOL_RESOURCE = ResourceLocation.fromNamespaceAndPath("bhspells", "gold");
 
@@ -42,15 +53,25 @@ public class HymnofPurificationSpell extends AbstractSpell {
             .setMinRarity(SpellRarity.RARE)
             .setSchoolResource(GOLD_SCHOOL_RESOURCE)
             .setMaxLevel(1)
-            .setCooldownSeconds(60.0D)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public HymnofPurificationSpell() {
         this.baseSpellPower = 1;
         this.spellPowerPerLevel = 1;
-        this.baseManaCost = 80; // Instant cast mana cost
-        this.manaCostPerLevel = 0;
+        this.baseManaCost = BASE_MANA_COST; // Instant cast mana cost
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
         this.castTime = 0; // Instant cast (click once)
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.HymnofPurification.getBaseMana() + (spellLevel - 1) * SpellConfig.HymnofPurification.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.HymnofPurification.getCooldown() * 20);
     }
 
     @Override
@@ -104,7 +125,9 @@ public class HymnofPurificationSpell extends AbstractSpell {
     }
 
     public static float getHealAmount(int spellLevel, LivingEntity caster) {
-        return 1.0F * (1.0F + (spellLevel - 1) * 0.5F);
+        float base = SpellConfig.HymnofPurification.getBaseHeal();
+        float perLevel = SpellConfig.HymnofPurification.getHealPerLevel();
+        return base + (spellLevel - 1) * perLevel;
     }
 
     @Override

@@ -5,7 +5,7 @@
 - **Registry ID**: `ironspell_more:crimson_thornbind`
 - **School**: Fire (`SchoolRegistry.FIRE_RESOURCE`)
 - **Rarity**: Rare (`SpellRarity.RARE`)
-- **Maximum Level**: 5
+- **Maximum Level**: 1 (Every scroll in-game exists as 1 tier at Level 1; level scaling is available via `/cast <player> <spell> <level>` command and server configuration `ironspell_more-server.toml`)
 - **Cast Type**: Instant (`CastType.INSTANT`)
 - **Cast Time**: 0
 - **Base Mana Cost**: 40
@@ -18,23 +18,33 @@
 
 ## Combat Mechanics and Spell Flow
 
-Crimson Thornbind launches an incrementally propagating, dynamically steerable crimson vine horizontally from the caster's hand. The travelling vine is a visual path that steers with the caster's crosshair, while a separate vertical root performs the bind when the path intersects its first valid target.
+### 1. Incremental Dynamically Steered 3D Vine Surge (`CrimsonRootEntity` PATH mode)
 
-### 1. Incremental Dynamically Steered Horizontal Vine Surge (`CrimsonRootEntity` PATH mode)
-
-- Upon cast, segment 1 spawns immediately near the caster's active hand oriented along the caster's initial look angle.
+- **Cast Origin Visual Sheet (`textures/entity/crimson_root.png`)**: Upon cast, a flat planar sheet formed by the `crimson_root.png` texture fans out radially in all directions (360 degrees, 16 interleaved root petals) perpendicular to the launch vector at the caster's hand origin (`start`). It rapidly unfolds over 4 ticks (0.2s) and lingers in place with a subtle magical breathing pulse throughout the vine's travel and hazard linger duration, clearly marking the exact origin of the spell. Ambient crimson spores and red dust float around it (`spawnOriginBurst`), while generic root fog and block particles are omitted.
+- Segment 1 spawns immediately near the caster's active hand oriented along the caster's initial 3D look angle (pitch and yaw).
 - Segment 1 acts as the server-authoritative propagation coordinator, advancing one segment every 3 ticks (`STEP_INTERVAL = 3`) up to a maximum of 12 segments.
 - On each step:
-  - The coordinator samples the caster's **current** horizontal look vector.
-  - The next segment extends forward by 1.35 blocks along this updated look direction and derives its yaw from that specific step's vector.
-  - Previously placed segments remain stationary and preserve their original orientations (for example, segment 1 stays pointed straight while segment 2 curves towards the new crosshair direction).
+  - The coordinator preserves an explicit tail and head for the latest segment. The current segment is always resolved from `currentSegmentTail` to `currentTip` before another segment is created.
+  - The next segment's tail is spawned at the previous segment's exact head (`nextTail = currentTip`), so changing aim never recalculates or displaces an already established joint.
+  - The coordinator samples the caster's **current** 3D look vector (aiming up, down, or flat with no horizontal lock).
+  - From that fixed joint, the next head extends forward by 1.35 blocks along the updated 3D direction and derives both its yaw and pitch from that specific step's vector.
+  - Previously placed segments remain stationary and preserve their original orientations (for example, segment 1 stays pointed straight while segment 2 curves towards the new crosshair direction, whether turning horizontally or tilting vertically).
 - Collision and target intersection occur step-by-step:
   - A block raycast clips the path ahead of entity testing. If a solid block is hit, propagation halts.
   - Candidate targets intersecting the current step are tested (`CrimsonThornbindSpell.isValidTarget`).
   - If a valid target is struck, propagation halts immediately and an upright `BIND` root is spawned at the target.
-- Path segments have gravity and physics explicitly disabled (`noGravity = true`, `noPhysics = true`, and no-op `travel()`), maintaining mid-air elevation along their trajectory.
-- When propagation finishes (by obstacle, target hit, max 12 segments reached, or caster death), all spawned path segments are assigned a synchronized removal time (`level.getGameTime() + PATH_HOLD_TICKS`, where `PATH_HOLD_TICKS = 6`). All horizontal segments hold their pose and vanish together in a crimson root fog burst.
+- Path segments have gravity and physics explicitly disabled (`noGravity = true`, `noPhysics = true`, and no-op `travel()`), maintaining mid-air elevation and orientation along their 3D trajectory.
+- **Lingering Hazard Snare Trail (`PATH_LINGER_TICKS = 60`)**:
+  - When propagation halts (due to target hit, block collision, max 12 segments reached, or caster death), the vine path does not vanish immediately.
+  - The entire vine trail remains frozen in place in mid-air for 3.0 seconds (60 ticks).
+  - During this lingering duration, every segment actively tests its inflated bounding box (`checkHazardSnare()`, inflated by 0.65m horizontally and 0.5m vertically) every 2 ticks.
+  - If any valid enemy entity walks into, jumps through, or touches any segment of the lingering vine trail, an upright `BIND` root is immediately spawned on them, dealing direct spell damage and binding them with Wither + Slowness for 10 seconds.
+- **Sequential Dissolve Wave (`DISSOLVE_INTERVAL_TICKS = 2`)**:
+  - After the 3.0-second lingering period ends, the segments dissolve sequentially from origin to tip rather than disappearing all at once.
+  - Segment 1 / Origin sheet dissolves first at `baseDissolveTime`, followed by segment 2 at `+2 ticks`, segment 3 at `+4 ticks`, cascading all the way to the tip.
+  - When each segment dissolves (`removeRoot()`), it emits a burst of pure red particles (`CRIMSON_SPORE` and bright red dust `Vector3f(0.88F, 0.06F, 0.14F)`) accompanied by `SoundEvents.SWEET_BERRY_BUSH_BREAK` audio until the entire vine has dissolved.
 - Path root visuals use enlarged base scale (`DEFAULT_PATH_SCALE = 1.85F`) and increased renderer dimensions (`scale * 0.65F, scale * 0.95F, scale * 0.65F`) for noticeably thicker, bolder vines.
+- In `CrimsonRootRenderer`, PATH mode bypasses GeckoLib's interpolated LivingEntity body yaw and explicitly applies the segment trajectory rotation using synced `DATA_YAW` and `DATA_PITCH`: `Axis.YP.rotationDegrees(180.0F - animatable.getPathYaw())`, followed by `Axis.XP.rotationDegrees(-animatable.getPathPitch() - 90.0F)`. The non-uniform path scale is applied in model-local space without off-axis translation offsets, keeping the vine's visual forward axis aligned with its server-side 3D propagation vector at all yaw/pitch angles (aiming upwards, downwards, or diagonally).
 
 ### 2. Single-Target Damage and Vertical Bind (`CrimsonRootEntity` BIND mode)
 
@@ -63,13 +73,13 @@ The vertical bind root ejects its passenger and safely discards when:
 - An antimagic / dispel effect strikes the entity.
 - The target is moved more than 5 blocks away (for example, by teleportation).
 
-Horizontal `PATH` entities use their shared cast removal time instead of the 200-tick bind lifecycle.
+`PATH` entities persist through their 3.0s lingering hazard period (`PATH_LINGER_TICKS = 60`) before sequentially dissolving from origin to tip (`DISSOLVE_INTERVAL_TICKS = 2`).
 
 ## Server and Client Responsibilities
 
-- The server manages step-by-step propagation, samples live caster aim, performs per-step block and entity collision, spawns BIND roots, and synchronizes removal times to all path segments.
-- Synced entity data exposes mode, warmup, scale, and removal time to tracking clients.
-- Clients render each segment with the appropriate scale and orientation, playing the held 18-bone emergence animation smoothly.
+- The server manages step-by-step propagation in full 3D, samples live caster aim (pitch and yaw), performs per-step block and entity collision, spawns BIND roots, executes hazard snare checks during linger, and schedules sequential dissolve waves to all path segments.
+- Synced entity data exposes mode, warmup, scale, yaw (`DATA_YAW`), pitch (`DATA_PITCH`), and removal time to tracking clients.
+- Clients render each segment with the appropriate scale and 3D orientation (yaw and pitch tilt), playing the held 18-bone emergence animation smoothly, and rendering ambient path spores.
 
 ## Progression and Scaling
 
@@ -100,4 +110,4 @@ Both direct damage and thorn rend damage scale with the caster's Fire Spell Powe
 ## Verification Notes
 
 - Automated verification: `gradlew.bat compileJava`, `gradlew.bat build`, and `git diff --check`.
-- Manual runtime checks must cover miss, solid obstruction, two collinear hostiles, friendly/invalid entities before a hostile, a target moving away before arrival, path-only non-damage, simultaneous path cleanup, upright bind presentation, and the full 200-tick bind/rend lifecycle.
+- Manual runtime checks must cover miss, solid obstruction, cast origin burst, lingering vine hazard snare for walking entities, sequential dissolve wave from origin to tip, upright bind presentation, and the full 200-tick bind/rend lifecycle.

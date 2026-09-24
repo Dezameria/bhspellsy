@@ -48,8 +48,20 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 @AutoSpellConfig
 public class CrimsonRainBathesMoonSpell extends AbstractUniqueSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_DAMAGE = 7.0F;
+    public static final float DAMAGE_PER_LEVEL = 5.0F;
+    public static final int BASE_MANA_COST = 5;
+    public static final int MANA_COST_PER_LEVEL = 3;
+    public static final double COOLDOWN_SECONDS = 60.0D;
+    public static final int CAST_TIME_TICKS = 200;
+
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IronSpellMore.MODID,
             "crimson_rain_bathes_moon");
     private final DefaultConfig defaultConfig;
@@ -58,14 +70,24 @@ public class CrimsonRainBathesMoonSpell extends AbstractUniqueSpell {
         this.defaultConfig = (new DefaultConfig())
                 .setMinRarity(SpellRarity.EPIC)
                 .setSchoolResource(TravelopticsSchools.AQUA_RESOURCE)
-                .setMaxLevel(3)
-                .setCooldownSeconds(60.0D)
+                .setMaxLevel(1)
+                .setCooldownSeconds(COOLDOWN_SECONDS)
                 .build();
-        this.manaCostPerLevel = 3;
-        this.baseSpellPower = 1;
-        this.spellPowerPerLevel = 1;
-        this.castTime = 200;
-        this.baseManaCost = 5;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) BASE_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
+        this.castTime = CAST_TIME_TICKS;
+        this.baseManaCost = BASE_MANA_COST;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.CrimsonRainBathesMoon.getBaseMana() + (spellLevel - 1) * SpellConfig.CrimsonRainBathesMoon.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.CrimsonRainBathesMoon.getCooldown() * 20);
     }
 
     @Override
@@ -433,7 +455,9 @@ public class CrimsonRainBathesMoonSpell extends AbstractUniqueSpell {
     }
 
     public float getDamage(int spellLevel, LivingEntity caster) {
-        return 2.0F + this.getSpellPower(spellLevel, caster) * 5.0F;
+        float base = SpellConfig.CrimsonRainBathesMoon.getBaseDamage();
+        float perLevel = SpellConfig.CrimsonRainBathesMoon.getDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(caster);
     }
 
     private float getRange() {

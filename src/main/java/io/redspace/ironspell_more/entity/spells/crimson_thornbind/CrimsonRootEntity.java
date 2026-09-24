@@ -10,9 +10,9 @@ import io.redspace.ironsspellbooks.entity.mobs.AntiMagicSusceptible;
 import io.redspace.ironsspellbooks.entity.spells.root.PreventDismount;
 import io.redspace.ironsspellbooks.registries.SoundRegistry;
 import io.redspace.ironsspellbooks.util.ModTags;
-import io.redspace.ironsspellbooks.util.ParticleHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -32,8 +32,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import org.joml.Vector3f;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -65,11 +68,16 @@ public class CrimsonRootEntity extends LivingEntity implements GeoEntity, Preven
     public static final int MAX_PATH_SEGMENTS = 12;
     public static final float SEGMENT_SPACING = 1.35F;
     public static final int PATH_HOLD_TICKS = 6;
+    public static final int PATH_LINGER_TICKS = 60; // 3 seconds lingering hazard trail
+    public static final int DISSOLVE_INTERVAL_TICKS = 2; // 2 ticks between each segment dissolving
 
     private static final EntityDataAccessor<Integer> DATA_WARMUP = SynchedEntityData.defineId(CrimsonRootEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> DATA_SCALE = SynchedEntityData.defineId(CrimsonRootEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Integer> DATA_MODE = SynchedEntityData.defineId(CrimsonRootEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Long> DATA_REMOVAL_GAME_TIME = SynchedEntityData.defineId(CrimsonRootEntity.class, EntityDataSerializers.LONG);
+    private static final EntityDataAccessor<Float> DATA_YAW = SynchedEntityData.defineId(CrimsonRootEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> DATA_PITCH = SynchedEntityData.defineId(CrimsonRootEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Boolean> DATA_IS_ORIGIN = SynchedEntityData.defineId(CrimsonRootEntity.class, EntityDataSerializers.BOOLEAN);
 
     @Nullable
     private LivingEntity owner;
@@ -91,6 +99,7 @@ public class CrimsonRootEntity extends LivingEntity implements GeoEntity, Preven
     private int stepTimer = STEP_INTERVAL;
     private int currentSegmentIndex = 1;
     private int maxSegments = MAX_PATH_SEGMENTS;
+    private Vec3 currentSegmentTail = Vec3.ZERO;
     private Vec3 currentTip = Vec3.ZERO;
     private final List<UUID> spawnedSegmentUUIDs = new ArrayList<>();
 
@@ -117,6 +126,45 @@ public class CrimsonRootEntity extends LivingEntity implements GeoEntity, Preven
         this.entityData.define(DATA_SCALE, DEFAULT_BIND_SCALE);
         this.entityData.define(DATA_MODE, RootMode.BIND.ordinal());
         this.entityData.define(DATA_REMOVAL_GAME_TIME, -1L);
+        this.entityData.define(DATA_YAW, 0.0F);
+        this.entityData.define(DATA_PITCH, 0.0F);
+        this.entityData.define(DATA_IS_ORIGIN, false);
+    }
+
+    public boolean isOrigin() {
+        return this.entityData.get(DATA_IS_ORIGIN);
+    }
+
+    public void setIsOrigin(boolean origin) {
+        this.entityData.set(DATA_IS_ORIGIN, origin);
+    }
+
+    public float getPathYaw() {
+        return this.entityData.get(DATA_YAW);
+    }
+
+    public void setPathYaw(float yaw) {
+        this.entityData.set(DATA_YAW, yaw);
+        this.setYRot(yaw);
+        this.yRotO = yaw;
+    }
+
+    public float getPathPitch() {
+        return this.entityData.get(DATA_PITCH);
+    }
+
+    public void setPathPitch(float pitch) {
+        this.entityData.set(DATA_PITCH, pitch);
+        this.setXRot(pitch);
+        this.xRotO = pitch;
+    }
+
+    public float getPitch() {
+        return getPathPitch();
+    }
+
+    public void setPitch(float pitch) {
+        setPathPitch(pitch);
     }
 
     public int getWarmup() {
@@ -280,6 +328,9 @@ public class CrimsonRootEntity extends LivingEntity implements GeoEntity, Preven
                 removeRoot();
                 return;
             }
+            if (this.tickCount % 2 == 0) {
+                checkHazardSnare();
+            }
         }
 
         int currentWarmup = getWarmup();
@@ -319,91 +370,109 @@ public class CrimsonRootEntity extends LivingEntity implements GeoEntity, Preven
                 this.removeRoot();
             }
         } else {
-            if (activeTicks < 15) {
-                if (isPathMode()) {
-                    clientPathParticles();
-                } else {
-                    clientDiggingParticles(this);
-                }
+            if (isPathMode()) {
+                clientPathParticles();
+            } else if (activeTicks < 15) {
+                clientDiggingParticles(this);
             }
             activeTicks++;
         }
     }
 
-    public void initCoordinator(Vec3 startPos, int maxSegments, float damage, float rendDamage) {
+    public void initCoordinator(Vec3 startPos, Vec3 initialDirection, int maxSegments, float damage, float rendDamage) {
         this.isCoordinator = true;
         this.coordinatorActive = true;
         this.stepTimer = STEP_INTERVAL;
         this.currentSegmentIndex = 1;
         this.maxSegments = maxSegments;
-        this.currentTip = startPos;
+        Vec3 direction = initialDirection.lengthSqr() < 1e-4
+                ? Vec3.directionFromRotation(getXRot(), getYRot())
+                : initialDirection.normalize();
+        this.currentSegmentTail = startPos;
+        this.currentTip = startPos.add(direction.scale(SEGMENT_SPACING));
         this.damage = damage;
         this.rendDamage = rendDamage;
         this.spawnedSegmentUUIDs.clear();
         this.spawnedSegmentUUIDs.add(this.getUUID());
-        long fallbackRemoval = level().getGameTime() + ((long) maxSegments * STEP_INTERVAL) + PATH_HOLD_TICKS + 40L;
+        this.setIsOrigin(true);
+        long fallbackRemoval = level().getGameTime() + ((long) maxSegments * STEP_INTERVAL)
+                + PATH_LINGER_TICKS + ((long) maxSegments * DISSOLVE_INTERVAL_TICKS) + 80L;
         this.setRemovalGameTime(fallbackRemoval);
     }
 
     private void performPropagationStep() {
         LivingEntity rootOwner = getOwner();
         if (rootOwner == null || !rootOwner.isAlive() || rootOwner.isRemoved()) {
-            terminatePropagation();
+            terminatePropagationAndScheduleDissolve();
             return;
         }
 
-        Vec3 look = rootOwner.getLookAngle();
-        Vec3 flatDir = new Vec3(look.x, 0.0D, look.z).normalize();
-        if (flatDir.lengthSqr() < 1e-4) {
-            float yawRad = rootOwner.getYRot() * Mth.DEG_TO_RAD;
-            flatDir = new Vec3(-Mth.sin(yawRad), 0.0D, Mth.cos(yawRad));
-        }
-
-        Vec3 nextPoint = currentTip.add(flatDir.scale(SEGMENT_SPACING));
-
-        BlockHitResult blockHit = level().clip(new ClipContext(currentTip, nextPoint,
+        // Resolve the segment that has just finished growing before creating the next one.
+        BlockHitResult blockHit = level().clip(new ClipContext(currentSegmentTail, currentTip,
                 ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, rootOwner));
+        Vec3 segmentDirection = currentTip.subtract(currentSegmentTail).normalize();
         Vec3 clippedEnd = blockHit.getType() == HitResult.Type.BLOCK
-                ? blockHit.getLocation().subtract(flatDir.scale(0.1D))
-                : nextPoint;
+                ? blockHit.getLocation().subtract(segmentDirection.scale(0.1D))
+                : currentTip;
 
-        CrimsonThornbindSpell.TargetHit targetHit = CrimsonThornbindSpell.findTargetAlongSegment(level(), rootOwner, currentTip, clippedEnd);
+        CrimsonThornbindSpell.TargetHit targetHit = CrimsonThornbindSpell.findTargetAlongSegment(
+                level(), rootOwner, currentSegmentTail, clippedEnd);
         if (targetHit != null) {
-            spawnBindRootAndTerminate(targetHit.target());
+            spawnBindRootOnTarget(targetHit.target());
+            terminatePropagationAndScheduleDissolve();
             return;
         }
 
-        if (blockHit.getType() == HitResult.Type.BLOCK) {
-            terminatePropagation();
+        if (blockHit.getType() == HitResult.Type.BLOCK || currentSegmentIndex >= maxSegments) {
+            terminatePropagationAndScheduleDissolve();
             return;
         }
 
-        Vec3 stepVec = nextPoint.subtract(currentTip);
-        float stepYaw = (float) (Mth.atan2(stepVec.z, stepVec.x) * (180.0D / Math.PI)) - 90.0F;
+        Vec3 lookDir = rootOwner.getLookAngle().normalize();
+        if (lookDir.lengthSqr() < 1e-4) {
+            float yawRad = rootOwner.getYRot() * Mth.DEG_TO_RAD;
+            float pitchRad = rootOwner.getXRot() * Mth.DEG_TO_RAD;
+            lookDir = new Vec3(
+                    -Mth.sin(yawRad) * Mth.cos(pitchRad),
+                    -Mth.sin(pitchRad),
+                    Mth.cos(yawRad) * Mth.cos(pitchRad)
+            ).normalize();
+        }
+
+        Vec3 nextTail = currentTip;
+        Vec3 nextTip = nextTail.add(lookDir.scale(SEGMENT_SPACING));
+        Vec3 stepVec = nextTip.subtract(nextTail).normalize();
+        double horizDist = Math.sqrt(stepVec.x * stepVec.x + stepVec.z * stepVec.z);
+        float stepYaw = horizDist > 1e-4
+                ? (float) (Mth.atan2(-stepVec.x, stepVec.z) * (180.0D / Math.PI))
+                : rootOwner.getYRot();
+        float stepPitch = (float) (-Mth.atan2(stepVec.y, horizDist) * (180.0D / Math.PI));
 
         CrimsonRootEntity nextSegment = new CrimsonRootEntity(level(), rootOwner);
         nextSegment.setMode(RootMode.PATH);
-        nextSegment.moveTo(nextPoint.x, nextPoint.y, nextPoint.z, stepYaw, 0.0F);
+        nextSegment.moveTo(nextTail.x, nextTail.y, nextTail.z, stepYaw, stepPitch);
+        nextSegment.setPathYaw(stepYaw);
+        nextSegment.setPathPitch(stepPitch);
         nextSegment.setWarmup(0);
         nextSegment.setBaseScale(DEFAULT_PATH_SCALE);
-        long fallbackRemoval = level().getGameTime() + ((long) (maxSegments - currentSegmentIndex + 1) * STEP_INTERVAL) + PATH_HOLD_TICKS + 40L;
+        nextSegment.setIsOrigin(false);
+        nextSegment.setDamage(this.damage);
+        nextSegment.setRendDamage(this.rendDamage);
+        long fallbackRemoval = level().getGameTime() + ((long) (maxSegments - currentSegmentIndex + 1) * STEP_INTERVAL)
+                + PATH_LINGER_TICKS + ((long) maxSegments * DISSOLVE_INTERVAL_TICKS) + 80L;
         nextSegment.setRemovalGameTime(fallbackRemoval);
         level().addFreshEntity(nextSegment);
 
         spawnedSegmentUUIDs.add(nextSegment.getUUID());
-        currentTip = nextPoint;
+        currentSegmentTail = nextTail;
+        currentTip = nextTip;
         currentSegmentIndex++;
 
-        level().playSound(null, nextPoint.x, nextPoint.y, nextPoint.z,
+        level().playSound(null, nextTail.x, nextTail.y, nextTail.z,
                 SoundRegistry.ROOT_EMERGE.get(), SoundSource.PLAYERS, 0.6F, 1.15F + random.nextFloat() * 0.15F);
-
-        if (currentSegmentIndex >= maxSegments) {
-            terminatePropagation();
-        }
     }
 
-    private void spawnBindRootAndTerminate(LivingEntity hitTarget) {
-        terminatePropagation();
+    public void spawnBindRootOnTarget(LivingEntity hitTarget) {
         LivingEntity rootOwner = getOwner();
         double groundY = CrimsonThornbindSpell.findGroundHeight(level(), hitTarget.getX(), hitTarget.getY(), hitTarget.getZ());
         CrimsonRootEntity bindRoot = new CrimsonRootEntity(level(), rootOwner);
@@ -422,18 +491,42 @@ public class CrimsonRootEntity extends LivingEntity implements GeoEntity, Preven
                 SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES, SoundSource.PLAYERS, 1.2F, 0.8F);
     }
 
-    public void terminatePropagation() {
+    private void checkHazardSnare() {
+        LivingEntity rootOwner = getOwner();
+        if (rootOwner == null || !rootOwner.isAlive() || rootOwner.isRemoved()) {
+            return;
+        }
+        AABB box = this.getBoundingBox().inflate(0.65D, 0.5D, 0.65D);
+        List<LivingEntity> victims = level().getEntitiesOfClass(LivingEntity.class, box,
+                e -> CrimsonThornbindSpell.isValidTarget(rootOwner, e)
+                        && !(e.getVehicle() instanceof CrimsonRootEntity));
+        for (LivingEntity victim : victims) {
+            if (victim.getVehicle() instanceof CrimsonRootEntity) {
+                continue;
+            }
+            spawnBindRootOnTarget(victim);
+        }
+    }
+
+    public void terminatePropagationAndScheduleDissolve() {
         this.coordinatorActive = false;
-        long cleanupTime = level().getGameTime() + PATH_HOLD_TICKS;
-        this.setRemovalGameTime(cleanupTime);
+        long baseDissolveTime = level().getGameTime() + PATH_LINGER_TICKS;
         if (level() instanceof ServerLevel serverLevel) {
-            for (UUID uuid : spawnedSegmentUUIDs) {
+            for (int i = 0; i < spawnedSegmentUUIDs.size(); i++) {
+                UUID uuid = spawnedSegmentUUIDs.get(i);
                 Entity entity = serverLevel.getEntity(uuid);
                 if (entity instanceof CrimsonRootEntity root && root.isPathMode()) {
-                    root.setRemovalGameTime(cleanupTime);
+                    long segmentRemoval = baseDissolveTime + ((long) i * DISSOLVE_INTERVAL_TICKS);
+                    root.setRemovalGameTime(segmentRemoval);
                 }
             }
+        } else {
+            this.setRemovalGameTime(baseDissolveTime);
         }
+    }
+
+    public void terminatePropagation() {
+        terminatePropagationAndScheduleDissolve();
     }
 
     private void activateBind() {
@@ -486,7 +579,7 @@ public class CrimsonRootEntity extends LivingEntity implements GeoEntity, Preven
     }
 
     private void clientPathParticles() {
-        if (this.random.nextBoolean()) {
+        if (this.random.nextFloat() < 0.45F) {
             this.level().addParticle(ParticleTypes.CRIMSON_SPORE,
                     getX() + Utils.getRandomScaled(0.25F),
                     getY() + Utils.getRandomScaled(0.18F),
@@ -535,9 +628,20 @@ public class CrimsonRootEntity extends LivingEntity implements GeoEntity, Preven
     }
 
     public void removeRoot() {
+        if (level() instanceof ServerLevel serverLevel) {
+            if (isPathMode()) {
+                // Red crimson burst particles for sequential dissolve wave
+                serverLevel.sendParticles(ParticleTypes.CRIMSON_SPORE, getX(), getY() + 0.25D, getZ(),
+                        18, 0.3D, 0.25D, 0.3D, 0.04D);
+                serverLevel.sendParticles(new DustParticleOptions(new Vector3f(0.88F, 0.06F, 0.14F), 1.4F),
+                        getX(), getY() + 0.25D, getZ(), 16, 0.35D, 0.25D, 0.35D, 0.05D);
+                serverLevel.playSound(null, getX(), getY(), getZ(),
+                        SoundEvents.SWEET_BERRY_BUSH_BREAK, SoundSource.PLAYERS, 0.75F, 1.25F + random.nextFloat() * 0.3F);
+            }
+        }
         if (level().isClientSide) {
-            for (int i = 0; i < 6; i++) {
-                level().addParticle(ParticleHelper.ROOT_FOG, getX() + Utils.getRandomScaled(.3f), getY() + Utils.getRandomScaled(.3f), getZ() + Utils.getRandomScaled(.3f), Utils.getRandomScaled(1.5f), -random.nextFloat() * .3f, Utils.getRandomScaled(1.5f));
+            for (int i = 0; i < 4; i++) {
+                level().addParticle(ParticleTypes.CRIMSON_SPORE, getX() + Utils.getRandomScaled(.3f), getY() + Utils.getRandomScaled(.3f), getZ() + Utils.getRandomScaled(.3f), Utils.getRandomScaled(0.5f), 0.02D, Utils.getRandomScaled(0.5f));
             }
         }
         this.ejectPassengers();
@@ -572,9 +676,14 @@ public class CrimsonRootEntity extends LivingEntity implements GeoEntity, Preven
         pCompound.putInt("StepTimer", stepTimer);
         pCompound.putInt("CurrentSegmentIndex", currentSegmentIndex);
         pCompound.putInt("MaxSegments", maxSegments);
+        pCompound.putDouble("CurrentSegmentTailX", currentSegmentTail.x);
+        pCompound.putDouble("CurrentSegmentTailY", currentSegmentTail.y);
+        pCompound.putDouble("CurrentSegmentTailZ", currentSegmentTail.z);
         pCompound.putDouble("CurrentTipX", currentTip.x);
         pCompound.putDouble("CurrentTipY", currentTip.y);
         pCompound.putDouble("CurrentTipZ", currentTip.z);
+        pCompound.putFloat("PathYaw", getPathYaw());
+        pCompound.putFloat("PathPitch", getPathPitch());
         net.minecraft.nbt.ListTag uuidList = new net.minecraft.nbt.ListTag();
         for (UUID uuid : spawnedSegmentUUIDs) {
             CompoundTag tag = new CompoundTag();
@@ -590,6 +699,14 @@ public class CrimsonRootEntity extends LivingEntity implements GeoEntity, Preven
         this.tickCount = pCompound.getInt("Age");
         if (pCompound.hasUUID("Owner")) {
             this.ownerUUID = pCompound.getUUID("Owner");
+        }
+        if (pCompound.contains("PathYaw")) {
+            setPathYaw(pCompound.getFloat("PathYaw"));
+        }
+        if (pCompound.contains("PathPitch")) {
+            setPathPitch(pCompound.getFloat("PathPitch"));
+        } else if (pCompound.contains("Pitch")) {
+            setPathPitch(pCompound.getFloat("Pitch"));
         }
         if (pCompound.contains("Duration")) {
             this.duration = pCompound.getInt("Duration");
@@ -634,6 +751,15 @@ public class CrimsonRootEntity extends LivingEntity implements GeoEntity, Preven
         }
         if (pCompound.contains("CurrentTipX")) {
             this.currentTip = new Vec3(pCompound.getDouble("CurrentTipX"), pCompound.getDouble("CurrentTipY"), pCompound.getDouble("CurrentTipZ"));
+        }
+        if (pCompound.contains("CurrentSegmentTailX")) {
+            this.currentSegmentTail = new Vec3(
+                    pCompound.getDouble("CurrentSegmentTailX"),
+                    pCompound.getDouble("CurrentSegmentTailY"),
+                    pCompound.getDouble("CurrentSegmentTailZ"));
+        } else {
+            // Compatibility with saves made before the explicit tail/head chain state.
+            this.currentSegmentTail = this.currentTip;
         }
         if (pCompound.contains("SpawnedUUIDs", net.minecraft.nbt.Tag.TAG_LIST)) {
             net.minecraft.nbt.ListTag uuidList = pCompound.getList("SpawnedUUIDs", net.minecraft.nbt.Tag.TAG_COMPOUND);

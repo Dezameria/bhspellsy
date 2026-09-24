@@ -22,12 +22,23 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
 @AutoSpellConfig
 public class RapturousBloomSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_DAMAGE = 24.0F;
+    public static final float DAMAGE_PER_LEVEL = 4.0F;
+    public static final int BASE_MANA_COST = 45;
+    public static final int MANA_COST_PER_LEVEL = 5;
+    public static final double COOLDOWN_SECONDS = 16.0D;
+
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IronSpellMore.MODID, "rapturous_bloom");
 
     private static final float RANGE = 28.0F;
@@ -36,16 +47,26 @@ public class RapturousBloomSpell extends AbstractSpell {
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.RARE)
             .setSchoolResource(SchoolRegistry.NATURE_RESOURCE)
-            .setMaxLevel(5)
-            .setCooldownSeconds(16.0)
+            .setMaxLevel(1)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public RapturousBloomSpell() {
-        this.baseSpellPower = 24;
-        this.spellPowerPerLevel = 4;
-        this.baseManaCost = 45;
-        this.manaCostPerLevel = 5;
+        this.baseSpellPower = (int) BASE_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
+        this.baseManaCost = BASE_MANA_COST;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
         this.castTime = 0;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.RapturousBloom.getBaseMana() + (spellLevel - 1) * SpellConfig.RapturousBloom.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.RapturousBloom.getCooldown() * 20);
     }
 
     @Override
@@ -152,7 +173,9 @@ public class RapturousBloomSpell extends AbstractSpell {
     }
 
     public float getBurstDamage(int spellLevel, LivingEntity caster) {
-        return (baseSpellPower + (spellLevel - 1) * spellPowerPerLevel) * getEntityPowerMultiplier(caster);
+        float base = SpellConfig.RapturousBloom.getBaseDamage();
+        float perLevel = SpellConfig.RapturousBloom.getDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(caster);
     }
 
     @Nullable

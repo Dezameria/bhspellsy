@@ -60,7 +60,13 @@ public class GildedHareCombatEvents {
             return;
         }
 
-        // 4. If victim is currently in Cocoon Stun (amplifier >= 4), do not add combo hits
+        // 4. If victim is on finisher cooldown (10s after completing full 5-hit combo), do not build stacks
+        long finisherCooldown = victim.getPersistentData().getLong(GildedHareMarkEffect.FINISHER_COOLDOWN_TICK_TAG);
+        if (victim.level().getGameTime() < finisherCooldown) {
+            return;
+        }
+
+        // If victim is currently in Cocoon Stun (amplifier >= 4), do not add combo hits
         var activeMark = victim.getEffect(MobEffectsRegistry.GILDED_HARE_MARK.get());
         if (activeMark != null && activeMark.getAmplifier() >= 4) {
             return;
@@ -89,7 +95,7 @@ public class GildedHareCombatEvents {
             // Remove existing mark before re-adding to cleanly advance amplifier without hidden effect retention
             victim.removeEffect(MobEffectsRegistry.GILDED_HARE_MARK.get());
 
-            // Apply ribbon binding mark with amplifier (nextCombo - 1) for 40 ticks
+            // Apply ribbon binding mark with amplifier (nextCombo - 1) for 100 ticks (5 seconds)
             victim.addEffect(new MobEffectInstance(MobEffectsRegistry.GILDED_HARE_MARK.get(),
                     GildedHareSpell.COMBO_WINDOW_TICKS, nextCombo - 1, false, false, true));
 
@@ -105,6 +111,9 @@ public class GildedHareCombatEvents {
             // 5th Hit Finisher: Full Cocoon Stun & Blindness (amplifier = 4)
             attacker.getPersistentData().remove(GildedHareEffect.CASTER_ACTIVE_TARGET_TAG);
             GildedHareMarkEffect.clearComboData(victim);
+            // Lock out building new combo stacks on this victim for 10 seconds (200 ticks)
+            victim.getPersistentData().putLong(GildedHareMarkEffect.FINISHER_COOLDOWN_TICK_TAG,
+                    victim.level().getGameTime() + GildedHareSpell.FINISHER_COOLDOWN_TICKS);
 
             // Remove existing mark before applying finisher mark to prevent vanilla hidden effect restoration
             victim.removeEffect(MobEffectsRegistry.GILDED_HARE_MARK.get());

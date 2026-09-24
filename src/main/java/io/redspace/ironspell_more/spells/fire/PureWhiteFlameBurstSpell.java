@@ -41,11 +41,24 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 import io.redspace.ironsspellbooks.particle.SparkParticleOptions;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 import java.util.List;
 import java.util.Optional;
 
 @AutoSpellConfig
 public class PureWhiteFlameBurstSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_DAMAGE = 80.0F;
+    public static final float DAMAGE_PER_LEVEL = 10.0F;
+    public static final float AOE_DAMAGE_RATIO = 0.8F;
+    public static final int BASE_MANA_COST = 50;
+    public static final int MANA_COST_PER_LEVEL = 10;
+    public static final double COOLDOWN_SECONDS = 15.0;
+    public static final int CAST_TIME_TICKS = 25;
+
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IronSpellMore.MODID,
             "pure_white_flame_burst");
     private static final ParticleEmitterInfo PURE_WHITE_FLAME_FX = new ParticleEmitterInfo(
@@ -55,16 +68,26 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.RARE)
             .setSchoolResource(SchoolRegistry.FIRE_RESOURCE)
-            .setMaxLevel(5)
-            .setCooldownSeconds(15)
+            .setMaxLevel(1)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public PureWhiteFlameBurstSpell() {
-        this.manaCostPerLevel = 10;
-        this.baseSpellPower = 80;
-        this.spellPowerPerLevel = 10;
-        this.castTime = 25; // 25 ticks (20-30 ticks charge)
-        this.baseManaCost = 50;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) BASE_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
+        this.castTime = CAST_TIME_TICKS;
+        this.baseManaCost = BASE_MANA_COST;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.PureWhiteFlameBurst.getBaseMana() + (spellLevel - 1) * SpellConfig.PureWhiteFlameBurst.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.PureWhiteFlameBurst.getCooldown() * 20);
     }
 
     @Override
@@ -72,7 +95,7 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
         float damage = getDamage(spellLevel, caster);
         return List.of(
                 Component.translatable("ui.irons_spellbooks.damage", Utils.stringTruncation(damage, 1)),
-                Component.translatable("ui.irons_spellbooks.aoe_damage", Utils.stringTruncation(damage * 0.8f, 1)),
+                Component.translatable("ui.irons_spellbooks.aoe_damage", Utils.stringTruncation(damage * SpellConfig.PureWhiteFlameBurst.getAoeRatio(), 1)),
                 Component.translatable("ui.irons_spellbooks.distance", "20"),
                 Component.translatable("ui.irons_spellbooks.cast_time",
                         Utils.stringTruncation(getCastTime(spellLevel) / 20f, 1)));
@@ -398,7 +421,7 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
         // Length 20, Height 7, Width 7
         final Vec3 impactOrigin = primaryTarget.position();
         final Vec3 forwardDir = lookVec;
-        final float phase2Damage = damage * 0.8F;
+        final float phase2Damage = damage * SpellConfig.PureWhiteFlameBurst.getAoeRatio();
         final double boxLength = 20.0;
         final double boxWidth = 7.0;
         final double boxHeight = 7.0;
@@ -604,6 +627,8 @@ public class PureWhiteFlameBurstSpell extends AbstractSpell {
     }
 
     public float getDamage(int spellLevel, LivingEntity caster) {
-        return getSpellPower(spellLevel, caster);
+        float base = SpellConfig.PureWhiteFlameBurst.getBaseDamage();
+        float perLevel = SpellConfig.PureWhiteFlameBurst.getDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(caster);
     }
 }

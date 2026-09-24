@@ -2,6 +2,11 @@
 
 รายการนี้ซิงก์กับ `src/main/java/io/redspace/ironspell_more/registry/SpellRegistry.java` ปัจจุบันมี **20 เวทใน 6 สายเวท** รายละเอียดค่าพลัง ระยะเวลา damage, cooldown, entity, asset และ edge case ให้ยึดเอกสารรายสกิลที่ลิงก์ไว้
 
+> **หมายเหตุระบบ Scroll และ Config:**
+> - สกิลทุกสกิลในม็อดถูกกำหนดให้มี Scroll เพียงระดับเดียวคือ **Level 1** (`maxLevel = 1`) ทำให้ในเมนูสร้างสรรค์ (Creative Tab), JEI, ดรอปจากมอนสเตอร์ หรือกล่องสมบัติ จะพบเพียงคัมภีร์ระดับ 1 เท่านั้น
+> - ตัวคูณความสามารถตามเลเวล (Level Scaling) ยังคงทำงานได้เต็มรูปแบบผ่านคำสั่งร่ายเวท: `/cast <ผู้เล่น> <ชื่อเวท> <เลเวล>`
+> - ค่าสเตตัสทั้งหมด (Base Damage, Damage Per Level, Base Mana, Mana Per Level, Cooldown) สามารถปรับแต่งได้อย่างสะดวกรวดเร็วผ่านไฟล์คอนฟิกเซิร์ฟเวอร์ `config/ironspell_more-server.toml` หรือผ่านค่าคงที่ `SPELL TUNING CONSTANTS` ด้านบนสุดของแต่ละคลาสเวท
+
 ## Fire
 
 | เวท | Registry ID | บทบาทหลัก | Specification |

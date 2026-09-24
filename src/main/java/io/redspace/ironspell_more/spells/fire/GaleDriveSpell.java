@@ -22,11 +22,22 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 import java.util.List;
 import java.util.Optional;
 
 @AutoSpellConfig
 public class GaleDriveSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_DAMAGE = 10.0F;
+    public static final float DAMAGE_PER_LEVEL = 2.0F;
+    public static final int BASE_MANA_COST = 40;
+    public static final int MANA_COST_PER_LEVEL = 5;
+    public static final double COOLDOWN_SECONDS = 20.0;
+
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IronSpellMore.MODID, "gale_drive");
 
     public static final SpinAttackType GALE_SPIN = new SpinAttackType(
@@ -35,23 +46,40 @@ public class GaleDriveSpell extends AbstractSpell {
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.RARE)
             .setSchoolResource(SchoolRegistry.FIRE_RESOURCE)
-            .setMaxLevel(5)
-            .setCooldownSeconds(20)
+            .setMaxLevel(1)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public GaleDriveSpell() {
-        this.manaCostPerLevel = 5;
-        this.baseSpellPower = 10;
-        this.spellPowerPerLevel = 2;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) BASE_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
         this.castTime = 0;
-        this.baseManaCost = 40;
+        this.baseManaCost = BASE_MANA_COST;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.GaleDrive.getBaseMana() + (spellLevel - 1) * SpellConfig.GaleDrive.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.GaleDrive.getCooldown() * 20);
     }
 
     @Override
     public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
         return List.of(
+                Component.translatable("ui.irons_spellbooks.damage", Utils.stringTruncation(getDamage(spellLevel, caster), 1)),
                 Component.translatable("ui.irons_spellbooks.radius", Utils.stringTruncation(10.0, 1)),
                 Component.translatable("ui.irons_spellbooks.duration", Utils.timeFromTicks(140, 1)));
+    }
+
+    public float getDamage(int spellLevel, LivingEntity caster) {
+        float base = SpellConfig.GaleDrive.getBaseDamage();
+        float perLevel = SpellConfig.GaleDrive.getDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(caster);
     }
 
     @Override
@@ -127,7 +155,7 @@ public class GaleDriveSpell extends AbstractSpell {
 
         // 3. มอบ GaleDriveDashEffect เพื่อขับเคลื่อนการพุ่งและตรวจจับ 1 เป้าหมาย
         entity.addEffect(new MobEffectInstance(MobEffectsRegistry.GALE_DRIVE_DASH.get(), 12,
-                (int) getSpellPower(spellLevel, entity), false, false, false));
+                (int) getDamage(spellLevel, entity), false, false, false));
 
         world.playSound(null, entity.getX(), entity.getY(), entity.getZ(),
                 SoundEvents.TRIDENT_RIPTIDE_3, SoundSource.PLAYERS, 1.0f, 1.0f);

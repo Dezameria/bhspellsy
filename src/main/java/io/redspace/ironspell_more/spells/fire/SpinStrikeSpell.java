@@ -19,30 +19,52 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+import io.redspace.ironsspellbooks.api.util.Utils;
+
 import java.util.List;
 
 @AutoSpellConfig
 public class SpinStrikeSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_DAMAGE = 10.0F;
+    public static final float DAMAGE_PER_LEVEL = 1.0F;
+    public static final int BASE_MANA_COST = 30;
+    public static final int MANA_COST_PER_LEVEL = 5;
+    public static final double COOLDOWN_SECONDS = 10.0;
+
     private final ResourceLocation spellId = new ResourceLocation(IronSpellMore.MODID, "spin_strike");
 
     @Override
     public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
-        return List.of(Component.translatable("ui.irons_spellbooks.damage", getDamage(spellLevel, caster)));
+        return List.of(Component.translatable("ui.irons_spellbooks.damage", Utils.stringTruncation(getDamage(spellLevel, caster), 1)));
     }
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.COMMON)
             .setSchoolResource(SchoolRegistry.FIRE_RESOURCE)
             .setMaxLevel(1)
-            .setCooldownSeconds(10)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public SpinStrikeSpell() {
-        this.manaCostPerLevel = 5;
-        this.baseSpellPower = 10;
-        this.spellPowerPerLevel = 1;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) BASE_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
         this.castTime = 0;
-        this.baseManaCost = 30;
+        this.baseManaCost = BASE_MANA_COST;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.SpinStrike.getBaseMana() + (spellLevel - 1) * SpellConfig.SpinStrike.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.SpinStrike.getCooldown() * 20);
     }
 
     @Override
@@ -115,8 +137,10 @@ public class SpinStrikeSpell extends AbstractSpell {
         super.onCast(world, spellLevel, entity, castSource, playerMagicData);
     }
 
-    // กำหนดค่า Damage ตรงนี้ (จะอิงจาก baseSpellPower อัตโนมัติ)
+    // กำหนดค่า Damage ตรงนี้ (จะอิงจาก baseSpellPower / SpellConfig อัตโนมัติ)
     public float getDamage(int spellLevel, LivingEntity caster) {
-        return getSpellPower(spellLevel, caster);
+        float base = SpellConfig.SpinStrike.getBaseDamage();
+        float perLevel = SpellConfig.SpinStrike.getDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(caster);
     }
 }

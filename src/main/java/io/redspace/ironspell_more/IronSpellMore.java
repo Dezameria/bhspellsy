@@ -35,6 +35,8 @@ public class IronSpellMore {
         io.redspace.ironspell_more.registry.EntityRegistry.register(modEventBus);
         io.redspace.ironspell_more.compat.CompatBootstrap.init(modEventBus);
 
+        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.SERVER, io.redspace.ironspell_more.config.SpellConfig.SPEC, "ironspell_more-server.toml");
+
         MinecraftForge.EVENT_BUS.register(this);
     }
 

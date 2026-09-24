@@ -29,8 +29,19 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 @AutoSpellConfig
 public class JadeAuraSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_DURATION_SECONDS = 45.0F;
+    public static final float DURATION_PER_LEVEL_SECONDS = 10.0F;
+    public static final int BASE_MANA_COST = 50;
+    public static final int MANA_COST_PER_LEVEL = 25;
+    public static final double COOLDOWN_SECONDS = 40.0;
+
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IronSpellMore.MODID, "jade_aura");
     private static final ResourceLocation GROUND_SCHOOL_RESOURCE = ResourceLocation.fromNamespaceAndPath("bhspells", "ground");
 
@@ -39,16 +50,32 @@ public class JadeAuraSpell extends AbstractSpell {
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.RARE)
             .setSchoolResource(GROUND_SCHOOL_RESOURCE)
-            .setMaxLevel(3)
-            .setCooldownSeconds(40)
+            .setMaxLevel(1)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public JadeAuraSpell() {
-        this.baseManaCost = 50;
-        this.manaCostPerLevel = 25;
-        this.baseSpellPower = 45;
-        this.spellPowerPerLevel = 10;
+        this.baseManaCost = BASE_MANA_COST;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) BASE_DURATION_SECONDS;
+        this.spellPowerPerLevel = (int) DURATION_PER_LEVEL_SECONDS;
         this.castTime = 0;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.JadeAura.getBaseMana() + (spellLevel - 1) * SpellConfig.JadeAura.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.JadeAura.getCooldown() * 20);
+    }
+
+    public int getDurationTicks(int spellLevel, LivingEntity entity) {
+        float base = SpellConfig.JadeAura.getBaseDuration();
+        float perLevel = SpellConfig.JadeAura.getDurationPerLevel();
+        return (int) ((base + (spellLevel - 1) * perLevel) * 20 * getEntityPowerMultiplier(entity));
     }
 
     @Override
@@ -85,7 +112,7 @@ public class JadeAuraSpell extends AbstractSpell {
     @Override
     public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
         return List.of(
-                Component.translatable("ui.irons_spellbooks.effect_length", Utils.timeFromTicks((int) (getSpellPower(spellLevel, caster) * 20), 1)),
+                Component.translatable("ui.irons_spellbooks.effect_length", Utils.timeFromTicks(getDurationTicks(spellLevel, caster), 1)),
                 Component.translatable("attribute.modifier.plus.1", Utils.stringTruncation(getPercentAttackDamage(spellLevel), 0), Component.translatable("attribute.name.generic.attack_damage")),
                 Component.translatable("attribute.modifier.plus.1", Utils.stringTruncation(getPercentSpeed(spellLevel), 0), Component.translatable("attribute.name.generic.movement_speed")),
                 Component.translatable("attribute.modifier.plus.1", Utils.stringTruncation(getPercentSpellPower(spellLevel), 0), Component.translatable("attribute.irons_spellbooks.spell_power")),
@@ -109,7 +136,7 @@ public class JadeAuraSpell extends AbstractSpell {
     public void onCast(Level level, int spellLevel, LivingEntity entity, CastSource castSource, MagicData playerMagicData) {
         if (!level.isClientSide) {
             // Calculate duration once before applying any effect to prevent new Spell Power from artificially boosting the 2nd recipient
-            int duration = (int) (getSpellPower(spellLevel, entity) * 20);
+            int duration = getDurationTicks(spellLevel, entity);
 
             // Attempt direct raycast to an ally
             LivingEntity targetAlly = findTargetAlly(level, entity, TARGET_RANGE);

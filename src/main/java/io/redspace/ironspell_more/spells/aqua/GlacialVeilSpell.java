@@ -41,23 +41,44 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.List;
 import java.util.Optional;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 @AutoSpellConfig
 public class GlacialVeilSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float BASE_DAMAGE = 20.0F;
+    public static final float DAMAGE_PER_LEVEL = 3.0F;
+    public static final int BASE_MANA_COST = 50;
+    public static final int MANA_COST_PER_LEVEL = 10;
+    public static final double COOLDOWN_SECONDS = 20.0D;
+
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IronSpellMore.MODID, "glacial_veil");
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.RARE)
             .setSchoolResource(TravelopticsSchools.AQUA_RESOURCE)
-            .setMaxLevel(5)
-            .setCooldownSeconds(20)
+            .setMaxLevel(1)
+            .setCooldownSeconds(COOLDOWN_SECONDS)
             .build();
 
     public GlacialVeilSpell() {
-        this.manaCostPerLevel = 10;
-        this.baseSpellPower = 20;
-        this.spellPowerPerLevel = 3;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) BASE_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
         this.castTime = 0;
-        this.baseManaCost = 50;
+        this.baseManaCost = BASE_MANA_COST;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.GlacialVeil.getBaseMana() + (spellLevel - 1) * SpellConfig.GlacialVeil.getManaPerLevel();
+    }
+
+    @Override
+    public int getSpellCooldown() {
+        return (int) (SpellConfig.GlacialVeil.getCooldown() * 20);
     }
 
     @Override
@@ -172,8 +193,10 @@ public class GlacialVeilSpell extends AbstractSpell {
         super.onCast(level, spellLevel, entity, castSource, playerMagicData);
     }
 
-    private float getDamage(int spellLevel, LivingEntity entity) {
-        return getSpellPower(spellLevel, entity);
+    public float getDamage(int spellLevel, LivingEntity entity) {
+        float base = SpellConfig.GlacialVeil.getBaseDamage();
+        float perLevel = SpellConfig.GlacialVeil.getDamagePerLevel();
+        return (base + (spellLevel - 1) * perLevel) * getEntityPowerMultiplier(entity);
     }
 
     @Override

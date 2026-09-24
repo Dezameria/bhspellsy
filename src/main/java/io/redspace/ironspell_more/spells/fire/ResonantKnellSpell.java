@@ -32,6 +32,8 @@ import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 
+import io.redspace.ironspell_more.config.SpellConfig;
+
 /**
  * Resonant Knell — Fire School Spell.
  * 6-count Recast system (3 cycles of Open Barrier & Nuclear Blast Push).
@@ -39,11 +41,22 @@ import java.util.List;
  * Pushes and launches enemies into the air, causing standard fall damage.
  */
 public class ResonantKnellSpell extends AbstractSpell {
+    // ==========================================
+    // SPELL TUNING CONSTANTS (Code Defaults)
+    // ==========================================
+    public static final float STAGE_1_DAMAGE = 6.0F;
+    public static final float STAGE_2_DAMAGE = 10.0F;
+    public static final float STAGE_3_DAMAGE = 16.0F;
+    public static final float DAMAGE_PER_LEVEL = 2.0F;
+    public static final int BASE_MANA_COST = 75;
+    public static final int MANA_COST_PER_LEVEL = 0;
+    public static final double COOLDOWN_SECONDS = 30.0;
+
     private static final ResourceLocation SPELL_ID = IronSpellMore.id("resonant_knell");
 
     public static final int TOTAL_RECAST_COUNT = 6;
     public static final int RECAST_WINDOW_TICKS = 300; // 15 seconds per push window
-    public static final int COOLDOWN_DURATION_TICKS = 600; // 30 seconds cooldown effect
+    public static final int COOLDOWN_DURATION_TICKS = (int) (COOLDOWN_SECONDS * 20); // 30 seconds cooldown effect
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.EPIC)
@@ -53,11 +66,16 @@ public class ResonantKnellSpell extends AbstractSpell {
             .build();
 
     public ResonantKnellSpell() {
-        this.baseManaCost = 75;
-        this.manaCostPerLevel = 0;
-        this.baseSpellPower = 10;
-        this.spellPowerPerLevel = 0;
+        this.baseManaCost = BASE_MANA_COST;
+        this.manaCostPerLevel = MANA_COST_PER_LEVEL;
+        this.baseSpellPower = (int) STAGE_1_DAMAGE;
+        this.spellPowerPerLevel = (int) DAMAGE_PER_LEVEL;
         this.castTime = 0;
+    }
+
+    @Override
+    public int getManaCost(int spellLevel) {
+        return SpellConfig.ResonantKnell.getBaseMana() + (spellLevel - 1) * SpellConfig.ResonantKnell.getManaPerLevel();
     }
 
     @Override
@@ -136,7 +154,8 @@ public class ResonantKnellSpell extends AbstractSpell {
                 case 5 -> {
                     // === Press 2: Cycle 1 Push (Radius 15) ===
                     playPushSound(level, entity, 1.2f, 1.4f);
-                    pushEnemies(level, entity, 15.0f, 1.8f, 1.2f, 6.0f);
+                    float dmg = (SpellConfig.ResonantKnell.getStage1Damage() + (spellLevel - 1) * SpellConfig.ResonantKnell.getDamagePerLevel()) * getEntityPowerMultiplier(entity);
+                    pushEnemies(level, entity, 15.0f, 1.8f, 1.2f, dmg);
                     triggerDomeShockwave(level, entity, 15.0f);
                 }
                 case 4 -> {
@@ -147,7 +166,8 @@ public class ResonantKnellSpell extends AbstractSpell {
                 case 3 -> {
                     // === Press 4: Cycle 2 Push (Radius 20) ===
                     playPushSound(level, entity, 1.0f, 1.2f);
-                    pushEnemies(level, entity, 20.0f, 2.5f, 1.5f, 10.0f);
+                    float dmg = (SpellConfig.ResonantKnell.getStage2Damage() + (spellLevel - 1) * SpellConfig.ResonantKnell.getDamagePerLevel()) * getEntityPowerMultiplier(entity);
+                    pushEnemies(level, entity, 20.0f, 2.5f, 1.5f, dmg);
                     triggerDomeShockwave(level, entity, 20.0f);
                 }
                 case 2 -> {
@@ -158,7 +178,8 @@ public class ResonantKnellSpell extends AbstractSpell {
                 case 1 -> {
                     // === Press 6: Cycle 3 Push (Radius 30 - Final Nuclear Blast) ===
                     playNuclearBlastSound(level, entity);
-                    pushEnemies(level, entity, 30.0f, 3.8f, 2.0f, 16.0f);
+                    float dmg = (SpellConfig.ResonantKnell.getStage3Damage() + (spellLevel - 1) * SpellConfig.ResonantKnell.getDamagePerLevel()) * getEntityPowerMultiplier(entity);
+                    pushEnemies(level, entity, 30.0f, 3.8f, 2.0f, dmg);
                     triggerDomeShockwave(level, entity, 30.0f);
                     applyCooldownEffect(entity);
                 }
@@ -256,7 +277,8 @@ public class ResonantKnellSpell extends AbstractSpell {
     }
 
     private void applyCooldownEffect(LivingEntity caster) {
-        caster.addEffect(new MobEffectInstance(MobEffectsRegistry.COOLDOWN.get(), COOLDOWN_DURATION_TICKS, 0, false, false, true));
+        int durationTicks = (int) (SpellConfig.ResonantKnell.getCooldown() * 20);
+        caster.addEffect(new MobEffectInstance(MobEffectsRegistry.COOLDOWN.get(), durationTicks, 0, false, false, true));
     }
 
     private void playChimeSound(Level level, LivingEntity entity) {

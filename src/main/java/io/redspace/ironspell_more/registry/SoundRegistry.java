@@ -13,6 +13,7 @@ public class SoundRegistry {
     public static final RegistryObject<SoundEvent> VENOMOUS_BLOSSOMFALL_CHARGE_1 = registerSoundEvent("venomous_blossomfall_charge_1");
     public static final RegistryObject<SoundEvent> VENOMOUS_BLOSSOMFALL_CHARGE_2 = registerSoundEvent("venomous_blossomfall_charge_2");
     public static final RegistryObject<SoundEvent> VENOMOUS_BLOSSOMFALL_CHARGE = VENOMOUS_BLOSSOMFALL_CHARGE_1;
+    public static final RegistryObject<SoundEvent> HYMN_OF_PURIFICATION = registerSoundEvent("hymnofpurification");
 
     private static RegistryObject<SoundEvent> registerSoundEvent(String name) {
         return SOUND_EVENTS.register(name, () -> SoundEvent.createVariableRangeEvent(IronSpellMore.id(name)));

@@ -38,6 +38,18 @@ public class MobEffectsRegistry {
     public static final RegistryObject<MobEffect> TIGERSHADE_MARK = MOB_EFFECTS.register("tigershade_mark",
             () -> new io.redspace.ironspell_more.effect.TigershadeMarkEffect(MobEffectCategory.HARMFUL, 0xD2691E));
 
+    public static final RegistryObject<MobEffect> HYMN_OF_PURIFICATION = MOB_EFFECTS.register("hymn_of_purification",
+            () -> new io.redspace.ironspell_more.effect.HymnofPurificationEffect(MobEffectCategory.BENEFICIAL, 0xFFD700));
+
+    public static final RegistryObject<MobEffect> JADE_AURA = MOB_EFFECTS.register("jade_aura",
+            () -> new io.redspace.ironspell_more.effect.JadeAuraEffect(MobEffectCategory.BENEFICIAL, 0x3EB9A8));
+
+    public static final RegistryObject<MobEffect> GILDED_HARE = MOB_EFFECTS.register("gilded_hare",
+            () -> new io.redspace.ironspell_more.effect.GildedHareEffect(MobEffectCategory.BENEFICIAL, 0xFFD700));
+
+    public static final RegistryObject<MobEffect> GILDED_HARE_MARK = MOB_EFFECTS.register("gilded_hare_mark",
+            () -> new io.redspace.ironspell_more.effect.GildedHareMarkEffect(MobEffectCategory.HARMFUL, 0xFFE066));
+
     public static void register(IEventBus eventBus) {
         MOB_EFFECTS.register(eventBus);
     }

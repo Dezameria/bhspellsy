@@ -7,9 +7,9 @@ package io.redspace.ironspell_more.entity.spells.rapturous_bloom;
  *
  * Sequence:
  * 1. หุบเป็นตุ่ม (Closed Bud): Tightly closed bud at center during water ripple (0-2s)
- * 2. ค่อยผลิบาน (Unfolding): Outer -> Middle -> Inner petals peel back, stamen rises (2-3.75s)
- * 3. บานเต็มที่ (Full Bloom): Fully open blossom with gentle breathing and rotation (3.75-6s)
- * 4. แตกออก (Shatter): Blossom explodes into radial flying petals and shards (6-6.5s)
+ * 2. ค่อยผลิบาน (Unfolding): Outer -> Middle -> Inner petals peel back smoothly (2-5.1s)
+ * 3. บานเต็มที่ (Full Bloom): Fully open blossom with gentle breathing and rotation (5.1-6s)
+ * 4. แตกออก (Shatter): Petals disperse from 6-6.5s; the final ripple fades by 6.8s
  */
 public final class RapturousBloomVisuals {
     private RapturousBloomVisuals() {}
@@ -25,30 +25,42 @@ public final class RapturousBloomVisuals {
     public static final int PETAL_WIDTH_COLUMNS = 7;
     public static final float BASE_RADIUS = 3.0F;
 
-    // --- Colors: Plum Blossom Crimson Palette ---
-    public static final float PETAL_SHADOW_R = 0.169F;
+    // --- Bloom Motion ---
+    // Keep the first phase as a genuinely small bud, then unfold each layer
+    // over most of the bloom phase with smooth acceleration and deceleration.
+    public static final float BUD_START_SCALE = 0.08F;
+    public static final float BUD_END_SCALE = 0.52F;
+    public static final float OUTER_BLOOM_TICKS = 54.0F;
+    public static final float MIDDLE_BLOOM_DELAY_TICKS = 7.0F;
+    public static final float MIDDLE_BLOOM_TICKS = 52.0F;
+    public static final float INNER_BLOOM_DELAY_TICKS = 14.0F;
+    public static final float INNER_BLOOM_TICKS = 48.0F;
+    public static final float FLOWER_GROWTH_TICKS = 58.0F;
+
+    // --- Colors: Vivid Scarlet Petal Palette ---
+    public static final float PETAL_SHADOW_R = 0.471F;
     public static final float PETAL_SHADOW_G = 0.000F;
-    public static final float PETAL_SHADOW_B = 0.039F;
+    public static final float PETAL_SHADOW_B = 0.059F;
 
-    public static final float PETAL_BASE_R = 0.290F;
+    public static final float PETAL_BASE_R = 0.702F;
     public static final float PETAL_BASE_G = 0.000F;
-    public static final float PETAL_BASE_B = 0.071F;
+    public static final float PETAL_BASE_B = 0.098F;
 
-    public static final float PETAL_BODY_R = 0.431F;
-    public static final float PETAL_BODY_G = 0.016F;
-    public static final float PETAL_BODY_B = 0.090F;
+    public static final float PETAL_BODY_R = 0.851F;
+    public static final float PETAL_BODY_G = 0.082F;
+    public static final float PETAL_BODY_B = 0.184F;
 
-    public static final float PETAL_BRIGHT_R = 0.718F;
-    public static final float PETAL_BRIGHT_G = 0.039F;
-    public static final float PETAL_BRIGHT_B = 0.165F;
+    public static final float PETAL_BRIGHT_R = 0.941F;
+    public static final float PETAL_BRIGHT_G = 0.165F;
+    public static final float PETAL_BRIGHT_B = 0.259F;
 
-    public static final float PETAL_RIM_R = 0.902F;
-    public static final float PETAL_RIM_G = 0.071F;
-    public static final float PETAL_RIM_B = 0.231F;
+    public static final float PETAL_RIM_R = 1.000F;
+    public static final float PETAL_RIM_G = 0.251F;
+    public static final float PETAL_RIM_B = 0.341F;
 
-    public static final float PETAL_HIGHLIGHT_R = 0.953F;
-    public static final float PETAL_HIGHLIGHT_G = 0.169F;
-    public static final float PETAL_HIGHLIGHT_B = 0.322F;
+    public static final float PETAL_HIGHLIGHT_R = 1.000F;
+    public static final float PETAL_HIGHLIGHT_G = 0.420F;
+    public static final float PETAL_HIGHLIGHT_B = 0.471F;
 
     // --- Colors: Center Stamen (เกสรสีทองเรืองแสง) ---
     public static final float STAMEN_R = 1.00F;
@@ -115,8 +127,10 @@ public final class RapturousBloomVisuals {
     // Ground Ring Rendering
     public static final float GROUND_Y = 0.025F;
     public static final float RING_WIDTH = 0.08F;
+    public static final float RIPPLE_LINE_WIDTH = 0.025F;
+    public static final float BURST_RIPPLE_LINE_WIDTH = 0.040F;
     public static final int RIPPLE_COUNT = 3;
-    public static final float RIPPLE_CYCLE_TICKS = 30.0F;
+    public static final float RIPPLE_CYCLE_TICKS = 52.0F;
 
     // Render Distance
     public static final double MAX_RENDER_DISTANCE = 64.0;

@@ -119,4 +119,32 @@ public final class EpicFightCompat {
             IronSpellMore.LOGGER.error("Epic Fight scatter particles failed due to linkage error", error);
         }
     }
+
+    public static boolean isBattleMode(LivingEntity entity) {
+        if (!isAvailable() || entity == null) {
+            return false;
+        }
+
+        try {
+            return EpicFightLoadedBridge.isBattleMode(entity);
+        } catch (LinkageError error) {
+            linkageFailed = true;
+            IronSpellMore.LOGGER.error("Epic Fight battle mode check failed due to linkage error", error);
+            return false;
+        }
+    }
+
+    public static Vec3 getLegJointWorldPos(LivingEntity entity, boolean isLeft) {
+        if (!isAvailable() || entity == null) {
+            return null;
+        }
+
+        try {
+            return EpicFightLoadedBridge.getLegJointWorldPos(entity, isLeft);
+        } catch (LinkageError error) {
+            linkageFailed = true;
+            IronSpellMore.LOGGER.error("Epic Fight leg joint lookup failed due to linkage error", error);
+            return null;
+        }
+    }
 }

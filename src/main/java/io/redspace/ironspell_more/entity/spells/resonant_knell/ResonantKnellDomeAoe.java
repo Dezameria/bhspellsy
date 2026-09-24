@@ -1,6 +1,7 @@
 package io.redspace.ironspell_more.entity.spells.resonant_knell;
 
 import io.redspace.ironspell_more.registry.EntityRegistry;
+import io.redspace.ironspell_more.spells.fire.ResonantKnellSpell;
 import io.redspace.ironsspellbooks.entity.spells.AoeEntity;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -10,11 +11,14 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -221,6 +225,11 @@ public class ResonantKnellDomeAoe extends AoeEntity {
         int state = getDomeState();
 
         if (!this.level().isClientSide) {
+            // Continuously buff allies inside the open dome
+            if (state == STATE_OPEN && this.tickCount % 10 == 0) {
+                buffAlliesInDome();
+            }
+
             // Server side state transitions
             if (state == STATE_EXPLODING) {
                 int startTick = this.entityData.get(DATA_SHOCKWAVE_TICK);
@@ -258,6 +267,24 @@ public class ResonantKnellDomeAoe extends AoeEntity {
                         this.getZ() + Math.sin(blastAngle) * blastR,
                         0.0, 0.05, 0.0);
             }
+        }
+    }
+
+    private void buffAlliesInDome() {
+        Entity ownerEntity = this.getOwner();
+        if (!(ownerEntity instanceof LivingEntity caster) || !caster.isAlive()) {
+            return;
+        }
+
+        float radius = this.getRadius();
+        AABB aabb = this.getBoundingBox().inflate(radius);
+        List<LivingEntity> list = this.level().getEntitiesOfClass(LivingEntity.class, aabb,
+                e -> e.isAlive() && !e.isSpectator() && !(e instanceof ArmorStand)
+                        && ResonantKnellSpell.isAlly(caster, e)
+                        && this.distanceToSqr(e) <= (double) (radius * radius));
+
+        for (LivingEntity ally : list) {
+            ResonantKnellSpell.applyBarrierBuffs(ally, 100);
         }
     }
 

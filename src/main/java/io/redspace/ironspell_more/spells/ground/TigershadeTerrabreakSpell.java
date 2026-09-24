@@ -57,17 +57,19 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
             "bhspells", "ground");
 
     public static final float ACQUISITION_RANGE = 20.0F;
-    public static final float EXECUTE_MAX_DISTANCE = 5.0F;
-    public static final float EXECUTE_HEALTH_PERCENT = 0.10F;
-    public static final float HEAL_ON_EXECUTE = 50.0F;
+    public static final float SLAM_MAX_DISTANCE = 5.0F;
+    public static final float EXECUTE_MAX_DISTANCE = SLAM_MAX_DISTANCE;
+    public static final float HEAL_ON_DEFEAT = 10.0F;
+    public static final float HEAL_ON_EXECUTE = HEAL_ON_DEFEAT;
     public static final int MARK_DURATION_TICKS = 1200;
-    public static final int EXECUTE_COOLDOWN_TICKS = 600;
+    public static final int SLAM_COOLDOWN_TICKS = 600;
+    public static final int EXECUTE_COOLDOWN_TICKS = SLAM_COOLDOWN_TICKS;
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.EPIC)
             .setSchoolResource(GROUND_SCHOOL_RESOURCE)
             .setMaxLevel(1)
-            .setCooldownSeconds(EXECUTE_COOLDOWN_TICKS / 20.0D)
+            .setCooldownSeconds(SLAM_COOLDOWN_TICKS / 20.0D)
             .build();
 
     public TigershadeTerrabreakSpell() {
@@ -76,6 +78,10 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
         this.baseManaCost = 40;
         this.manaCostPerLevel = 0;
         this.castTime = 0;
+    }
+
+    public float getDamage(int spellLevel, LivingEntity caster) {
+        return 20.0F + getSpellPower(spellLevel, caster);
     }
 
     @Override
@@ -102,14 +108,16 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
     @Override
     public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
         return List.of(
-                Component.translatable("ui.irons_spellbooks.cooldown",
-                        Utils.timeFromTicks(EXECUTE_COOLDOWN_TICKS, 1)),
+                Component.translatable("ui.ironspell_more.tigershade_slam_damage",
+                        Utils.stringTruncation(getDamage(spellLevel, caster), 1)),
                 Component.translatable("ui.irons_spellbooks.distance",
-                        Utils.stringTruncation(EXECUTE_MAX_DISTANCE, 1)),
+                        Utils.stringTruncation(SLAM_MAX_DISTANCE, 1)),
                 Component.translatable("ui.irons_spellbooks.duration",
                         Utils.timeFromTicks(MARK_DURATION_TICKS, 1)),
-                Component.translatable("ui.irons_spellbooks.hp",
-                        Utils.stringTruncation(HEAL_ON_EXECUTE, 1)));
+                Component.translatable("ui.ironspell_more.tigershade_heal_on_defeat",
+                        Utils.stringTruncation(HEAL_ON_DEFEAT, 1)),
+                Component.translatable("ui.irons_spellbooks.cooldown",
+                        Utils.timeFromTicks(SLAM_COOLDOWN_TICKS, 1)));
     }
 
     @Override
@@ -140,13 +148,8 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
             return false;
         }
 
-        if (caster.distanceToSqr(target) > EXECUTE_MAX_DISTANCE * EXECUTE_MAX_DISTANCE) {
+        if (caster.distanceToSqr(target) > SLAM_MAX_DISTANCE * SLAM_MAX_DISTANCE) {
             displayActionBar(caster, "ui.ironspell_more.tigershade_too_far");
-            return false;
-        }
-
-        if (target.getHealth() > target.getMaxHealth() * EXECUTE_HEALTH_PERCENT) {
-            displayActionBar(caster, "ui.ironspell_more.tigershade_hp_too_high");
             return false;
         }
 
@@ -165,8 +168,8 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
             }
         } else {
             LivingEntity target = resolveMarkedTarget(caster);
-            if (canExecute(caster, target)) {
-                executeTarget(level, caster, target);
+            if (canSlam(caster, target)) {
+                slamTarget(level, caster, target, spellLevel);
             } else {
                 // Fail closed if another event changed the target between pre-cast and cast.
                 clearHunt(caster);
@@ -231,16 +234,15 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
         }
     }
 
-    private boolean canExecute(LivingEntity caster, @Nullable LivingEntity target) {
+    private boolean canSlam(LivingEntity caster, @Nullable LivingEntity target) {
         return target != null
                 && target.isAlive()
                 && caster.level() == target.level()
-                && caster.distanceToSqr(target) <= EXECUTE_MAX_DISTANCE * EXECUTE_MAX_DISTANCE
-                && target.getHealth() <= target.getMaxHealth() * EXECUTE_HEALTH_PERCENT
+                && caster.distanceToSqr(target) <= SLAM_MAX_DISTANCE * SLAM_MAX_DISTANCE
                 && isOwnedMark(caster, target);
     }
 
-    private void executeTarget(Level level, LivingEntity caster, LivingEntity target) {
+    private void slamTarget(Level level, LivingEntity caster, LivingEntity target, int spellLevel) {
         Vec3 toTarget = target.position().subtract(caster.position());
         caster.setDeltaMovement(new Vec3(toTarget.x, 0.15D, toTarget.z).normalize().scale(1.25D));
         caster.hurtMarked = true;
@@ -248,16 +250,15 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
         target.setDeltaMovement(0.0D, -1.2D, 0.0D);
         target.hurtMarked = true;
 
-        boolean damageAccepted = DamageSources.applyDamage(target, 999999.0F, getDamageSource(caster));
-        if (damageAccepted && target.isAlive()) {
-            target.setHealth(0.0F);
-            target.die(getDamageSource(caster));
-        }
+        float damage = getDamage(spellLevel, caster);
+        boolean damageAccepted = DamageSources.applyDamage(target, damage, getDamageSource(caster));
 
-        boolean defeated = !target.isAlive();
-        if (defeated) {
-            caster.heal(HEAL_ON_EXECUTE);
-            playExecuteEffects(level, target);
+        // Always play slam impact effects on a valid slam attempt
+        playSlamEffects(level, target);
+
+        // Heal on defeat if the target died from this slam
+        if (damageAccepted && !target.isAlive()) {
+            caster.heal(HEAL_ON_DEFEAT);
         }
 
         // The attempt consumes the mark. Healing is awarded only when the target is
@@ -265,7 +266,7 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
         clearHunt(caster);
     }
 
-    private void playExecuteEffects(Level level, LivingEntity target) {
+    private void playSlamEffects(Level level, LivingEntity target) {
         level.playSound(null, target.getX(), target.getY(), target.getZ(),
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.3F, 0.7F);
         level.playSound(null, target.getX(), target.getY(), target.getZ(),

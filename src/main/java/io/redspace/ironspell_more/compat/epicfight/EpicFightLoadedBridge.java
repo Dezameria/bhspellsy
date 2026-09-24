@@ -10,6 +10,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import yesman.epicfight.api.animation.AnimationManager;
 
 /**
@@ -22,6 +24,9 @@ final class EpicFightLoadedBridge {
 
     static void registerModEvents(IEventBus modEventBus) {
         modEventBus.addListener(IronSpellAnimations::registerAnimations);
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
+                () -> () -> io.redspace.ironspell_more.compat.epicfight.client.GildedHareEpicFightRenderCompat
+                        .registerModEvents(modEventBus));
     }
 
     static CompatResult playAnimation(AnimationRequest request) {
@@ -43,5 +48,13 @@ final class EpicFightLoadedBridge {
 
     static void spawnScatterParticles(net.minecraft.server.level.ServerLevel level, double x, double y, double z) {
         EpicFightVfx.spawnScatterParticles(level, x, y, z);
+    }
+
+    static boolean isBattleMode(LivingEntity entity) {
+        return io.redspace.ironspell_more.compat.epicfight.client.EpicFightLegPoseHelper.isBattleMode(entity);
+    }
+
+    static Vec3 getLegJointWorldPos(LivingEntity entity, boolean isLeft) {
+        return io.redspace.ironspell_more.compat.epicfight.client.EpicFightLegPoseHelper.getLegJointWorldPos(entity, isLeft);
     }
 }

@@ -8,5 +8,10 @@
     "sounds": [
       "ironspell_more:venomousblossomfall_charge_2"
     ]
+  },
+  "hymnofpurification": {
+    "sounds": [
+      "ironspell_more:hymnofpurification"
+    ]
   }
 }

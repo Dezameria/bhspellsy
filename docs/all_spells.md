@@ -1,6 +1,6 @@
 # รายการเวททั้งหมด
 
-รายการนี้ซิงก์กับ `src/main/java/io/redspace/ironspell_more/registry/SpellRegistry.java` ปัจจุบันมี **16 เวทใน 6 สายเวท** รายละเอียดค่าพลัง ระยะเวลา damage, cooldown, entity, asset และ edge case ให้ยึดเอกสารรายสกิลที่ลิงก์ไว้
+รายการนี้ซิงก์กับ `src/main/java/io/redspace/ironspell_more/registry/SpellRegistry.java` ปัจจุบันมี **20 เวทใน 6 สายเวท** รายละเอียดค่าพลัง ระยะเวลา damage, cooldown, entity, asset และ edge case ให้ยึดเอกสารรายสกิลที่ลิงก์ไว้
 
 ## Fire
 
@@ -11,6 +11,7 @@
 | Pure White Flame Burst | `ironspell_more:pure_white_flame_burst` | จับเป้าหมายระยะประชิด ทุ่ม และสร้างระเบิด/คลื่นเพลิงขาว | [เปิดเอกสาร](spells/fire/pure_white_flame_burst.md) |
 | Gale Drive | `ironspell_more:gale_drive` | พุ่งทะลวงและสร้าง vortex เมื่อชนเป้าหมาย | [เปิดเอกสาร](spells/fire/gale_drive.md) |
 | Resonant Knell | `ironspell_more:resonant_knell` | Recast 6 ครั้งเพื่อสลับโดมป้องกันกับ shockwave รัศมี 15/20/30 | [เปิดเอกสาร](spells/fire/resonant_knell.md) |
+| Crimson Thornbind | `ironspell_more:crimson_thornbind` | ปล่อยเถาวัลย์แนวนอนจากมือ จับเป้าหมายแรกเพียงตัวเดียวด้วยรากแนวตั้ง และเสริม Rend Damage | [เปิดเอกสาร](spells/fire/crimson_thornbind.md) |
 
 ## Lightning
 
@@ -41,12 +42,15 @@
 | เวท | Registry ID | บทบาทหลัก | Specification |
 | --- | --- | --- | --- |
 | Shackle of Fear | `ironspell_more:shackle_of_fear` | ยิง projectile เพื่อสร้างโซ่หลายเส้นตรึงเป้าหมาย | [เปิดเอกสาร](spells/gold/shackle_of_fear.md) |
+| Hymn of Purification | `ironspell_more:hymn_of_purification` | บรรเลงเพลงทองคำ 20 วินาที ฟื้นฟูเลือดและล้างสถานะผิดปกติทั้งหมด | [เปิดเอกสาร](spells/gold/hymn_of_purification.md) |
+| Gilded Hare | `ironspell_more:gilded_hare` | บัฟตนเอง 2 นาที (ความเร็ว/กระโดด/ตีเร็ว/เกราะทอง/พลัง) เตะศัตรูสะสมคอมโบติดริบบิ้นสโลว์ และเตะครบ 5 ครั้งตรึงดักแด้สตั๊นพร้อมหูกระต่าย | [เปิดเอกสาร](spells/gold/gilded_hare.md) |
 
 ## Ground
 
 | เวท | Registry ID | บทบาทหลัก | Specification |
 | --- | --- | --- | --- |
-| Tigershade Terrabreak | `ironspell_more:tigershade_terrabreak` | Mark เป้าหมาย เข้าสู่ stance และ recast เพื่อ execute เมื่อเข้าเงื่อนไข | [เปิดเอกสาร](spells/ground/tigershade_terrabreak.md) |
+| Tigershade Terrabreak | `ironspell_more:tigershade_terrabreak` | Mark เป้าหมาย รับบัฟ stance และ recast เพื่อพุ่งทุบทำ damage ในระยะ 5 บล็อก | [เปิดเอกสาร](spells/ground/tigershade_terrabreak.md) |
+| Jade Aura | `ironspell_more:jade_aura` | บัฟตัวเองหรือเพื่อนร่วมทีม เพิ่มพลังโจมตี ความเร็ว และพลังเวท พร้อมคลื่นออร่าหยก | [เปิดเอกสาร](spells/ground/jade_aura.md) |
 
 ## ตรวจความสอดคล้อง
 

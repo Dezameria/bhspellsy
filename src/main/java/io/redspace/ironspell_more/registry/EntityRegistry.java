@@ -94,7 +94,21 @@ public class EntityRegistry {
                     .updateInterval(1)
                     .build(IronSpellMore.MODID + ":rapturous_bloom"));
 
+    public static final RegistryObject<EntityType<io.redspace.ironspell_more.entity.spells.crimson_thornbind.CrimsonRootEntity>> CRIMSON_ROOT = ENTITIES.register("crimson_root",
+            () -> EntityType.Builder.<io.redspace.ironspell_more.entity.spells.crimson_thornbind.CrimsonRootEntity>of(io.redspace.ironspell_more.entity.spells.crimson_thornbind.CrimsonRootEntity::new, MobCategory.MISC)
+                    .sized(1.0F, 1.0F)
+                    .clientTrackingRange(64)
+                    .build(IronSpellMore.MODID + ":crimson_root"));
+
     public static void register(IEventBus eventBus) {
         ENTITIES.register(eventBus);
+    }
+
+    @net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid = IronSpellMore.MODID, bus = net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD)
+    public static class ModEvents {
+        @net.minecraftforge.eventbus.api.SubscribeEvent
+        public static void onEntityAttributeCreation(net.minecraftforge.event.entity.EntityAttributeCreationEvent event) {
+            event.put(CRIMSON_ROOT.get(), net.minecraft.world.entity.LivingEntity.createLivingAttributes().build());
+        }
     }
 }

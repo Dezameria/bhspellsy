@@ -46,6 +46,7 @@ public class IronSpellMoreClient {
         event.registerEntityRenderer(EntityRegistry.GLACIAL_TOMB.get(), io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialTombRenderer::new);
         event.registerEntityRenderer(EntityRegistry.RESONANT_KNELL_DOME.get(), ResonantKnellDomeRenderer::new);
         event.registerEntityRenderer(EntityRegistry.RAPTUROUS_BLOOM.get(), io.redspace.ironspell_more.entity.spells.rapturous_bloom.RapturousBloomRenderer::new);
+        event.registerEntityRenderer(EntityRegistry.CRIMSON_ROOT.get(), io.redspace.ironspell_more.entity.spells.crimson_thornbind.CrimsonRootRenderer::new);
     }
 
     @SubscribeEvent
@@ -54,5 +55,16 @@ public class IronSpellMoreClient {
         event.registerLayerDefinition(io.redspace.ironspell_more.entity.spells.gale_piercer.GalePiercerArrowModel.LAYER_LOCATION, io.redspace.ironspell_more.entity.spells.gale_piercer.GalePiercerArrowModel::createBodyLayer);
         event.registerLayerDefinition(io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialSpikeRenderer.GlacialSpikeModel.LAYER_LOCATION, io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialSpikeRenderer.GlacialSpikeModel::createBodyLayer);
         event.registerLayerDefinition(io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialTombRenderer.GlacialTombModel.LAYER_LOCATION, io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialTombRenderer.GlacialTombModel::createBodyLayer);
+    }
+
+    @SubscribeEvent
+    public static void addLayers(EntityRenderersEvent.AddLayers event) {
+        for (String skin : event.getSkins()) {
+            var renderer = event.getSkin(skin);
+            if (renderer instanceof net.minecraft.client.renderer.entity.player.PlayerRenderer playerRenderer) {
+                playerRenderer.addLayer(new io.redspace.ironspell_more.client.renderer.GalePiercerChargeLayer(playerRenderer));
+                playerRenderer.addLayer(new io.redspace.ironspell_more.client.renderer.GildedHarePlayerLayer(playerRenderer));
+            }
+        }
     }
 }

@@ -1,6 +1,6 @@
 # Per-spell documentation
 
-This directory is the required source of detailed design and implementation notes for spells in IronSpell More. The index currently covers all **16 registered spells across 6 magic schools**.
+This directory is the required source of detailed design and implementation notes for spells in IronSpell More. The index currently covers all **20 registered spells across 6 magic schools**.
 
 ## File organization
 
@@ -19,6 +19,7 @@ This directory is the required source of detailed design and implementation note
 - [Pure White Flame Burst](fire/pure_white_flame_burst.md)
 - [Gale Drive](fire/gale_drive.md)
 - [Resonant Knell](fire/resonant_knell.md)
+- [Crimson Thornbind](fire/crimson_thornbind.md)
 
 ### ⚡ Lightning
 
@@ -41,10 +42,13 @@ This directory is the required source of detailed design and implementation note
 ### 🪙 Gold
 
 - [Shackle of Fear](gold/shackle_of_fear.md)
+- [Hymn of Purification](gold/hymn_of_purification.md)
+- [Gilded Hare](gold/gilded_hare.md)
 
 ### ⛰️ Ground
 
 - [Tigershade Terrabreak](ground/tigershade_terrabreak.md)
+- [Jade Aura](ground/jade_aura.md)
 
 ## Required workflow
 

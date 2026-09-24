@@ -24,7 +24,9 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
@@ -33,7 +35,7 @@ import java.util.List;
 /**
  * Resonant Knell — Fire School Spell.
  * 6-count Recast system (3 cycles of Open Barrier & Nuclear Blast Push).
- * Grants Strength II, Resistance II, and Fire Resistance I during cast.
+ * Grants Strength II, Resistance II, and Fire Resistance I to caster and allies in the barrier dome.
  * Pushes and launches enemies into the air, causing standard fall damage.
  */
 public class ResonantKnellSpell extends AbstractSpell {
@@ -106,8 +108,8 @@ public class ResonantKnellSpell extends AbstractSpell {
         PlayerRecasts recasts = playerMagicData.getPlayerRecasts();
         boolean hasRecast = recasts.hasRecastForSpell(this);
 
-        // Keep caster buffed with Strength II, Resistance II, Fire Resistance I
-        applyCasterBuffs(entity);
+        // Keep caster and allies in barrier buffed with Strength II, Resistance II, Fire Resistance I
+        applyBarrierBuffsToAllies(level, entity);
 
         if (!hasRecast) {
             // === Press 1: Cycle 1 Open ===
@@ -194,7 +196,7 @@ public class ResonantKnellSpell extends AbstractSpell {
     private void pushEnemies(Level level, LivingEntity caster, float radius, float horizontalPower, float verticalPower, float damage) {
         AABB aabb = caster.getBoundingBox().inflate(radius);
         List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, aabb,
-                e -> e != caster && e.isAlive() && !e.isAlliedTo(caster) && !(e instanceof ArmorStand));
+                e -> e != caster && e.isAlive() && !(e instanceof ArmorStand) && !isAlly(caster, e));
 
         for (LivingEntity target : targets) {
             double dx = target.getX() - caster.getX();
@@ -217,13 +219,40 @@ public class ResonantKnellSpell extends AbstractSpell {
         }
     }
 
-    private void applyCasterBuffs(LivingEntity caster) {
+    public static void applyBarrierBuffs(LivingEntity target, int durationTicks) {
         // Strength II (amplifier 1)
-        caster.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, RECAST_WINDOW_TICKS, 1, false, false, true));
+        target.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, durationTicks, 1, false, false, true));
         // Resistance II (amplifier 1)
-        caster.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, RECAST_WINDOW_TICKS, 1, false, false, true));
+        target.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, durationTicks, 1, false, false, true));
         // Fire Resistance I (amplifier 0)
-        caster.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, RECAST_WINDOW_TICKS, 0, false, false, true));
+        target.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, durationTicks, 0, false, false, true));
+    }
+
+    private void applyBarrierBuffsToAllies(Level level, LivingEntity caster) {
+        applyBarrierBuffs(caster, RECAST_WINDOW_TICKS);
+
+        float radius = 8.0F;
+        AABB aabb = caster.getBoundingBox().inflate(radius);
+        List<LivingEntity> allies = level.getEntitiesOfClass(LivingEntity.class, aabb,
+                e -> isAlly(caster, e) && caster.distanceToSqr(e) <= (double) (radius * radius));
+
+        for (LivingEntity ally : allies) {
+            applyBarrierBuffs(ally, RECAST_WINDOW_TICKS);
+        }
+    }
+
+    public static boolean isAlly(LivingEntity caster, LivingEntity target) {
+        if (target == caster) return true;
+        if (!target.isAlive() || target.isSpectator()) return false;
+        if (target instanceof ArmorStand) return false;
+        if (target.isAlliedTo(caster)) return true;
+        if (caster instanceof Player && target instanceof Player) {
+            return DamageSources.isFriendlyFireBetween(caster, target);
+        }
+        if (target instanceof TamableAnimal tamable && tamable.isOwnedBy(caster)) {
+            return true;
+        }
+        return false;
     }
 
     private void applyCooldownEffect(LivingEntity caster) {

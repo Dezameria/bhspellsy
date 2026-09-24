@@ -31,9 +31,9 @@ import static io.redspace.ironspell_more.entity.spells.rapturous_bloom.Rapturous
  *
  * Sequence:
  * 1. หุบเป็นตุ่ม (Closed Bud): Emerges and rests as a closed bud in the center of water ripples (0-2s)
- * 2. ค่อยผลิบาน (Unfolding): Outer -> Middle -> Inner petals peel back, golden stamen rises (2-3.75s)
- * 3. บานเต็มที่ (Full Bloom): Fully open blossom with gentle breathing and rotation (3.75-6s)
- * 4. แตกออก (Shatter): Blossom explodes into radial flying petals and shards (6-6.5s)
+ * 2. ค่อยผลิบาน (Unfolding): Outer -> Middle -> Inner petals peel back smoothly (2-5.1s)
+ * 3. บานเต็มที่ (Full Bloom): Fully open blossom with gentle breathing and rotation (5.1-6s)
+ * 4. แตกออก (Shatter): Petals disperse from 6-6.5s; the final ripple fades by 6.8s
  */
 public class RapturousBloomRenderer extends EntityRenderer<RapturousBloomEntity> {
     private static final ResourceLocation WHITE_TEXTURE =
@@ -48,7 +48,8 @@ public class RapturousBloomRenderer extends EntityRenderer<RapturousBloomEntity>
                 RenderSystem.defaultBlendFunc();
             });
 
-    private static final RenderType RENDER_TYPE = buildBloomRenderType();
+    private static final RenderType EFFECT_RENDER_TYPE = buildBloomRenderType();
+    private static final RenderType OPAQUE_PETAL_RENDER_TYPE = RenderType.entityCutoutNoCull(WHITE_TEXTURE);
 
     private static RenderType buildBloomRenderType() {
         RenderType.CompositeState state = RenderType.CompositeState.builder()
@@ -119,16 +120,18 @@ public class RapturousBloomRenderer extends EntityRenderer<RapturousBloomEntity>
         Matrix4f positionMatrix = pose.pose();
         Matrix3f normalMatrix = pose.normal();
 
-        VertexConsumer consumer = buffer.getBuffer(RENDER_TYPE);
+        VertexConsumer effectConsumer = buffer.getBuffer(EFFECT_RENDER_TYPE);
+        VertexConsumer opaquePetalConsumer = buffer.getBuffer(OPAQUE_PETAL_RENDER_TYPE);
 
         int phase = entity.getPhase();
         int seed = entity.getId();
 
         // 1. Render Ground Visuals (Water ripples, floral resonance circle, shockwave)
-        renderGroundVisuals(phase, time, positionMatrix, normalMatrix, consumer);
+        renderGroundVisuals(phase, time, positionMatrix, normalMatrix, effectConsumer);
 
         // 2. Render Layered Lotus/Plum Blossom Flower Model
-        renderFlowerModel(phase, time, seed, positionMatrix, normalMatrix, consumer);
+        renderFlowerModel(phase, time, seed, positionMatrix, normalMatrix,
+                opaquePetalConsumer, effectConsumer);
     }
 
     // =========================================================================
@@ -137,62 +140,98 @@ public class RapturousBloomRenderer extends EntityRenderer<RapturousBloomEntity>
 
     private void renderGroundVisuals(int phase, float time, Matrix4f position, Matrix3f normal, VertexConsumer consumer) {
         if (phase == RapturousBloomEntity.PHASE_RIPPLE) {
-            // Phase 1 (0-2s / 40 ticks): Concentric Aqua Water Ripples expanding outward
-            float rippleAlpha = Mth.clamp(time / 10.0F, 0.0F, 1.0F);
+            // Phase 1 (0-2s / 40 ticks): slow, thin aqua ripples.
+            float rippleAlpha = smootherstep(0.0F, 12.0F, time);
+            float boundaryPulse = 0.82F + 0.18F * Mth.sin(time * 0.08F);
 
-            // Boundary guide ring at max radius (3.0F)
-            renderRing(BASE_RADIUS, RING_WIDTH * 0.7F, GROUND_Y,
-                    RIPPLE_R, RIPPLE_G, RIPPLE_B, 0.35F * rippleAlpha, position, normal, consumer);
+            // Static boundary stays a single restrained line. Layered glow is
+            // reserved for the moving ripples only.
+            renderRing(BASE_RADIUS, RING_WIDTH * 0.32F, GROUND_Y,
+                    RIPPLE_R, RIPPLE_G, RIPPLE_B, 0.32F * rippleAlpha * boundaryPulse,
+                    position, normal, consumer);
 
             // Expanding ripple wave circles
             for (int k = 0; k < RIPPLE_COUNT; k++) {
                 float cycle = (time / RIPPLE_CYCLE_TICKS + (float) k / RIPPLE_COUNT);
                 float p = cycle - Mth.floor(cycle);
                 float currentRadius = p * BASE_RADIUS;
-                float waveAlpha = (1.0F - p) * Mth.sin(p * (float) Math.PI) * 0.70F * rippleAlpha;
-                float currentWidth = RING_WIDTH * (0.8F + p * 1.2F);
+                float waveAlpha = rippleFade(p) * 0.68F * rippleAlpha;
 
-                renderRing(currentRadius, currentWidth, GROUND_Y + 0.002F * k,
-                        RIPPLE_CORE_R, RIPPLE_CORE_G, RIPPLE_CORE_B, waveAlpha, position, normal, consumer);
+                renderRippleRing(currentRadius, RIPPLE_LINE_WIDTH, GROUND_Y + 0.002F * k,
+                        RIPPLE_CORE_R, RIPPLE_CORE_G, RIPPLE_CORE_B, waveAlpha,
+                        position, normal, consumer);
             }
         } else if (phase == RapturousBloomEntity.PHASE_BLOOM) {
-            // Phase 2 (2-6s / 40-120 ticks): Glowing Floral Nature Sigil on Ground
+            // Phase 2: cross-fade the water rings into the floral sigil.
             float bloomAge = time - RapturousBloomEntity.RIPPLE_DURATION_TICKS;
-            float fadeIn = Mth.clamp(bloomAge / 15.0F, 0.0F, 1.0F);
-            float pulse = 0.85F + 0.15F * Mth.sin(time * 0.12F);
+            float transition = smootherstep(0.0F, 20.0F, bloomAge);
+            float waterFade = 1.0F - transition;
+            float ringSwap = 0.5F + 0.5F * Mth.sin(time * 0.10F);
 
-            // Outer perimeter circle
-            renderRing(BASE_RADIUS, RING_WIDTH * 0.8F, GROUND_Y,
-                    GROUND_SIGIL_R, GROUND_SIGIL_G, GROUND_SIGIL_B, 0.45F * fadeIn * pulse, position, normal, consumer);
+            // Preserve outgoing ripples briefly so there is no phase pop.
+            renderRing(BASE_RADIUS, RING_WIDTH * 0.32F, GROUND_Y,
+                    RIPPLE_R, RIPPLE_G, RIPPLE_B, 0.30F * waterFade,
+                    position, normal, consumer);
+            for (int k = 0; k < RIPPLE_COUNT; k++) {
+                float cycle = (time / RIPPLE_CYCLE_TICKS + (float) k / RIPPLE_COUNT);
+                float p = cycle - Mth.floor(cycle);
+                renderRippleRing(p * BASE_RADIUS, RIPPLE_LINE_WIDTH,
+                        GROUND_Y + 0.002F * k, RIPPLE_CORE_R, RIPPLE_CORE_G, RIPPLE_CORE_B,
+                        rippleFade(p) * 0.60F * waterFade, position, normal, consumer);
+            }
+
+            // The rings trade brightness through phase-shifted sine curves.
+            renderRing(BASE_RADIUS, RING_WIDTH * 0.38F, GROUND_Y,
+                    GROUND_SIGIL_R, GROUND_SIGIL_G, GROUND_SIGIL_B,
+                    (0.30F + 0.14F * ringSwap) * transition, position, normal, consumer);
 
             // Inner concentric decorative rings
-            renderRing(1.85F, RING_WIDTH * 0.6F, GROUND_Y + 0.002F,
-                    GROUND_SIGIL_R, GROUND_SIGIL_G, GROUND_SIGIL_B, 0.30F * fadeIn, position, normal, consumer);
-            renderRing(0.90F, RING_WIDTH * 0.5F, GROUND_Y + 0.004F,
-                    PETAL_RIM_R, PETAL_RIM_G, PETAL_RIM_B, 0.40F * fadeIn * pulse, position, normal, consumer);
+            renderRing(1.85F, RING_WIDTH * 0.30F, GROUND_Y + 0.002F,
+                    GROUND_SIGIL_R, GROUND_SIGIL_G, GROUND_SIGIL_B,
+                    (0.23F + 0.11F * (1.0F - ringSwap)) * transition, position, normal, consumer);
+            renderRing(0.90F, RING_WIDTH * 0.26F, GROUND_Y + 0.004F,
+                    PETAL_RIM_R, PETAL_RIM_G, PETAL_RIM_B,
+                    (0.30F + 0.13F * ringSwap) * transition, position, normal, consumer);
 
             // Subtle secondary water ripples lingering beneath the flower
             for (int k = 0; k < 2; k++) {
                 float cycle = (time / (RIPPLE_CYCLE_TICKS * 1.3F) + (float) k / 2.0F);
                 float p = cycle - Mth.floor(cycle);
-                float waveAlpha = (1.0F - p) * 0.22F * fadeIn;
-                renderRing(p * BASE_RADIUS, RING_WIDTH * 0.5F, GROUND_Y + 0.001F,
+                float waveAlpha = rippleFade(p) * 0.18F * transition;
+                renderRippleRing(p * BASE_RADIUS, RIPPLE_LINE_WIDTH * 0.80F, GROUND_Y + 0.001F,
                         RIPPLE_R, RIPPLE_G, RIPPLE_B, waveAlpha, position, normal, consumer);
             }
         } else if (phase == RapturousBloomEntity.PHASE_BURST) {
-            // Phase 3 (6-6.5s / 120-130 ticks): Violent Expanding Shockwave Ring
+            // Phase 3: a soft luminous shockwave grows out of the fading sigil.
             float burstAge = time - RapturousBloomEntity.BURST_TICK;
             float p = Mth.clamp(burstAge / RapturousBloomEntity.BURST_VISUAL_TICKS, 0.0F, 1.0F);
-            float ease = easeOutCubic(p);
+            float ease = smootherstep01(p);
+            float sigilFade = 1.0F - smootherstep(0.0F, 0.32F, p);
             float currentRadius = Mth.lerp(ease, 0.6F, 4.4F);
-            float alpha = (1.0F - p) * (1.0F - p);
-            float width = 0.45F * (1.0F + ease * 0.8F);
+            float alpha = rippleFade(p);
 
-            renderRing(currentRadius, width, GROUND_Y + 0.01F,
-                    BURST_R, BURST_G, BURST_B, alpha * 0.95F, position, normal, consumer);
-            renderRing(currentRadius * 0.92F, width * 0.5F, GROUND_Y + 0.015F,
-                    STAMEN_TIP_R, STAMEN_TIP_G, STAMEN_TIP_B, alpha, position, normal, consumer);
+            renderRing(BASE_RADIUS, RING_WIDTH * 0.38F, GROUND_Y,
+                    GROUND_SIGIL_R, GROUND_SIGIL_G, GROUND_SIGIL_B,
+                    0.34F * sigilFade, position, normal, consumer);
+            renderRing(1.85F, RING_WIDTH * 0.30F, GROUND_Y + 0.002F,
+                    PETAL_RIM_R, PETAL_RIM_G, PETAL_RIM_B,
+                    0.26F * sigilFade, position, normal, consumer);
+            renderRippleRing(currentRadius, BURST_RIPPLE_LINE_WIDTH, GROUND_Y + 0.01F,
+                    BURST_R, BURST_G, BURST_B, alpha * 0.88F,
+                    position, normal, consumer);
         }
+    }
+
+    private static void renderRippleRing(float radius, float lineWidth, float y,
+                                         float r, float g, float b, float alpha,
+                                         Matrix4f position, Matrix3f normal, VertexConsumer consumer) {
+        if (alpha <= 0.003F || radius <= 0.01F) return;
+
+        // A narrow bright core plus two faint bands reads as a thin water line
+        // with glow, without turning the whole ground sigil into a thick halo.
+        renderRing(radius, lineWidth * 4.0F, y, r, g, b, alpha * 0.07F, position, normal, consumer);
+        renderRing(radius, lineWidth * 2.2F, y + 0.0005F, r, g, b, alpha * 0.16F, position, normal, consumer);
+        renderRing(radius, lineWidth, y + 0.001F, r, g, b, alpha * 0.82F, position, normal, consumer);
     }
 
     private static void renderRing(float radius, float width, float y,
@@ -216,7 +255,8 @@ public class RapturousBloomRenderer extends EntityRenderer<RapturousBloomEntity>
     // =========================================================================
 
     private void renderFlowerModel(int phase, float time, int seed,
-                                   Matrix4f position, Matrix3f normal, VertexConsumer consumer) {
+                                   Matrix4f position, Matrix3f normal,
+                                   VertexConsumer opaquePetalConsumer, VertexConsumer effectConsumer) {
         float flowerScale;
         float outerTilt;
         float middleTilt;
@@ -229,10 +269,10 @@ public class RapturousBloomRenderer extends EntityRenderer<RapturousBloomEntity>
 
         if (phase == RapturousBloomEntity.PHASE_RIPPLE) {
             // Stage 1: เริ่มต้น (หุบเป็นตุ่มดอกไม้อยู่ตรงกลางวงน้ำ)
-            // Closed bud rises and rests at center while water ripples expand
-            float budEmerge = Mth.clamp(time / 18.0F, 0.0F, 1.0F);
-            float bob = 0.02F * Mth.sin(time * 0.15F);
-            flowerScale = (0.20F + 0.55F * easeOutCubic(budEmerge)) + bob;
+            // Grow slowly from a tiny closed bud for the whole ripple phase.
+            float budEmerge = smootherstep(0.0F, RapturousBloomEntity.RIPPLE_DURATION_TICKS, time);
+            float bob = 0.008F * budEmerge * Mth.sin(time * 0.12F);
+            flowerScale = Mth.lerp(budEmerge, BUD_START_SCALE, BUD_END_SCALE) + bob;
 
             // Tightly closed upright bud angles
             outerTilt = OUTER_BUD_ANGLE;
@@ -240,26 +280,22 @@ public class RapturousBloomRenderer extends EntityRenderer<RapturousBloomEntity>
             innerTilt = INNER_BUD_ANGLE;
             bloomProgress = 0.0F;
 
-            // Stamen is tucked low inside the closed bud
-            stamenHeight = STAMEN_HEIGHT * 0.20F * budEmerge;
-            stamenAlpha = 0.40F * budEmerge; // Gentle inner glow
+            // Keep a fixed stamen shape and reveal it only through opacity.
+            stamenHeight = STAMEN_HEIGHT;
+            stamenAlpha = 0.15F * smootherstep(0.45F, 1.0F, budEmerge);
         } else if (phase == RapturousBloomEntity.PHASE_BLOOM) {
             // Stage 2 & 3: ค่อยๆ ผลิบาน -> บานเต็มที่ (Layer-by-layer progressive unfolding)
             float bloomAge = time - RapturousBloomEntity.RIPPLE_DURATION_TICKS;
 
-            // Progressive unfolding over 35 ticks (ticks 40 to 75)
-            // Outer layer opens first (0 to 28 ticks)
-            float pOuter = Mth.clamp(bloomAge / 28.0F, 0.0F, 1.0F);
-            // Middle layer follows (6 to 32 ticks)
-            float pMid = Mth.clamp((bloomAge - 6.0F) / 26.0F, 0.0F, 1.0F);
-            // Inner layer follows (12 to 36 ticks)
-            float pInner = Mth.clamp((bloomAge - 12.0F) / 24.0F, 0.0F, 1.0F);
-            // Scale expands from bud (0.75) to full size (1.0)
-            float pScale = Mth.clamp(bloomAge / 25.0F, 0.0F, 1.0F);
+            // Layered unfolding now occupies most of the four-second phase.
+            float pOuter = Mth.clamp(bloomAge / OUTER_BLOOM_TICKS, 0.0F, 1.0F);
+            float pMid = Mth.clamp((bloomAge - MIDDLE_BLOOM_DELAY_TICKS) / MIDDLE_BLOOM_TICKS, 0.0F, 1.0F);
+            float pInner = Mth.clamp((bloomAge - INNER_BLOOM_DELAY_TICKS) / INNER_BLOOM_TICKS, 0.0F, 1.0F);
+            float pScale = Mth.clamp(bloomAge / FLOWER_GROWTH_TICKS, 0.0F, 1.0F);
 
-            float easeOuter = easeOutCubic(pOuter);
-            float easeMid = easeOutCubic(pMid);
-            float easeInner = easeOutCubic(pInner);
+            float easeOuter = smootherstep01(pOuter);
+            float easeMid = smootherstep01(pMid);
+            float easeInner = smootherstep01(pInner);
 
             outerTilt = Mth.lerp(easeOuter, OUTER_BUD_ANGLE, OUTER_BLOOM_ANGLE);
             middleTilt = Mth.lerp(easeMid, MIDDLE_BUD_ANGLE, MIDDLE_BLOOM_ANGLE);
@@ -267,45 +303,55 @@ public class RapturousBloomRenderer extends EntityRenderer<RapturousBloomEntity>
 
             bloomProgress = (easeOuter + easeMid + easeInner) / 3.0F;
 
-            // Subtle breathing idle animation once blooming
-            float breathe = 1.0F + 0.025F * Mth.sin(time * 0.09F);
-            flowerScale = Mth.lerp(easeOutCubic(pScale), 0.75F, 1.0F) * breathe;
+            // Fade breathing in near the end so opening motion remains steady.
+            float easedScale = smootherstep01(pScale);
+            float breatheWeight = smootherstep(0.82F, 1.0F, pScale);
+            float breathe = 1.0F + 0.018F * breatheWeight * Mth.sin(time * 0.075F);
+            flowerScale = Mth.lerp(easedScale, BUD_END_SCALE, 1.0F) * breathe;
 
-            // Golden stamen rises and brightens as petals open
-            stamenHeight = Mth.lerp(easeInner, STAMEN_HEIGHT * 0.20F, STAMEN_HEIGHT);
-            stamenAlpha = Mth.lerp(easeInner, 0.40F, 0.95F);
+            // Reveal the fixed-height stamen without stretching its geometry.
+            float stamenReveal = smootherstep(0.10F, 0.82F, pInner);
+            stamenHeight = STAMEN_HEIGHT;
+            stamenAlpha = Mth.lerp(stamenReveal, 0.15F, 0.92F);
         } else {
             // Stage 4 & 5: แตกออก -> กระจายเป็นชิ้นเล็กๆ (Shatter & Disperse)
             float burstAge = time - RapturousBloomEntity.BURST_TICK;
-            burstProgress = Mth.clamp(burstAge / RapturousBloomEntity.BURST_VISUAL_TICKS, 0.0F, 1.0F);
+            burstProgress = Mth.clamp(burstAge / RapturousBloomEntity.PETAL_SHATTER_TICKS, 0.0F, 1.0F);
             flowerScale = 1.0F;
             outerTilt = OUTER_BLOOM_ANGLE;
             middleTilt = MIDDLE_BLOOM_ANGLE;
             innerTilt = INNER_BLOOM_ANGLE;
             bloomProgress = 1.0F;
             stamenHeight = STAMEN_HEIGHT;
-            stamenAlpha = (1.0F - burstProgress) * (1.0F - burstProgress);
+            // Fade in place; the center no longer stretches or flies outward.
+            stamenAlpha = 1.0F - smootherstep01(burstProgress);
         }
 
         if (flowerScale <= 0.01F) return;
 
         // Render Center Stamen (เกสร)
-        renderCenterStamen(time, stamenHeight, flowerScale, stamenAlpha, burstProgress, position, normal, consumer);
+        renderCenterStamen(time, stamenHeight, flowerScale, stamenAlpha,
+                position, normal, effectConsumer);
+
+        // Stable petals are rendered through an opaque, depth-writing layer so
+        // their scarlet colors stay saturated. Shattering petals retain the
+        // additive layer so the existing fade-out animation remains intact.
+        VertexConsumer petalConsumer = burstProgress < 0.0F ? opaquePetalConsumer : effectConsumer;
 
         // Render Outer Layer (กลีบชั้นนอก - 10 Petals)
         renderPetalLayer(OUTER_PETAL_COUNT, 0.0F, OUTER_PETAL_LENGTH, OUTER_PETAL_WIDTH,
                 OUTER_PETAL_CURVE, outerTilt, OUTER_PIVOT_Y, flowerScale, idleRot,
-                bloomProgress, burstProgress, seed, 0, position, normal, consumer);
+                bloomProgress, burstProgress, seed, 0, position, normal, petalConsumer);
 
         // Render Middle Layer (กลีบชั้นกลาง - 8 Petals, offset angle)
         renderPetalLayer(MIDDLE_PETAL_COUNT, (float) Math.PI / 8.0F, MIDDLE_PETAL_LENGTH, MIDDLE_PETAL_WIDTH,
                 MIDDLE_PETAL_CURVE, middleTilt, MIDDLE_PIVOT_Y, flowerScale, idleRot,
-                bloomProgress, burstProgress, seed, 1, position, normal, consumer);
+                bloomProgress, burstProgress, seed, 1, position, normal, petalConsumer);
 
         // Render Inner Layer (กลีบชั้นใน - 6 Petals, offset angle)
         renderPetalLayer(INNER_PETAL_COUNT, (float) Math.PI / 6.0F, INNER_PETAL_LENGTH, INNER_PETAL_WIDTH,
                 INNER_PETAL_CURVE, innerTilt, INNER_PIVOT_Y, flowerScale, idleRot,
-                bloomProgress, burstProgress, seed, 2, position, normal, consumer);
+                bloomProgress, burstProgress, seed, 2, position, normal, petalConsumer);
     }
 
     // =========================================================================
@@ -318,7 +364,7 @@ public class RapturousBloomRenderer extends EntityRenderer<RapturousBloomEntity>
                                   int seed, int layerId,
                                   Matrix4f position, Matrix3f normal, VertexConsumer consumer) {
         boolean shattering = burstProgress >= 0.0F;
-        float baseAlpha = shattering ? (1.0F - burstProgress) * (1.0F - burstProgress) : 0.98F;
+        float baseAlpha = shattering ? (1.0F - burstProgress) * (1.0F - burstProgress) : 1.0F;
         if (baseAlpha <= 0.005F) return;
 
         float easeBurst = shattering ? easeOutCubic(burstProgress) : 0.0F;
@@ -489,7 +535,7 @@ public class RapturousBloomRenderer extends EntityRenderer<RapturousBloomEntity>
         float r = Mth.lerp(rimMix, centerR, edgeR);
         float g = Mth.lerp(rimMix, centerG, edgeG);
         float b = Mth.lerp(rimMix, centerB, edgeB);
-        float vertexAlpha = Mth.lerp(rimMix, alpha * 0.95F, alpha);
+        float vertexAlpha = alpha < 1.0F ? Mth.lerp(rimMix, alpha * 0.95F, alpha) : 1.0F;
         vertex(consumer, position, normal, x, y, z, r, g, b, vertexAlpha);
     }
 
@@ -532,11 +578,9 @@ public class RapturousBloomRenderer extends EntityRenderer<RapturousBloomEntity>
     // =========================================================================
 
     private void renderCenterStamen(float time, float height, float scale, float alpha,
-                                    float burstProgress,
                                     Matrix4f position, Matrix3f normal, VertexConsumer consumer) {
         if (alpha <= 0.005F) return;
 
-        boolean shattering = burstProgress >= 0.0F;
         float coreRadius = 0.09F * scale;
         float h = height * scale;
 
@@ -571,13 +615,6 @@ public class RapturousBloomRenderer extends EntityRenderer<RapturousBloomEntity>
             float tz = sin * flare;
             float ty = by + h;
 
-            if (shattering) {
-                float disperse = burstProgress * 2.5F;
-                tx += cos * disperse;
-                tz += sin * disperse;
-                ty += burstProgress * 1.5F;
-            }
-
             // Filament stalk line quad
             float halfW = 0.014F * scale;
             vertex(consumer, position, normal, bx - halfW, by, bz, STAMEN_R, STAMEN_G, STAMEN_B, alpha * 0.7F);
@@ -601,6 +638,21 @@ public class RapturousBloomRenderer extends EntityRenderer<RapturousBloomEntity>
     private static float easeOutCubic(float p) {
         float inv = 1.0F - p;
         return 1.0F - inv * inv * inv;
+    }
+
+    private static float smootherstep01(float p) {
+        float t = Mth.clamp(p, 0.0F, 1.0F);
+        return t * t * t * (t * (t * 6.0F - 15.0F) + 10.0F);
+    }
+
+    private static float smootherstep(float edge0, float edge1, float x) {
+        return smootherstep01((x - edge0) / (edge1 - edge0));
+    }
+
+    private static float rippleFade(float progress) {
+        float appear = smootherstep(0.0F, 0.07F, progress);
+        float fade = 1.0F - smootherstep(0.10F, 1.0F, progress);
+        return appear * fade;
     }
 
     private static float smoothstep(float edge0, float edge1, float x) {

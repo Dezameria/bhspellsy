@@ -13,6 +13,7 @@ import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -77,10 +78,19 @@ public class GaleDriveVortexEntity extends AoeEntity implements GeoEntity, AntiM
             }
 
             // 1. ตรึงเป้าหมายหลักให้ลอยค้างบนฟ้าสูง 6 บล็อก และทำดาเมจ 2 หน่วยต่อ 1 วินาที
-            if (this.capturedTarget != null && this.capturedTarget.isAlive()) {
+            if (this.capturedTarget != null && this.capturedTarget.isAlive() && !this.capturedTarget.isRemoved()) {
                 double targetY = this.groundY + 6.0;
-                this.capturedTarget.teleportTo(this.getX(), targetY, this.getZ());
-                this.capturedTarget.setDeltaMovement(0, 0, 0);
+                if (this.capturedTarget instanceof ServerPlayer player) {
+                    // ดึงเข้าสู่ใจกลางพายุและพยุงตัวไว้ด้วย Motion เพื่อป้องกัน Rubberbanding และการถูกเตะโดย Vanilla Anti-Cheat
+                    double dx = this.getX() - player.getX();
+                    double dy = targetY - player.getY();
+                    double dz = this.getZ() - player.getZ();
+                    player.setDeltaMovement(new Vec3(dx, dy, dz).scale(0.35));
+                    player.hurtMarked = true;
+                } else {
+                    this.capturedTarget.teleportTo(this.getX(), targetY, this.getZ());
+                    this.capturedTarget.setDeltaMovement(0, 0, 0);
+                }
                 this.capturedTarget.fallDistance = 6.0f; // เตรียมระยะตกให้รับ Fall Damage เมื่อพายุหมด
 
                 // ดาเมจ 2 ดาเมจ ต่อ 1 วินาที (ทุกๆ 20 ticks) รวม 7 วินาที
@@ -161,8 +171,9 @@ public class GaleDriveVortexEntity extends AoeEntity implements GeoEntity, AntiM
     }
 
     private void releaseTarget(boolean applyFallPenalty) {
-        if (this.capturedTarget != null && this.capturedTarget.isAlive()) {
+        if (this.capturedTarget != null && this.capturedTarget.isAlive() && !this.capturedTarget.isRemoved()) {
             this.capturedTarget.setDeltaMovement(0, -0.8, 0);
+            this.capturedTarget.hurtMarked = true;
             this.capturedTarget.fallDistance = 6.0f; // รับ Fall Damage จากความสูง 6 บล็อก
             if (applyFallPenalty) {
                 // ให้ GaleFallImpactEffect เพื่อตรวจจับเมื่อตกถึงพื้น แล้วมอบ Nausea II,

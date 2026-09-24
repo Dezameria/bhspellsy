@@ -31,7 +31,7 @@ After each blast cast, the next recast is locked until the current 24-tick shock
 
 The first, second, and final blasts deal 6, 10, and 16 direct spell damage respectively. Targets must be alive, hostile to the caster, not the caster, and not an armor stand. The horizontal and vertical launch strengths are `1.8/1.2`, `2.5/1.5`, and `3.8/2.0` respectively. Normal fall damage may occur after the launch.
 
-Each accepted cast refreshes Strength II, Resistance II, and Fire Resistance I on the caster for 300 ticks. If the recast sequence expires or finishes, the cooldown effect is applied. A non-exploding dome is removed immediately; an exploding dome is marked for removal as soon as its current 24-tick shockwave completes.
+Each accepted cast refreshes Strength II, Resistance II, and Fire Resistance I on the caster and all allies within the 8-block barrier dome for 300 ticks. Furthermore, while the barrier dome is open (`STATE_OPEN`), any allies standing within its 8-block radius continuously receive and refresh these buffs every 10 ticks (lingering for 100 ticks upon leaving). Allies are resolved via `ResonantKnellSpell.isAlly()` (matching scoreboard teams, non-friendly-fire players, and tamed pets); allies are also exempt from blast damage and knockback. If the recast sequence expires or finishes, the cooldown effect is applied. A non-exploding dome is removed immediately; an exploding dome is marked for removal as soon as its current 24-tick shockwave completes.
 
 ## Entity lifecycle and synchronization
 
@@ -86,3 +86,4 @@ The renderer stops drawing beyond 64 blocks from the entity center. Additional c
 - Let the recast window expire during a stage-1 or stage-2 blast and verify the ring finishes before the dome entity disappears without leaving an inactive visual or stale entity.
 - In integrated singleplayer, verify server casts never select the client-side mirror entity and that a new sequence removes any same-side stale dome.
 - Verify that gameplay damage remains immediate and is not delayed until the visual ring reaches a target.
+- Verify `ResonantKnellSpell.isAlly()` correctly recognizes teammates and non-friendly-fire players as allies (receiving buffs) and hostile players as enemies (taking blast damage without receiving dome buffs).

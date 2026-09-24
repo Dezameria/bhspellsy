@@ -1,6 +1,5 @@
 package io.redspace.ironspell_more.entity.spells.rapturous_bloom;
 
-import io.redspace.ironspell_more.client.particle.ShockwaveParticleOptionCustom;
 import io.redspace.ironspell_more.registry.EntityRegistry;
 import io.redspace.ironspell_more.registry.ParticleRegistry;
 import io.redspace.ironspell_more.registry.SpellRegistry;
@@ -9,13 +8,15 @@ import io.redspace.ironsspellbooks.damage.DamageSources;
 import io.redspace.ironsspellbooks.entity.mobs.AntiMagicSusceptible;
 import io.redspace.ironsspellbooks.entity.spells.AoeEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -32,7 +33,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.PlayerTeam;
-import org.joml.Vector3f;
+import net.minecraftforge.registries.ForgeRegistries;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +42,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RapturousBloomEntity extends AoeEntity implements AntiMagicSusceptible {
+    private static final ResourceLocation BLESSED_SPARKLE_ID =
+            ResourceLocation.fromNamespaceAndPath("dungeons_and_combat", "blessed_sparkle");
+
     public static final int PHASE_RIPPLE = 0;
     public static final int PHASE_BLOOM = 1;
     public static final int PHASE_BURST = 2;
@@ -48,7 +52,8 @@ public class RapturousBloomEntity extends AoeEntity implements AntiMagicSuscepti
     public static final int RIPPLE_DURATION_TICKS = 40; // 2 seconds
     public static final int BLOOM_DURATION_TICKS = 80;   // 4 seconds bloom
     public static final int BURST_TICK = RIPPLE_DURATION_TICKS + BLOOM_DURATION_TICKS; // 120 ticks
-    public static final int BURST_VISUAL_TICKS = 10;    // 0.5s visual shell to render burst animation
+    public static final int PETAL_SHATTER_TICKS = 10;   // 0.5s petal shatter, unchanged
+    public static final int BURST_VISUAL_TICKS = 16;    // 0.8s shell for the slower fading ripple
     public static final int TOTAL_LIFETIME_TICKS = BURST_TICK + BURST_VISUAL_TICKS;
 
     public static final float DEFAULT_RADIUS = 3.0F;
@@ -319,16 +324,9 @@ public class RapturousBloomEntity extends AoeEntity implements AntiMagicSuscepti
 
         // Burst VFX on server
         if (this.level() instanceof ServerLevel serverLevel) {
-            Vector3f shockwaveColor = new Vector3f(0.890F, 0.071F, 0.275F); // Bright Red #E31246
-            Vector3f direction = new Vector3f(0, 1, 0);
-
-            for (ServerPlayer player : serverLevel.players()) {
-                serverLevel.sendParticles(player,
-                        new ShockwaveParticleOptionCustom(shockwaveColor, radius * 1.3F, true, direction),
-                        true, getX(), getY() + 0.15, getZ(), 1, 0, 0, 0, 0);
-            }
-
-            // Custom plum petals and spores flying outwards
+            // Custom plum petals and spores fly outwards. The final ground
+            // ripple is rendered procedurally on the entity, avoiding a second
+            // thick textured shockwave layered over the thin water-like line.
             for (int i = 0; i < 40; i++) {
                 double speed = 0.25 + this.random.nextDouble() * 0.35;
                 double angle = this.random.nextDouble() * Math.PI * 2.0;
@@ -367,6 +365,12 @@ public class RapturousBloomEntity extends AoeEntity implements AntiMagicSuscepti
 
         int phase = getPhase();
         float radius = getRadius();
+
+        // Fine golden motes rise from the center like released pollen.
+        if (phase != PHASE_BURST
+                && this.tickCount % (phase == PHASE_RIPPLE ? 3 : 2) == 0) {
+            spawnBlessedSparklePollen(phase);
+        }
 
         if (phase == PHASE_RIPPLE) {
             // Water droplet & ripple particles around ground ring
@@ -428,6 +432,31 @@ public class RapturousBloomEntity extends AoeEntity implements AntiMagicSuscepti
             double vz = Mth.sin(angle) * radialSpeed + Mth.cos(angle) * tangentSpeed;
             double vy = 0.018D + lifecycleProgress * 0.022D + this.random.nextDouble() * 0.018D;
             this.level().addParticle(ParticleRegistry.RED_PLUM.get(), px, py, pz, vx, vy, vz);
+        }
+    }
+
+    private void spawnBlessedSparklePollen(int phase) {
+        ParticleType<?> particleType = ForgeRegistries.PARTICLE_TYPES.getValue(BLESSED_SPARKLE_ID);
+        if (!(particleType instanceof SimpleParticleType blessedSparkle)) {
+            return;
+        }
+
+        float bloomProgress = phase == PHASE_BLOOM
+                ? Mth.clamp((this.tickCount - RIPPLE_DURATION_TICKS) / 60.0F, 0.0F, 1.0F)
+                : Mth.clamp(this.tickCount / (float) RIPPLE_DURATION_TICKS, 0.0F, 1.0F) * 0.35F;
+        int count = phase == PHASE_BLOOM && this.random.nextFloat() < 0.30F + bloomProgress * 0.35F ? 2 : 1;
+
+        for (int i = 0; i < count; i++) {
+            float angle = this.random.nextFloat() * Mth.TWO_PI;
+            float spawnRadius = 0.03F + this.random.nextFloat() * 0.14F;
+            double px = getX() + Mth.cos(angle) * spawnRadius;
+            double py = getY() + 0.16D + bloomProgress * 0.20D + this.random.nextDouble() * 0.10D;
+            double pz = getZ() + Mth.sin(angle) * spawnRadius;
+            double drift = 0.002D + this.random.nextDouble() * 0.008D;
+            double vx = Mth.cos(angle) * drift;
+            double vy = 0.025D + bloomProgress * 0.030D + this.random.nextDouble() * 0.018D;
+            double vz = Mth.sin(angle) * drift;
+            this.level().addParticle(blessedSparkle, px, py, pz, vx, vy, vz);
         }
     }
 

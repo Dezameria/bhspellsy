@@ -4,15 +4,18 @@ import io.redspace.ironspell_more.IronSpellMore;
 import io.redspace.ironspell_more.entity.spells.gale_piercer.GaleArrowEntity;
 import io.redspace.ironspell_more.entity.spells.gale_piercer.WindArrowEntity;
 import io.redspace.ironspell_more.event.GalePiercerCastingEvents;
+import io.redspace.ironspell_more.registry.ParticleRegistry;
 import io.redspace.ironsspellbooks.api.config.DefaultConfig;
 import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.api.registry.SchoolRegistry;
 import io.redspace.ironsspellbooks.api.spells.*;
 import io.redspace.ironsspellbooks.api.util.AnimationHolder;
 import io.redspace.ironsspellbooks.api.util.Utils;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -26,7 +29,7 @@ import java.util.Optional;
 
 @AutoSpellConfig
 public class GalePiercerSpell extends AbstractSpell {
-    private static final ResourceLocation SPELL_ID = IronSpellMore.id("gale_piercer");
+    public static final ResourceLocation SPELL_ID = IronSpellMore.id("gale_piercer");
 
     public static final int FULL_CHARGE_TICKS = 200; // 10 seconds
     public static final int NATIVE_HOLD_CAST_TICKS = 1_000_000_000;
@@ -93,13 +96,69 @@ public class GalePiercerSpell extends AbstractSpell {
             GalePiercerCastingEvents.updateLock(serverPlayer, this, MAX_LOCK_RANGE);
 
             int elapsedTicks = getElapsedCastTicks(magicData);
-            if (elapsedTicks == FULL_CHARGE_TICKS) {
-                // Audio and message notifying full charge reached
-                serverPlayer.displayClientMessage(Component.translatable("ui.ironspell_more.gale_piercer_full_charge"), true);
-                level.playSound(null, caster.getX(), caster.getY(), caster.getZ(),
-                        SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.8F);
-                level.playSound(null, caster.getX(), caster.getY(), caster.getZ(),
-                        SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.6F);
+
+            // Compute arrow position in front of caster's right hand
+            Vec3 lookDir = caster.getLookAngle().normalize();
+            Vec3 rightDir = lookDir.cross(new Vec3(0, 1, 0)).normalize();
+            if (rightDir.lengthSqr() < 1.0E-4D) {
+                rightDir = new Vec3(1, 0, 0);
+            }
+            Vec3 arrowPos = caster.getEyePosition().add(lookDir.scale(0.7D)).add(rightDir.scale(0.25D)).subtract(0, 0.12D, 0);
+
+            if (serverPlayer.level() instanceof ServerLevel serverLevel) {
+                // 1. Continuous inward-swirling particles orbiting toward the arrow
+                int particleCount = (elapsedTicks >= FULL_CHARGE_TICKS) ? 4 : 3;
+                for (int i = 0; i < particleCount; i++) {
+                    double radius = 0.55D + caster.getRandom().nextDouble() * 0.35D;
+                    double theta = caster.getRandom().nextDouble() * Math.PI * 2.0D;
+                    double phi = (caster.getRandom().nextDouble() - 0.5D) * Math.PI;
+                    Vec3 pOffset = new Vec3(
+                            Math.cos(theta) * Math.cos(phi) * radius,
+                            Math.sin(phi) * radius,
+                            Math.sin(theta) * Math.cos(phi) * radius
+                    );
+                    Vec3 spawnPos = arrowPos.add(pOffset);
+                    Vec3 inwardVel = arrowPos.subtract(spawnPos).scale(0.14D);
+
+                    if (elapsedTicks < FULL_CHARGE_TICKS) {
+                        // White-gray / wind silver swirling inward particles
+                        serverLevel.sendParticles(ParticleTypes.ENCHANT, spawnPos.x, spawnPos.y, spawnPos.z, 0, inwardVel.x, inwardVel.y, inwardVel.z, 1.0D);
+                        if (i == 0) {
+                            serverLevel.sendParticles(ParticleRegistry.WHITE_EMBER.get(), spawnPos.x, spawnPos.y, spawnPos.z, 0, inwardVel.x, inwardVel.y, inwardVel.z, 0.08D);
+                        }
+                    } else {
+                        // Fully charged: fiery sparks and flames swirling inward
+                        serverLevel.sendParticles(ParticleTypes.SMALL_FLAME, spawnPos.x, spawnPos.y, spawnPos.z, 0, inwardVel.x, inwardVel.y, inwardVel.z, 0.10D);
+                        if (i == 0) {
+                            serverLevel.sendParticles(ParticleTypes.FLAME, spawnPos.x, spawnPos.y, spawnPos.z, 0, inwardVel.x * 0.8D, inwardVel.y * 0.8D, inwardVel.z * 0.8D, 0.06D);
+                        }
+                    }
+                }
+
+                // 2. Full charge reached: audio notification and outward particle dispersion burst
+                if (elapsedTicks == FULL_CHARGE_TICKS) {
+                    serverPlayer.displayClientMessage(Component.translatable("ui.ironspell_more.gale_piercer_full_charge"), true);
+                    level.playSound(null, caster.getX(), caster.getY(), caster.getZ(),
+                            SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.8F);
+                    level.playSound(null, caster.getX(), caster.getY(), caster.getZ(),
+                            SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.6F);
+
+                    // Outward particle dispersion burst
+                    for (int i = 0; i < 24; i++) {
+                        double yaw = (i / 24.0D) * Math.PI * 2.0D;
+                        double pitch = (caster.getRandom().nextDouble() - 0.5D) * 0.7D;
+                        double speed = 0.16D + caster.getRandom().nextDouble() * 0.1D;
+                        double vx = Math.cos(yaw) * Math.cos(pitch) * speed;
+                        double vy = Math.sin(pitch) * speed;
+                        double vz = Math.sin(yaw) * Math.cos(pitch) * speed;
+
+                        serverLevel.sendParticles(ParticleTypes.FLAME, arrowPos.x, arrowPos.y, arrowPos.z, 0, vx, vy, vz, 1.0D);
+                        if (i % 2 == 0) {
+                            serverLevel.sendParticles(ParticleRegistry.WHITE_FIRE.get(), arrowPos.x, arrowPos.y, arrowPos.z, 0, vx * 0.8D, vy * 0.8D, vz * 0.8D, 1.0D);
+                        }
+                    }
+                    serverLevel.sendParticles(ParticleTypes.FLASH, arrowPos.x, arrowPos.y, arrowPos.z, 1, 0, 0, 0, 0);
+                }
             }
         }
         super.onServerCastTick(level, spellLevel, caster, magicData);

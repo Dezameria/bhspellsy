@@ -1,6 +1,6 @@
 # Per-spell documentation
 
-This directory is the required source of detailed design and implementation notes for spells in IronSpell More. The index currently covers all **20 registered spells across 6 magic schools**.
+This directory is the required source of detailed design and implementation notes for spells in IronSpell More. The index currently covers all **21 registered spells across 6 magic schools**.
 
 ## File organization
 
@@ -38,6 +38,7 @@ This directory is the required source of detailed design and implementation note
 - [Crimson Rain Bathes Moon](aqua/crimson_rain_bathes_moon.md) — หาน หลิงเหวิน (Han Lingwen)
 - [Glacial Veil](aqua/glacial_veil.md) — หยิง ซีหยาง (Ying Xiyang)
 - [Glacial Firmament](aqua/glacial_firmament.md) — ปิงเยว่ (Bingyue)
+- [Toxic Salvation](aqua/toxic_salvation.md) — ซงหลิน (Song Lin)
 
 ### 🪙 Gold
 

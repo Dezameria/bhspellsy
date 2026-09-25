@@ -1,6 +1,6 @@
 # รายการเวททั้งหมด
 
-รายการนี้ซิงก์กับ `src/main/java/io/redspace/ironspell_more/registry/SpellRegistry.java` ปัจจุบันมี **20 เวทใน 6 สายเวท** รายละเอียดค่าพลัง ระยะเวลา damage, cooldown, entity, asset และ edge case ให้ยึดเอกสารรายสกิลที่ลิงก์ไว้
+รายการนี้ซิงก์กับ `src/main/java/io/redspace/ironspell_more/registry/SpellRegistry.java` ปัจจุบันมี **21 เวทใน 6 สายเวท** รายละเอียดค่าพลัง ระยะเวลา damage, cooldown, entity, asset และ edge case ให้ยึดเอกสารรายสกิลที่ลิงก์ไว้
 
 > **หมายเหตุระบบ Scroll และ Config:**
 > - สกิลทุกสกิลในม็อดถูกกำหนดให้มี Scroll เพียงระดับเดียวคือ **Level 1** (`maxLevel = 1`) ทำให้ในเมนูสร้างสรรค์ (Creative Tab), JEI, ดรอปจากมอนสเตอร์ หรือกล่องสมบัติ จะพบเพียงคัมภีร์ระดับ 1 เท่านั้น

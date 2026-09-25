@@ -68,7 +68,13 @@ Server ส่ง `SyncTigershadeTargetPacket` ไปยังผู้ร่า�
 - เป้าหมายถูกกระแทกลงพื้น (`y = -1.2D`)
 - สร้างความเสียหาย spell damage จาก `SpellConfig.TigershadeTerrabreak` (ดีฟอลต์เลเวล 1 คือ 30 damage) และคูณด้วย spell power multiplier ของผู้ร่าย
 - หากติดตั้ง Epic Fight จะสร้าง fracture ของพื้นรัศมี 3 บล็อกที่ตำแหน่งกระแทกผ่าน optional compat facade
-- แสดงเอฟเฟกต์การทุบทุกครั้งที่ทำสำเร็จแม้ไม่มี Epic Fight: เสียงระเบิด/ทั่งตก, custom shockwave, เศษดิน Coarse Dirt, dust สีส้มทอง, flame, lava, แสงวาบ `FLASH` และ explosion emitter
+- แสดงเอฟเฟกต์การทุบหนักแน่น (Heavy Impact):
+  - เสียงปะทะหนักหน่วง: `SoundEvents.WARDEN_ATTACK_IMPACT`, `SoundEvents.WARDEN_SONIC_BOOM`, `SoundEvents.GENERIC_EXPLODE`, `SoundEvents.DRAGON_FIREBALL_EXPLODE` (ตัดเสียงทั่งออกตามบรีฟ)
+  - คลื่นกระแทก 3 ชั้นที่พื้น: วงนอกสีม่วง (6.8 บล็อก), วงกลางสีชมพูมาเจนต้า (5.0 บล็อก), วงในสีทอง (3.2 บล็อก) ผ่าน `ShockwaveParticleOptionCustom`
+  - โดมพลังงานสีม่วงขนาดใหญ่ (Violet Energy Dome Canopy): โดมครึ่งทรงกลมรัศมี 5.2 บล็อก สร้างจากฝุ่นสีม่วง/มาเจนต้า, ควัน `DRAGON_BREATH`, และประกายดาว `WITCH`
+  - ริบบิ้นคมกรงเล็บเสือสีทอง 8 สาย (Curved Golden Tiger Slash Arcs): พุ่งหมุนตวัดโค้งจากใจกลางขึ้นฟ้าด้วย `END_ROD`, Gold Dust, และ `FLAME`
+  - การระเบิดใจกลาง: แฟลชสว่างวาบ `FLASH`, `EXPLOSION_EMITTER`, เสาเปลวเพลิงและสะเก็ดลาวา `LAVA`
+  - เศษหินสีดำแตกกระจาย: เศษ `Blocks.BLACKSTONE` และ `Blocks.COARSE_DIRT` ดีดตัวพุ่งขึ้นและกระจายออกรอบวงขอบหลุม
 - หากการโจมตีทำให้เป้าหมายตาย (`!target.isAlive()`) ผู้ร่ายจะได้รับการฟื้นฟูเลือด 10 HP
 - ล้าง Stance, Mark, UUID link และ client glow
 - เมื่อ commit การ dash จะเข้าสู่ cooldown 30 วินาทีจาก config ของ Iron's Spellbooks ไม่ว่าจะ impact สำเร็จหรือถูกยกเลิกระหว่างทาง

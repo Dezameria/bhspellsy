@@ -2,13 +2,13 @@
 
 An addon mod for **[Iron's Spells 'n Spellbooks](https://github.com/iron431/Irons-Spells-n-Spellbooks)** for Minecraft **1.20.1 (Forge)**.
 
-Adds **16 spells across 6 magic schools**, custom entities and animations, Effekseer integration, custom projectile physics, Epic Fight compatibility, and cinematic combat mechanics to expand the magical arsenal.
+Adds **21 spells across 6 magic schools**, custom entities and animations, Effekseer integration, custom projectile physics, Epic Fight compatibility, and cinematic combat mechanics to expand the magical arsenal.
 
 ---
 
 ## 🔮 Spell Catalog
 
-The current registry contains 16 spells. See [the complete spell overview](docs/all_spells.md) and [per-spell technical specifications](docs/spells/README.md) for balance values, lifecycle details, assets, and verification notes.
+The current registry contains 21 spells. See [the complete spell overview](docs/all_spells.md) and [per-spell technical specifications](docs/spells/README.md) for balance values, lifecycle details, assets, and verification notes.
 
 | School | Spell | Core mechanic | Specification |
 | :--- | :--- | :--- | :--- |
@@ -17,17 +17,22 @@ The current registry contains 16 spells. See [the complete spell overview](docs/
 | Fire | **Pure White Flame Burst** | Melee grab, white-flame impact, and forward corridor blast | [Details](docs/spells/fire/pure_white_flame_burst.md) |
 | Fire | **Gale Drive** | Piercing dash that creates a target-lifting vortex on collision | [Details](docs/spells/fire/gale_drive.md) |
 | Fire | **Resonant Knell** | Six-cast sequence alternating a mobile dome with 15/20/30-block shockwaves | [Details](docs/spells/fire/resonant_knell.md) |
+| Fire | **Crimson Thornbind** | Steering thorn vine lash and vertical root bind with rend damage | [Details](docs/spells/fire/crimson_thornbind.md) |
 | Lightning | **Lightning Strike** | Lightning lunge/teleport toward a raycast target | [Details](docs/spells/lightning/lightning_strike.md) |
 | Lightning | **Thunder Step** | Forward teleport that damages enemies along both path lines | [Details](docs/spells/lightning/thunder_step.md) |
 | Nature | **Wings of Tempest** | Caster-following storm that orbits and debuffs nearby enemies | [Details](docs/spells/nature/wings_of_tempest.md) |
 | Nature | **Venomous Blossomfall** | Three-stage charged azure venom projectile fired at the crosshair | [Details](docs/spells/nature/venomous_blossomfall.md) |
-| Nature | **Gale Piercer** | Charged homing wind arrow with a wall-piercing full-charge form | [Details](docs/spells/nature/gale_piercer.md) |
+| Nature | **Gale Piercer** | Swirling wind-charge arrow evolving into wall-piercing flame arrow | [Details](docs/spells/nature/gale_piercer.md) |
 | Nature | **Rapturous Bloom** | Target-anchored toxic flower that blooms, applies debuffs, and bursts for damage | [Details](docs/spells/nature/rapturous_bloom.md) |
 | Aqua | **Crimson Rain Bathes Moon** | Channeled crimson storm and timed spear barrage | [Details](docs/spells/aqua/crimson_rain_bathes_moon.md) |
 | Aqua | **Glacial Veil** | Frostwave and eight-directional ice-spike eruption | [Details](docs/spells/aqua/glacial_veil.md) |
 | Aqua | **Glacial Firmament** | Fifteen-block ice domain with concentric spike and tomb eruptions | [Details](docs/spells/aqua/glacial_firmament.md) |
+| Aqua | **Toxic Salvation** | Evaporates poison into a toxic mist, curing/healing caster & poisoning foes | [Details](docs/spells/aqua/toxic_salvation.md) |
 | Gold | **Shackle of Fear** | Projectile-created physical chains that restrain and pull targets | [Details](docs/spells/gold/shackle_of_fear.md) |
-| Ground | **Tigershade Terrabreak** | Mark-and-hunt stance followed by a conditional execution recast | [Details](docs/spells/ground/tigershade_terrabreak.md) |
+| Gold | **Hymn of Purification** | 20-second continuous golden melody cleansing debuffs and regenerating health | [Details](docs/spells/gold/hymn_of_purification.md) |
+| Gold | **Gilded Hare** | Gilded hare mark, phase dash, golden ribbon aura, and combat enhancements | [Details](docs/spells/gold/gilded_hare.md) |
+| Ground | **Tigershade Terrabreak** | Mark-and-hunt stance followed by a heavy ground slam with violet dome and golden claws | [Details](docs/spells/ground/tigershade_terrabreak.md) |
+| Ground | **Jade Aura** | Protective jade barrier aura granting armor, knockback resist, and jade burst | [Details](docs/spells/ground/jade_aura.md) |
 
 ---
 

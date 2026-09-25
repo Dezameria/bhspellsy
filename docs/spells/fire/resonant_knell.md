@@ -4,6 +4,7 @@
 
 | Item | Current value |
 | --- | --- |
+| ตัวละคร | โม่ ซินซิน (Mo Xinxin) |
 | Registry ID | `ironspell_more:resonant_knell` |
 | Spell class | `spells/fire/ResonantKnellSpell.java` |
 | School | Fire |

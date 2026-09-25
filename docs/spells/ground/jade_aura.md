@@ -2,6 +2,7 @@
 
 ## Identity and Configuration
 
+- **ตัวละคร**: มู่หรง เฟิงอี้ (Murong Fengyi)
 - **Registry ID**: `ironspell_more:jade_aura`
 - **School**: Ground (`bhspells:ground`, with dynamic fallback to `SchoolRegistry.EVOCATION` when BHSpells is absent)
 - **Rarity**: Rare (`SpellRarity.RARE`)

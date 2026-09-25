@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -26,6 +27,13 @@ public final class TigershadeLifecycleEvents {
     }
 
     @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer player) {
+            TigershadeTerrabreakSpell.tickActiveSlamDash(player);
+        }
+    }
+
+    @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         clearPlayerLinks(event.getEntity());
     }
@@ -38,6 +46,7 @@ public final class TigershadeLifecycleEvents {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onLivingDeath(LivingDeathEvent event) {
         LivingEntity deceased = event.getEntity();
+        TigershadeTerrabreakSpell.cancelActiveSlamDash(deceased);
         if (deceased.hasEffect(MobEffectsRegistry.TIGERSHADE_STANCE.get())
                 || deceased.getPersistentData().contains(TigershadeStanceEffect.TARGET_UUID_TAG)) {
             TigershadeTerrabreakSpell.clearHunt(deceased);
@@ -49,6 +58,7 @@ public final class TigershadeLifecycleEvents {
     }
 
     private static void clearPlayerLinks(LivingEntity player) {
+        TigershadeTerrabreakSpell.cancelActiveSlamDash(player);
         if (player.hasEffect(MobEffectsRegistry.TIGERSHADE_MARK.get())
                 || player.getPersistentData().contains(TigershadeMarkEffect.MARK_CASTER_UUID_TAG)) {
             TigershadeTerrabreakSpell.onMarkRemoved(player);

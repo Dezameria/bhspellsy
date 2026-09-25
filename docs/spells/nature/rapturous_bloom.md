@@ -2,6 +2,7 @@
 
 ## Identity and configuration
 
+- ตัวละคร: ฮวา เหมยเซียง (Hua Meixiang)
 - Registry ID: `ironspell_more:rapturous_bloom`
 - School: Nature
 - Rarity: Rare

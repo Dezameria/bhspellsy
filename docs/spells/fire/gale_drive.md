@@ -4,6 +4,7 @@
 
 | รายการ | ค่าปัจจุบัน |
 | --- | --- |
+| ตัวละคร | อู่ฉ่าย กวนหลง (Wucai Guanlong) |
 | Registry ID | `ironspell_more:gale_drive` |
 | `getSpellResource()` | `ironspell_more:gale_drive` |
 | Class | `spells/fire/GaleDriveSpell.java` |

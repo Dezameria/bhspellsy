@@ -14,12 +14,12 @@ This directory is the required source of detailed design and implementation note
 
 ### 🔥 Fire
 
-- [Blazing Chakra](fire/blazing_chakra.md)
+- [Blazing Chakra](fire/blazing_chakra.md) — จาง เจียอี้ (Zhang Jiayi)
 - [Spin Strike](fire/spin_strike.md)
-- [Pure White Flame Burst](fire/pure_white_flame_burst.md)
-- [Gale Drive](fire/gale_drive.md)
-- [Resonant Knell](fire/resonant_knell.md)
-- [Crimson Thornbind](fire/crimson_thornbind.md)
+- [Pure White Flame Burst](fire/pure_white_flame_burst.md) — ฮุ่นตุ้น ฮ่าวเหยียน (Hundun Haoyan)
+- [Gale Drive](fire/gale_drive.md) — อู่ฉ่าย กวนหลง (Wucai Guanlong)
+- [Resonant Knell](fire/resonant_knell.md) — โม่ ซินซิน (Mo Xinxin)
+- [Crimson Thornbind](fire/crimson_thornbind.md) — ซานฉา กุยจง (Shancha Guizhong)
 
 ### ⚡ Lightning
 
@@ -28,27 +28,27 @@ This directory is the required source of detailed design and implementation note
 
 ### 🌿 Nature
 
-- [Wings of Tempest](nature/wings_of_tempest.md)
-- [Venomous Blossomfall](nature/venomous_blossomfall.md)
-- [Gale Piercer](nature/gale_piercer.md)
-- [Rapturous Bloom](nature/rapturous_bloom.md)
+- [Wings of Tempest](nature/wings_of_tempest.md) — จี่ จื่อเกอ (Ji Zige)
+- [Venomous Blossomfall](nature/venomous_blossomfall.md) — หูเหยียน เฟิงเซียว (Huyan Fengxiao)
+- [Gale Piercer](nature/gale_piercer.md) — ลันลัน (Lanlan)
+- [Rapturous Bloom](nature/rapturous_bloom.md) — ฮวา เหมยเซียง (Hua Meixiang)
 
 ### 🌊 Aqua
 
-- [Crimson Rain Bathes Moon](aqua/crimson_rain_bathes_moon.md)
-- [Glacial Veil](aqua/glacial_veil.md)
-- [Glacial Firmament](aqua/glacial_firmament.md)
+- [Crimson Rain Bathes Moon](aqua/crimson_rain_bathes_moon.md) — หาน หลิงเหวิน (Han Lingwen)
+- [Glacial Veil](aqua/glacial_veil.md) — หยิง ซีหยาง (Ying Xiyang)
+- [Glacial Firmament](aqua/glacial_firmament.md) — ปิงเยว่ (Bingyue)
 
 ### 🪙 Gold
 
-- [Shackle of Fear](gold/shackle_of_fear.md)
-- [Hymn of Purification](gold/hymn_of_purification.md)
-- [Gilded Hare](gold/gilded_hare.md)
+- [Shackle of Fear](gold/shackle_of_fear.md) — อ็อตโต (Otto)
+- [Hymn of Purification](gold/hymn_of_purification.md) — เจียง หลิงหยวน (Jiang Lingyuan)
+- [Gilded Hare](gold/gilded_hare.md) — เว่ยลู่เยี่ยน (Wei Luyan)
 
 ### ⛰️ Ground
 
-- [Tigershade Terrabreak](ground/tigershade_terrabreak.md)
-- [Jade Aura](ground/jade_aura.md)
+- [Tigershade Terrabreak](ground/tigershade_terrabreak.md) — มู่ หลิงเยว่ (Mu Lingyue)
+- [Jade Aura](ground/jade_aura.md) — มู่หรง เฟิงอี้ (Murong Fengyi)
 
 ## Required workflow
 

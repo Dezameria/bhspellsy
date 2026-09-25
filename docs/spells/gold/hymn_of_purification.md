@@ -4,6 +4,7 @@
 
 | รายการ | ค่าปัจจุบัน |
 | --- | --- |
+| ตัวละคร | เจียง หลิงหยวน (Jiang Lingyuan) |
 | Registry ID | `ironspell_more:hymn_of_purification` |
 | Class | `spells/gold/HymnofPurificationSpell.java` |
 | School | `bhspells:gold`; fallback เป็น Ender เมื่อหา Gold school ไม่พบ |

@@ -2,6 +2,7 @@
 
 ## Identity and configuration
 
+- ตัวละคร: ลันลัน (Lanlan)
 - Registry ID: `ironspell_more:gale_piercer`
 - School: Nature
 - Rarity: Rare

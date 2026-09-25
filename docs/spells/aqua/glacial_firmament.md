@@ -1,6 +1,7 @@
 # Glacial Firmament (เหมันต์ผนึกฟ้า)
 
 ## ข้อมูลพื้นฐาน (Basic Information)
+- **ตัวละคร:** ปิงเยว่ (Bingyue)
 - **Display Name:** Glacial Firmament
 - **Registry ID:** `ironspell_more:glacial_firmament`
 - **School:** Aqua (`TravelopticsSchools.AQUA_RESOURCE`)

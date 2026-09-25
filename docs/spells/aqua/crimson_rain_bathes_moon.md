@@ -4,6 +4,7 @@
 
 | รายการ | ค่าปัจจุบัน |
 | --- | --- |
+| ตัวละคร | หาน หลิงเหวิน (Han Lingwen) |
 | Registry ID | `ironspell_more:crimson_rain_bathes_moon` |
 | `getSpellResource()` | `ironspell_more:crimson_rain_bathes_moon` |
 | Class | `spells/aqua/CrimsonRainBathesMoonSpell.java` |

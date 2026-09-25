@@ -4,6 +4,7 @@
 
 | รายการ | ค่าปัจจุบัน |
 | --- | --- |
+| ตัวละคร | อ็อตโต (Otto) |
 | Registry ID | `ironspell_more:shackle_of_fear` |
 | Class | `spells/gold/ShackleofFearSpell.java` |
 | School | `bhspells:gold`; fallback เป็น Ender เมื่อหา Gold school ไม่พบ |

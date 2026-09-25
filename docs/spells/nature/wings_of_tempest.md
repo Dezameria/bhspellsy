@@ -4,6 +4,7 @@
 
 | รายการ | ค่าปัจจุบัน |
 | --- | --- |
+| ตัวละคร | จี่ จื่อเกอ (Ji Zige) |
 | Registry ID | `ironspell_more:wings_of_tempest` |
 | `getSpellResource()` | `ironspell_more:wings_of_tempest` |
 | Class | `spells/nature/WingsofTempestSpell.java` |

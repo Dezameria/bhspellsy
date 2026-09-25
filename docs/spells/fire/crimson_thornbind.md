@@ -2,6 +2,7 @@
 
 ## Identity and Configuration
 
+- **ตัวละคร**: ซานฉา กุยจง (Shancha Guizhong)
 - **Registry ID**: `ironspell_more:crimson_thornbind`
 - **School**: Fire (`SchoolRegistry.FIRE_RESOURCE`)
 - **Rarity**: Rare (`SpellRarity.RARE`)

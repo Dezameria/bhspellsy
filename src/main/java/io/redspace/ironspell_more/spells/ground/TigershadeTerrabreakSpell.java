@@ -2,6 +2,7 @@ package io.redspace.ironspell_more.spells.ground;
 
 import io.redspace.ironspell_more.IronSpellMore;
 import io.redspace.ironspell_more.client.particle.ShockwaveParticleOptionCustom;
+import io.redspace.ironspell_more.compat.epicfight.EpicFightCompat;
 import io.redspace.ironspell_more.effect.TigershadeMarkEffect;
 import io.redspace.ironspell_more.effect.TigershadeStanceEffect;
 import io.redspace.ironspell_more.network.TigershadeNetwork;
@@ -13,13 +14,19 @@ import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import io.redspace.ironsspellbooks.api.spells.AutoSpellConfig;
 import io.redspace.ironsspellbooks.api.spells.CastSource;
 import io.redspace.ironsspellbooks.api.spells.CastType;
+import io.redspace.ironsspellbooks.api.spells.ICastData;
 import io.redspace.ironsspellbooks.api.spells.ICastDataSerializable;
 import io.redspace.ironsspellbooks.api.spells.SchoolType;
+import io.redspace.ironsspellbooks.api.spells.SpellAnimations;
 import io.redspace.ironsspellbooks.api.spells.SpellRarity;
+import io.redspace.ironsspellbooks.api.util.AnimationHolder;
 import io.redspace.ironsspellbooks.api.util.Utils;
+import io.redspace.ironsspellbooks.capabilities.magic.ImpulseCastData;
 import io.redspace.ironsspellbooks.capabilities.magic.RecastInstance;
 import io.redspace.ironsspellbooks.capabilities.magic.RecastResult;
 import io.redspace.ironsspellbooks.damage.DamageSources;
+import io.redspace.ironsspellbooks.network.debug.PlayPlayerAnimationPacket;
+import io.redspace.ironsspellbooks.setup.PacketDistributor;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -44,7 +51,9 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import io.redspace.ironspell_more.config.SpellConfig;
@@ -68,13 +77,22 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
             "bhspells", "ground");
 
     public static final float ACQUISITION_RANGE = 20.0F;
-    public static final float SLAM_MAX_DISTANCE = 5.0F;
+    public static final float SLAM_MAX_DISTANCE = 8.0F;
     public static final float EXECUTE_MAX_DISTANCE = SLAM_MAX_DISTANCE;
     public static final float HEAL_ON_DEFEAT = 10.0F;
     public static final float HEAL_ON_EXECUTE = HEAL_ON_DEFEAT;
     public static final int MARK_DURATION_TICKS = 1200;
     public static final int SLAM_COOLDOWN_TICKS = (int) (COOLDOWN_SECONDS * 20);
     public static final int EXECUTE_COOLDOWN_TICKS = SLAM_COOLDOWN_TICKS;
+
+    private static final double SLAM_FRACTURE_RADIUS = 3.0D;
+    private static final double SLAM_DASH_SPEED = 1.35D;
+    private static final int SLAM_DASH_TIMEOUT_TICKS = 10;
+    private static final double SLAM_DASH_MAX_TRAVEL = SLAM_MAX_DISTANCE + SLAM_DASH_SPEED;
+    private static final double SLAM_DASH_COLLISION_SAMPLE_DISTANCE = 0.25D;
+    private static final double SLAM_DASH_FLOOR_CLEARANCE = 0.05D;
+    private static final double SLAM_DASH_SIDE_CLEARANCE = 0.001D;
+    private static final Map<UUID, SlamDashState> ACTIVE_SLAM_DASHES = new HashMap<>();
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.EPIC)
@@ -120,6 +138,20 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
     @Override
     public CastType getCastType() {
         return CastType.INSTANT;
+    }
+
+    @Override
+    public ICastDataSerializable getEmptyCastData() {
+        return new ImpulseCastData();
+    }
+
+    @Override
+    public void onClientCast(Level level, int spellLevel, LivingEntity caster, ICastData castData) {
+        if (castData instanceof ImpulseCastData impulseData && impulseData.hasImpulse) {
+            caster.hasImpulse = true;
+            caster.setDeltaMovement(impulseData.x, impulseData.y, impulseData.z);
+        }
+        super.onClientCast(level, spellLevel, caster, castData);
     }
 
     @Override
@@ -191,8 +223,9 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
             }
         } else {
             LivingEntity target = resolveMarkedTarget(caster);
-            if (canSlam(caster, target)) {
-                slamTarget(level, caster, target, spellLevel);
+            if (canSlam(caster, target) && level instanceof ServerLevel serverLevel
+                    && caster instanceof ServerPlayer player) {
+                startSlamDash(serverLevel, player, target, spellLevel, magicData);
             } else {
                 // Fail closed if another event changed the target between pre-cast and cast.
                 clearHunt(caster);
@@ -265,10 +298,176 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
                 && isOwnedMark(caster, target);
     }
 
-    private void slamTarget(Level level, LivingEntity caster, LivingEntity target, int spellLevel) {
-        Vec3 toTarget = target.position().subtract(caster.position());
-        caster.setDeltaMovement(new Vec3(toTarget.x, 0.15D, toTarget.z).normalize().scale(1.25D));
+    private void startSlamDash(ServerLevel level, ServerPlayer caster, LivingEntity target, int spellLevel,
+            MagicData magicData) {
+        cancelActiveSlamDash(caster);
+        Vec3 initialVelocity = calculateDashVelocity(caster, target);
+        SlamDashState state = new SlamDashState(this, level, caster, target, spellLevel, caster.position());
+
+        // Consume the hunt as soon as the dash is committed. The captured state keeps
+        // only this bounded attempt alive while the normal recast/cooldown flow proceeds.
+        clearHunt(caster);
+
+        faceTarget(caster, getFacingYaw(caster.position(), target, caster.getYRot()));
+        playIronSpellAnimation(caster, SpellAnimations.OVERHEAD_MELEE_SWING_ANIMATION);
+        applyDashVelocity(caster, initialVelocity);
+        magicData.setAdditionalCastData(new ImpulseCastData(
+                (float) initialVelocity.x, (float) initialVelocity.y, (float) initialVelocity.z, true));
+        ACTIVE_SLAM_DASHES.put(caster.getUUID(), state);
+    }
+
+    public static void tickActiveSlamDash(ServerPlayer caster) {
+        SlamDashState state = ACTIVE_SLAM_DASHES.get(caster.getUUID());
+        if (state != null) {
+            state.spell.tickSlamDash(state);
+        }
+    }
+
+    private void tickSlamDash(SlamDashState state) {
+        if (state.terminal) {
+            return;
+        }
+
+        Entity currentCaster = state.level.getEntity(state.casterId);
+        Entity currentTarget = state.level.getEntity(state.targetId);
+        if (currentCaster != state.caster || currentTarget != state.target
+                || !state.caster.isAlive() || state.caster.isRemoved() || state.caster.isSpectator()
+                || !isValidTarget(state.caster, state.target)
+                || state.caster.level() != state.level || state.target.level() != state.level
+                || !state.level.getWorldBorder().isWithinBounds(state.caster.getBoundingBox())) {
+            abortSlamDash(state);
+            return;
+        }
+
+        Vec3 currentPosition = state.caster.position();
+        state.cumulativeTravel += currentPosition.distanceTo(state.lastPosition);
+        state.lastPosition = currentPosition;
+
+        if (state.cumulativeTravel > SLAM_DASH_MAX_TRAVEL + 1.0E-6D) {
+            abortSlamDash(state);
+            return;
+        }
+
+        if (hasReachedSlamTarget(state.caster, state.target)) {
+            completeSlamDashState(state);
+            finishSlamImpact(state.level, state.caster, state.target, state.spellLevel);
+            return;
+        }
+
+        if (state.ticksElapsed >= SLAM_DASH_TIMEOUT_TICKS
+                || state.cumulativeTravel >= SLAM_DASH_MAX_TRAVEL
+                || state.caster.horizontalCollision) {
+            abortSlamDash(state);
+            return;
+        }
+
+        Vec3 velocity = calculateDashVelocity(state.caster, state.target);
+        double remainingTravel = SLAM_DASH_MAX_TRAVEL - state.cumulativeTravel;
+        if (velocity.length() > remainingTravel) {
+            velocity = velocity.normalize().scale(remainingTravel);
+        }
+        if (velocity.lengthSqr() < 1.0E-6D || isDashPathBlocked(state.level, state.caster, velocity)) {
+            abortSlamDash(state);
+            return;
+        }
+
+        faceTarget(state.caster,
+                getFacingYaw(state.caster.position(), state.target, state.caster.getYRot()));
+        applyDashVelocity(state.caster, velocity);
+        state.ticksElapsed++;
+    }
+
+    private static Vec3 calculateDashVelocity(LivingEntity caster, LivingEntity target) {
+        Vec3 toTarget = target.getBoundingBox().getCenter().subtract(caster.getBoundingBox().getCenter());
+        double distance = toTarget.length();
+        if (distance < 1.0E-6D) {
+            return Vec3.ZERO;
+        }
+
+        double stepDistance = Math.min(SLAM_DASH_SPEED, distance);
+        Vec3 velocity = toTarget.scale(stepDistance / distance);
+        if (caster.onGround() && velocity.y < 0.15D) {
+            velocity = new Vec3(velocity.x, 0.15D, velocity.z);
+        }
+        if (velocity.lengthSqr() > SLAM_DASH_SPEED * SLAM_DASH_SPEED) {
+            velocity = velocity.normalize().scale(SLAM_DASH_SPEED);
+        }
+        return velocity;
+    }
+
+    private static boolean isDashPathBlocked(ServerLevel level, LivingEntity caster, Vec3 velocity) {
+        AABB bounds = caster.getBoundingBox();
+        AABB sampleBounds = new AABB(
+                bounds.minX + SLAM_DASH_SIDE_CLEARANCE,
+                bounds.minY + SLAM_DASH_FLOOR_CLEARANCE,
+                bounds.minZ + SLAM_DASH_SIDE_CLEARANCE,
+                bounds.maxX - SLAM_DASH_SIDE_CLEARANCE,
+                bounds.maxY - SLAM_DASH_SIDE_CLEARANCE,
+                bounds.maxZ - SLAM_DASH_SIDE_CLEARANCE);
+        int samples = Math.max(1,
+                (int) Math.ceil(velocity.length() / SLAM_DASH_COLLISION_SAMPLE_DISTANCE));
+
+        for (int sample = 1; sample <= samples; sample++) {
+            Vec3 offset = velocity.scale(sample / (double) samples);
+            AABB movedBounds = sampleBounds.move(offset);
+            if (!level.getWorldBorder().isWithinBounds(movedBounds)
+                    || level.getBlockCollisions(caster, movedBounds).iterator().hasNext()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasReachedSlamTarget(LivingEntity caster, LivingEntity target) {
+        return caster.getBoundingBox().intersects(target.getBoundingBox());
+    }
+
+    private static void applyDashVelocity(LivingEntity caster, Vec3 velocity) {
+        caster.hasImpulse = true;
+        caster.setDeltaMovement(velocity);
         caster.hurtMarked = true;
+        caster.resetFallDistance();
+    }
+
+    private static void abortSlamDash(SlamDashState state) {
+        if (state.terminal) {
+            return;
+        }
+        completeSlamDashState(state);
+
+        if (state.level.getEntity(state.casterId) == state.caster) {
+            stopDashMotion(state.caster);
+        }
+    }
+
+    public static void cancelActiveSlamDash(LivingEntity caster) {
+        SlamDashState state = ACTIVE_SLAM_DASHES.remove(caster.getUUID());
+        if (state == null || state.terminal) {
+            return;
+        }
+        state.terminal = true;
+        if (state.level.getEntity(state.casterId) == state.caster) {
+            stopDashMotion(state.caster);
+        }
+    }
+
+    private static void completeSlamDashState(SlamDashState state) {
+        state.terminal = true;
+        ACTIVE_SLAM_DASHES.remove(state.casterId, state);
+    }
+
+    private static void stopDashMotion(LivingEntity caster) {
+        caster.setDeltaMovement(Vec3.ZERO);
+        caster.hurtMarked = true;
+        caster.resetFallDistance();
+    }
+
+    private void finishSlamImpact(Level level, LivingEntity caster, LivingEntity target, int spellLevel) {
+        stopDashMotion(caster);
+        faceTarget(caster, getFacingYaw(caster.position(), target, caster.getYRot()));
+        playIronSpellAnimation(caster, SpellAnimations.TOUCH_GROUND_ANIMATION);
+
+        Vec3 impactPosition = target.position();
 
         target.setDeltaMovement(0.0D, -1.2D, 0.0D);
         target.hurtMarked = true;
@@ -276,40 +475,99 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
         float damage = getDamage(spellLevel, caster);
         boolean damageAccepted = DamageSources.applyDamage(target, damage, getDamageSource(caster));
 
-        // Always play slam impact effects on a valid slam attempt
-        playSlamEffects(level, target);
+        // Epic Fight supplies the true block fracture when available. The vanilla
+        // impact particles below remain visible when the optional mod is absent.
+        try {
+            EpicFightCompat.spawnFracture(caster, level, impactPosition, 1, 3, SLAM_FRACTURE_RADIUS);
+        } catch (RuntimeException exception) {
+            IronSpellMore.LOGGER.error("Tigershade ground fracture failed; continuing spell impact", exception);
+        }
+        playSlamEffects(level, target, impactPosition);
 
         // Heal on defeat if the target died from this slam
         if (damageAccepted && !target.isAlive()) {
             caster.heal(HEAL_ON_DEFEAT);
         }
 
-        // The attempt consumes the mark. Healing is awarded only when the target is
-        // actually defeated; the framework applies the configured 30-second cooldown.
-        clearHunt(caster);
     }
 
-    private void playSlamEffects(Level level, LivingEntity target) {
-        level.playSound(null, target.getX(), target.getY(), target.getZ(),
+    private static void playIronSpellAnimation(LivingEntity caster, AnimationHolder animation) {
+        if (!(caster instanceof ServerPlayer)) {
+            return;
+        }
+        animation.getForPlayer().ifPresent(animationId ->
+                PacketDistributor.sendToPlayersTrackingEntityAndSelf(caster,
+                        new PlayPlayerAnimationPacket(caster.getUUID(), animationId)));
+    }
+
+    private static float getFacingYaw(Vec3 casterPosition, LivingEntity target, float fallbackYaw) {
+        double deltaX = target.getX() - casterPosition.x;
+        double deltaZ = target.getZ() - casterPosition.z;
+        if (deltaX * deltaX + deltaZ * deltaZ <= 1.0E-6D) {
+            return fallbackYaw;
+        }
+        return (float) (Math.toDegrees(Math.atan2(deltaZ, deltaX)) - 90.0D);
+    }
+
+    private static void faceTarget(LivingEntity caster, float yaw) {
+        caster.setYRot(yaw);
+        caster.setYHeadRot(yaw);
+        caster.setYBodyRot(yaw);
+    }
+
+    private static final class SlamDashState {
+        private final TigershadeTerrabreakSpell spell;
+        private final ServerLevel level;
+        private final ServerPlayer caster;
+        private final LivingEntity target;
+        private final UUID casterId;
+        private final UUID targetId;
+        private final int spellLevel;
+        private Vec3 lastPosition;
+        private double cumulativeTravel;
+        private int ticksElapsed = 1;
+        private boolean terminal;
+
+        private SlamDashState(TigershadeTerrabreakSpell spell, ServerLevel level, ServerPlayer caster,
+                LivingEntity target, int spellLevel, Vec3 startPosition) {
+            this.spell = spell;
+            this.level = level;
+            this.caster = caster;
+            this.target = target;
+            this.casterId = caster.getUUID();
+            this.targetId = target.getUUID();
+            this.spellLevel = spellLevel;
+            this.lastPosition = startPosition;
+        }
+    }
+
+    private void playSlamEffects(Level level, LivingEntity target, Vec3 impactPosition) {
+        double impactX = impactPosition.x;
+        double impactY = impactPosition.y;
+        double impactZ = impactPosition.z;
+
+        level.playSound(null, impactX, impactY, impactZ,
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.3F, 0.7F);
-        level.playSound(null, target.getX(), target.getY(), target.getZ(),
+        level.playSound(null, impactX, impactY, impactZ,
                 SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.5F, 0.5F);
 
         if (level instanceof ServerLevel serverLevel) {
             serverLevel.sendParticles(new ShockwaveParticleOptionCustom(
                             new Vector3f(1.0F, 0.65F, 0.15F), 5.0F, true, new Vector3f(0, 1, 0)),
-                    target.getX(), target.getY() + 0.15, target.getZ(), 1, 0, 0, 0, 0);
+                    impactX, impactY + 0.15D, impactZ, 1, 0, 0, 0, 0);
             serverLevel.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK,
                             Blocks.COARSE_DIRT.defaultBlockState()),
-                    target.getX(), target.getY() + 0.1, target.getZ(), 60, 1.2, 0.3, 1.2, 0.25);
+                    impactX, impactY + 0.1D, impactZ, 60, 1.2, 0.3, 1.2, 0.25);
             serverLevel.sendParticles(new DustParticleOptions(new Vector3f(1.0F, 0.60F, 0.10F), 2.0F),
-                    target.getX(), target.getY() + 0.8, target.getZ(), 40, 1.0, 0.8, 1.0, 0.25);
+                    impactX, impactY + 0.8D, impactZ, 40, 1.0, 0.8, 1.0, 0.25);
             serverLevel.sendParticles(ParticleTypes.FLAME,
-                    target.getX(), target.getY() + 0.6, target.getZ(), 25, 0.8, 0.6, 0.8, 0.15);
+                    impactX, impactY + 0.6D, impactZ, 25, 0.8, 0.6, 0.8, 0.15);
             serverLevel.sendParticles(ParticleTypes.LAVA,
-                    target.getX(), target.getY() + 0.5, target.getZ(), 6, 0.5, 0.5, 0.5, 0.1);
+                    impactX, impactY + 0.5D, impactZ, 6, 0.5, 0.5, 0.5, 0.1);
+            serverLevel.sendParticles(ParticleTypes.FLASH,
+                    impactX, impactY + target.getBbHeight() * 0.5D, impactZ, 1, 0, 0, 0, 0);
             serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER,
-                    target.getX(), target.getY() + 0.5, target.getZ(), 1, 0, 0, 0, 0);
+                    impactX, impactY + 0.5D, impactZ, 1, 0, 0, 0, 0);
         }
     }
 

@@ -4,6 +4,7 @@
 
 | รายการ | ค่าปัจจุบัน |
 | --- | --- |
+| ตัวละคร | ฮุ่นตุ้น ฮ่าวเหยียน (Hundun Haoyan) |
 | Registry ID | `ironspell_more:pure_white_flame_burst` |
 | Class | `spells/fire/PureWhiteFlameBurstSpell.java` |
 | School | Fire |

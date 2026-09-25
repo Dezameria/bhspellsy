@@ -2,6 +2,7 @@
 
 ## Identity and Configuration
 
+- ตัวละคร: จาง เจียอี้ (Zhang Jiayi)
 - Registry ID: ironspell_more:blazing_chakra
 - School: Fire (SchoolRegistry.FIRE_RESOURCE)
 - Rarity: Epic (SpellRarity.EPIC)

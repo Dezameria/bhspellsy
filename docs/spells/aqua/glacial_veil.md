@@ -1,6 +1,7 @@
 # Glacial Veil (ม่านธารน้ำแข็ง)
 
 ## ข้อมูลพื้นฐาน (Basic Information)
+- **ตัวละคร:** หยิง ซีหยาง (Ying Xiyang)
 - **Display Name:** Glacial Veil
 - **Registry ID:** `ironspell_more:glacial_veil`
 - **School:** Aqua (`TravelopticsSchools.AQUA_RESOURCE`)

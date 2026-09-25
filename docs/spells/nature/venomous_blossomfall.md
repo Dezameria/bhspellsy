@@ -2,6 +2,7 @@
 
 ## Identity and configuration
 
+- ตัวละคร: หูเหยียน เฟิงเซียว (Huyan Fengxiao)
 - Registry ID: `ironspell_more:venomous_blossomfall`
 - School: Nature
 - Rarity: Legendary

@@ -4,6 +4,7 @@
 
 | รายการ | ค่าปัจจุบัน |
 | --- | --- |
+| ตัวละคร | เว่ยลู่เยี่ยน (Wei Luyan) |
 | Registry ID | `ironspell_more:gilded_hare` |
 | Class | `spells/gold/GildedHareSpell.java` |
 | School | `bhspells:gold`; fallback เป็น Ender เมื่อหา Gold school ไม่พบ |

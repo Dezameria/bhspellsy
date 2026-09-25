@@ -38,6 +38,10 @@ public final class JadeAuraRenderEvents {
             return;
         }
 
+        if (io.redspace.ironspell_more.compat.epicfight.EpicFightCompat.isBattleMode(entity)) {
+            return;
+        }
+
         Minecraft minecraft = Minecraft.getInstance();
         Camera camera = minecraft.gameRenderer.getMainCamera();
         double distanceSqr = camera.getPosition().distanceToSqr(entity.position());

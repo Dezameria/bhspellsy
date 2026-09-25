@@ -4,14 +4,16 @@ import io.redspace.ironspell_more.IronSpellMore;
 import io.redspace.ironspell_more.entity.spells.gale_piercer.GaleArrowEntity;
 import io.redspace.ironspell_more.entity.spells.gale_piercer.WindArrowEntity;
 import io.redspace.ironspell_more.event.GalePiercerCastingEvents;
-import io.redspace.ironspell_more.registry.ParticleRegistry;
 import io.redspace.ironsspellbooks.api.config.DefaultConfig;
 import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.api.registry.SchoolRegistry;
 import io.redspace.ironsspellbooks.api.spells.*;
 import io.redspace.ironsspellbooks.api.util.AnimationHolder;
 import io.redspace.ironsspellbooks.api.util.Utils;
+import io.redspace.ironsspellbooks.util.ParticleHelper;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
+import org.joml.Vector3f;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -20,6 +22,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -47,6 +51,16 @@ public class GalePiercerSpell extends AbstractSpell {
     public static final int FULL_CHARGE_TICKS = 200; // 10 seconds
     public static final int NATIVE_HOLD_CAST_TICKS = 1_000_000_000;
     public static final float MAX_LOCK_RANGE = 48.0F;
+    public static final double MIN_PROJECTILE_SPEED = 0.8D;
+
+    private static final DustParticleOptions WHITE_WIND_DUST =
+            new DustParticleOptions(new Vector3f(1.0F, 1.0F, 1.0F), 0.85F);
+    private static final DustParticleOptions PALE_WIND_DUST =
+            new DustParticleOptions(new Vector3f(0.92F, 0.94F, 1.0F), 0.9F);
+    private static final DustParticleOptions ORANGE_SPARK_DUST =
+            new DustParticleOptions(new Vector3f(1.0F, 0.38F, 0.08F), 1.0F);
+    private static final DustParticleOptions CRIMSON_SPARK_DUST =
+            new DustParticleOptions(new Vector3f(1.0F, 0.12F, 0.04F), 0.85F);
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.RARE)
@@ -115,45 +129,31 @@ public class GalePiercerSpell extends AbstractSpell {
 
             int elapsedTicks = getElapsedCastTicks(magicData);
 
-            // Compute arrow position in front of caster's right hand
+            // Compute arrow position in front of caster's hand holding the arrow
+            Vec3 eyePos = caster.getEyePosition();
             Vec3 lookDir = caster.getLookAngle().normalize();
-            Vec3 rightDir = lookDir.cross(new Vec3(0, 1, 0)).normalize();
-            if (rightDir.lengthSqr() < 1.0E-4D) {
-                rightDir = new Vec3(1, 0, 0);
-            }
-            Vec3 arrowPos = caster.getEyePosition().add(lookDir.scale(0.7D)).add(rightDir.scale(0.25D)).subtract(0, 0.12D, 0);
+            Vec3 referenceAxis = Math.abs(lookDir.y) > 0.9D ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
+            Vec3 rightDir = lookDir.cross(referenceAxis).normalize();
+            Vec3 upDir = rightDir.cross(lookDir).normalize();
+
+            double sideOffset = (caster.getMainArm() == HumanoidArm.RIGHT ? 0.22D : -0.22D);
+            double baseDown = 0.35D;
+            Vec3 arrowCenter = eyePos.add(lookDir.scale(0.42D)).add(rightDir.scale(sideOffset)).subtract(0.0D, baseDown, 0.0D);
 
             if (serverPlayer.level() instanceof ServerLevel serverLevel) {
-                // 1. Continuous inward-swirling particles orbiting toward the arrow
-                int particleCount = (elapsedTicks >= FULL_CHARGE_TICKS) ? 4 : 3;
-                for (int i = 0; i < particleCount; i++) {
-                    double radius = 0.55D + caster.getRandom().nextDouble() * 0.35D;
-                    double theta = caster.getRandom().nextDouble() * Math.PI * 2.0D;
-                    double phi = (caster.getRandom().nextDouble() - 0.5D) * Math.PI;
-                    Vec3 pOffset = new Vec3(
-                            Math.cos(theta) * Math.cos(phi) * radius,
-                            Math.sin(phi) * radius,
-                            Math.sin(theta) * Math.cos(phi) * radius
-                    );
-                    Vec3 spawnPos = arrowPos.add(pOffset);
-                    Vec3 inwardVel = arrowPos.subtract(spawnPos).scale(0.14D);
+                boolean fullyCharged = elapsedTicks >= FULL_CHARGE_TICKS;
 
-                    if (elapsedTicks < FULL_CHARGE_TICKS) {
-                        // White-gray / wind silver swirling inward particles
-                        serverLevel.sendParticles(ParticleTypes.ENCHANT, spawnPos.x, spawnPos.y, spawnPos.z, 0, inwardVel.x, inwardVel.y, inwardVel.z, 1.0D);
-                        if (i == 0) {
-                            serverLevel.sendParticles(ParticleRegistry.WHITE_EMBER.get(), spawnPos.x, spawnPos.y, spawnPos.z, 0, inwardVel.x, inwardVel.y, inwardVel.z, 0.08D);
-                        }
-                    } else {
-                        // Fully charged: fiery sparks and flames swirling inward
-                        serverLevel.sendParticles(ParticleTypes.SMALL_FLAME, spawnPos.x, spawnPos.y, spawnPos.z, 0, inwardVel.x, inwardVel.y, inwardVel.z, 0.10D);
-                        if (i == 0) {
-                            serverLevel.sendParticles(ParticleTypes.FLAME, spawnPos.x, spawnPos.y, spawnPos.z, 0, inwardVel.x * 0.8D, inwardVel.y * 0.8D, inwardVel.z * 0.8D, 0.06D);
-                        }
-                    }
+                // Keep both wind layers locked to the rendered arrow while limiting network traffic.
+                if ((elapsedTicks & 1) == 0) {
+                    spawnChargingWind(serverLevel, arrowCenter, lookDir, rightDir, upDir, elapsedTicks, fullyCharged);
                 }
 
-                // 2. Full charge reached: audio notification and outward particle dispersion burst
+                if (elapsedTicks % 24 == 0) {
+                    level.playSound(null, caster.getX(), caster.getY(), caster.getZ(),
+                            SoundEvents.ELYTRA_FLYING, SoundSource.PLAYERS, 0.35F,
+                            1.4F + caster.getRandom().nextFloat() * 0.2F);
+                }
+
                 if (elapsedTicks == FULL_CHARGE_TICKS) {
                     serverPlayer.displayClientMessage(Component.translatable("ui.ironspell_more.gale_piercer_full_charge"), true);
                     level.playSound(null, caster.getX(), caster.getY(), caster.getZ(),
@@ -161,25 +161,92 @@ public class GalePiercerSpell extends AbstractSpell {
                     level.playSound(null, caster.getX(), caster.getY(), caster.getZ(),
                             SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.6F);
 
-                    // Outward particle dispersion burst
-                    for (int i = 0; i < 24; i++) {
-                        double yaw = (i / 24.0D) * Math.PI * 2.0D;
-                        double pitch = (caster.getRandom().nextDouble() - 0.5D) * 0.7D;
-                        double speed = 0.16D + caster.getRandom().nextDouble() * 0.1D;
-                        double vx = Math.cos(yaw) * Math.cos(pitch) * speed;
-                        double vy = Math.sin(pitch) * speed;
-                        double vz = Math.sin(yaw) * Math.cos(pitch) * speed;
-
-                        serverLevel.sendParticles(ParticleTypes.FLAME, arrowPos.x, arrowPos.y, arrowPos.z, 0, vx, vy, vz, 1.0D);
-                        if (i % 2 == 0) {
-                            serverLevel.sendParticles(ParticleRegistry.WHITE_FIRE.get(), arrowPos.x, arrowPos.y, arrowPos.z, 0, vx * 0.8D, vy * 0.8D, vz * 0.8D, 1.0D);
-                        }
-                    }
-                    serverLevel.sendParticles(ParticleTypes.FLASH, arrowPos.x, arrowPos.y, arrowPos.z, 1, 0, 0, 0, 0);
+                    serverLevel.sendParticles(ParticleTypes.FLASH, arrowCenter.x, arrowCenter.y, arrowCenter.z, 1, 0, 0, 0, 0);
+                    spawnFullChargeCollapse(serverLevel, arrowCenter, lookDir, rightDir, upDir);
                 }
             }
         }
         super.onServerCastTick(level, spellLevel, caster, magicData);
+    }
+
+    private static void spawnChargingWind(ServerLevel level, Vec3 arrowCenter, Vec3 lookDir,
+                                          Vec3 rightDir, Vec3 upDir, int elapsedTicks,
+                                          boolean fullyCharged) {
+        double phase = elapsedTicks * (fullyCharged ? 0.48D : 0.34D);
+        double helixRadius = fullyCharged ? 0.13D : 0.10D;
+
+        // Two wind ribbons rotate around points sampled directly along the arrow shaft.
+        for (int arm = 0; arm < 2; arm++) {
+            for (int step = 0; step < 3; step++) {
+                double progress = (step + 0.5D) / 3.0D;
+                double shaftOffset = -0.30D + progress * 0.60D;
+                double angle = phase + arm * Math.PI + progress * Math.PI * 2.5D;
+                Vec3 radial = rightDir.scale(Math.cos(angle) * helixRadius)
+                        .add(upDir.scale(Math.sin(angle) * helixRadius));
+                Vec3 windPos = arrowCenter.add(lookDir.scale(shaftOffset)).add(radial);
+
+                level.sendParticles(arm == 0 ? WHITE_WIND_DUST : PALE_WIND_DUST,
+                        windPos.x, windPos.y, windPos.z, 1, 0, 0, 0, 0);
+
+                if (fullyCharged && arm == 0) {
+                    level.sendParticles(ParticleTypes.SMALL_FLAME,
+                            windPos.x, windPos.y, windPos.z, 1, 0, 0, 0, 0);
+                }
+
+                // Full charge adds sparse sparks inside the wind instead of a flame shell.
+                if (fullyCharged && step == arm + 1) {
+                    DustParticleOptions spark = arm == 0 ? ORANGE_SPARK_DUST : CRIMSON_SPARK_DUST;
+                    level.sendParticles(spark, windPos.x, windPos.y, windPos.z, 1, 0, 0, 0, 0);
+                }
+            }
+        }
+
+        // Three complete gathering streams remain visible at once instead of collapsing into one clump.
+        for (int lane = 0; lane < 3; lane++) {
+            double shaftOffset = -0.24D + lane * 0.24D;
+            Vec3 sink = arrowCenter.add(lookDir.scale(shaftOffset));
+
+            for (int sample = 0; sample < 3; sample++) {
+                double convergence = (elapsedTicks * 0.025D + sample / 3.0D) % 1.0D;
+                double radius = 1.80D - convergence * 1.72D;
+                double angle = phase * 0.45D
+                        + lane * Math.PI * 2.0D / 3.0D
+                        + convergence * Math.PI * 1.5D;
+                Vec3 gatherPos = sink
+                        .add(rightDir.scale(Math.cos(angle) * radius))
+                        .add(upDir.scale(Math.sin(angle) * radius));
+
+                if (sample == 1) {
+                    Vec3 inwardVelocity = sink.subtract(gatherPos).normalize().scale(0.08D);
+                    level.sendParticles(ParticleHelper.EMBERS, gatherPos.x, gatherPos.y, gatherPos.z,
+                            0, inwardVelocity.x, inwardVelocity.y, inwardVelocity.z, 1.0D);
+                } else {
+                    level.sendParticles(PALE_WIND_DUST, gatherPos.x, gatherPos.y, gatherPos.z,
+                            1, 0, 0, 0, 0);
+                }
+            }
+
+            level.sendParticles(WHITE_WIND_DUST, sink.x, sink.y, sink.z, 1, 0, 0, 0, 0);
+        }
+    }
+
+    private static void spawnFullChargeCollapse(ServerLevel level, Vec3 arrowCenter, Vec3 lookDir,
+                                                Vec3 rightDir, Vec3 upDir) {
+        for (int ring = 0; ring < 3; ring++) {
+            double radius = 0.66D - ring * 0.22D;
+            for (int point = 0; point < 6; point++) {
+                double angle = point * Math.PI * 2.0D / 6.0D + ring * 0.45D;
+                double shaftOffset = -0.24D + point * 0.096D;
+                Vec3 shaftPoint = arrowCenter.add(lookDir.scale(shaftOffset));
+                Vec3 spawnPos = shaftPoint
+                        .add(rightDir.scale(Math.cos(angle) * radius))
+                        .add(upDir.scale(Math.sin(angle) * radius));
+                Vec3 inward = shaftPoint.subtract(spawnPos).normalize().scale(0.20D + ring * 0.03D);
+
+                level.sendParticles(ParticleHelper.EMBERS, spawnPos.x, spawnPos.y, spawnPos.z,
+                        0, inward.x, inward.y, inward.z, 1.0D);
+            }
+        }
     }
 
     @Override
@@ -214,9 +281,10 @@ public class GalePiercerSpell extends AbstractSpell {
         } else {
             // Early Release: Wind Arrow
             float damage = getNormalDamage(spellLevel, caster);
+            double projectileSpeed = getProjectileSpeedForCharge(elapsedTicks);
             WindArrowEntity windArrow = new WindArrowEntity(level, caster);
             windArrow.setPos(spawnPos.x, spawnPos.y - windArrow.getBbHeight() * 0.5D, spawnPos.z);
-            windArrow.initializeArrow(lockedTarget, damage, spellLevel, lookDir, WindArrowEntity.SPEED);
+            windArrow.initializeArrow(lockedTarget, damage, spellLevel, lookDir, projectileSpeed);
             level.addFreshEntity(windArrow);
 
             // Wind whoosh audio
@@ -254,6 +322,12 @@ public class GalePiercerSpell extends AbstractSpell {
             return 0;
         }
         return Math.max(0, magicData.getCastDuration() - magicData.getCastDurationRemaining());
+    }
+
+    public static double getProjectileSpeedForCharge(int elapsedTicks) {
+        double progress = Mth.clamp(elapsedTicks, 0, FULL_CHARGE_TICKS) / (double) FULL_CHARGE_TICKS;
+        double easedProgress = progress * progress * (3.0D - 2.0D * progress);
+        return MIN_PROJECTILE_SPEED + (GaleArrowEntity.SPEED - MIN_PROJECTILE_SPEED) * easedProgress;
     }
 
     public float getNormalDamage(int spellLevel, LivingEntity caster) {

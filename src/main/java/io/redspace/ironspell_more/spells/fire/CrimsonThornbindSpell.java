@@ -44,7 +44,7 @@ public class CrimsonThornbindSpell extends AbstractSpell {
     // ==========================================
     // SPELL TUNING CONSTANTS (Code Defaults)
     // ==========================================
-    public static final float BASE_DAMAGE = 12.0F;
+    public static final float BASE_DAMAGE =8.0F;
     public static final float DAMAGE_PER_LEVEL = 2.5F;
     public static final float REND_BASE_DAMAGE = 6.0F;
     public static final float REND_DAMAGE_PER_LEVEL = 1.5F;

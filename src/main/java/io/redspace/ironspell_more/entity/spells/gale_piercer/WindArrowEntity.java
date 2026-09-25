@@ -3,7 +3,7 @@ package io.redspace.ironspell_more.entity.spells.gale_piercer;
 import io.redspace.ironspell_more.registry.EntityRegistry;
 import io.redspace.ironspell_more.registry.SpellRegistry;
 import io.redspace.ironsspellbooks.damage.DamageSources;
-import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -17,11 +17,15 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector3f;
 
 public class WindArrowEntity extends AbstractGalePiercerArrowEntity {
     public static final double SPEED = 3.2D;
     public static final double MAX_TURN_RATE = 0.08D; // radians per tick (~4.58 deg/tick)
     public static final float KNOCKBACK_STRENGTH = 0.4F;
+
+    private static final DustParticleOptions PALE_WIND_DUST =
+            new DustParticleOptions(new Vector3f(0.92F, 0.94F, 1.0F), 0.75F);
 
     public WindArrowEntity(EntityType<? extends Projectile> type, Level level) {
         super(type, level);
@@ -66,7 +70,7 @@ public class WindArrowEntity extends AbstractGalePiercerArrowEntity {
                         axis = axis.normalize();
                         // Rodriques rotation formula or SLERP
                         Vec3 newDir = rotateAroundAxis(currentDir, axis, turnStep).normalize();
-                        motion = newDir.scale(SPEED);
+                        motion = newDir.scale(currentSpeed);
                         setDeltaMovement(motion);
                         updateRotationFromMotion(motion);
                     }
@@ -122,15 +126,19 @@ public class WindArrowEntity extends AbstractGalePiercerArrowEntity {
 
     private void spawnWindTrailParticles(Vec3 start, Vec3 end) {
         double distance = start.distanceTo(end);
-        int steps = Math.max(1, (int) (distance * 2.0D));
+        if (distance < 1.0E-4D) {
+            return;
+        }
+
+        int steps = Math.min(4, Math.max(1, (int) Math.ceil(distance * 1.25D)));
         for (int i = 0; i < steps; i++) {
             double progress = (i + 0.5D) / steps;
             Vec3 pos = start.lerp(end, progress);
-            level().addParticle(ParticleTypes.CLOUD,
-                    pos.x + (random.nextDouble() - 0.5D) * 0.1D,
-                    pos.y + (random.nextDouble() - 0.5D) * 0.1D,
-                    pos.z + (random.nextDouble() - 0.5D) * 0.1D,
-                    0.0D, 0.01D, 0.0D);
+            level().addParticle(PALE_WIND_DUST,
+                    pos.x + (random.nextDouble() - 0.5D) * 0.035D,
+                    pos.y + (random.nextDouble() - 0.5D) * 0.035D,
+                    pos.z + (random.nextDouble() - 0.5D) * 0.035D,
+                    0.0D, 0.0D, 0.0D);
         }
     }
 

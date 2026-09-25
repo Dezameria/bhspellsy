@@ -65,7 +65,7 @@ public class CrimsonRootEntity extends LivingEntity implements GeoEntity, Preven
     public static final float DEFAULT_PATH_SCALE = 1.85F;
     public static final float DEFAULT_BIND_SCALE = 1.8F;
     public static final int STEP_INTERVAL = 3;
-    public static final int MAX_PATH_SEGMENTS = 12;
+    public static final int MAX_PATH_SEGMENTS = 20;
     public static final float SEGMENT_SPACING = 1.35F;
     public static final int PATH_HOLD_TICKS = 6;
     public static final int PATH_LINGER_TICKS = 60; // 3 seconds lingering hazard trail

@@ -3,6 +3,7 @@ package io.redspace.ironspell_more.entity.spells.gale_piercer;
 import io.redspace.ironspell_more.registry.EntityRegistry;
 import io.redspace.ironspell_more.registry.SpellRegistry;
 import io.redspace.ironsspellbooks.damage.DamageSources;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -16,12 +17,22 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector3f;
 
 public class GaleArrowEntity extends AbstractGalePiercerArrowEntity {
     public static final double SPEED = 6.0D;
     public static final float KNOCKBACK_STRENGTH = 0.8F;
     public static final int FIRE_SECONDS = 4;
     public static final int SLOWNESS_TICKS = 100; // 5 seconds
+
+    private static final DustParticleOptions WHITE_WIND_DUST =
+            new DustParticleOptions(new Vector3f(1.0F, 1.0F, 1.0F), 0.9F);
+    private static final DustParticleOptions PALE_WIND_DUST =
+            new DustParticleOptions(new Vector3f(0.92F, 0.94F, 1.0F), 0.9F);
+    private static final DustParticleOptions ORANGE_SPARK_DUST =
+            new DustParticleOptions(new Vector3f(1.0F, 0.34F, 0.06F), 1.0F);
+    private static final DustParticleOptions CRIMSON_SPARK_DUST =
+            new DustParticleOptions(new Vector3f(1.0F, 0.10F, 0.03F), 0.85F);
 
     public GaleArrowEntity(EntityType<? extends Projectile> type, Level level) {
         super(type, level);
@@ -44,9 +55,13 @@ public class GaleArrowEntity extends AbstractGalePiercerArrowEntity {
     @Override
     public void impactParticles(double x, double y, double z) {
         io.redspace.ironsspellbooks.capabilities.magic.MagicManager.spawnParticles(level(),
-                ParticleTypes.CLOUD, x, y, z, 25, 0.3D, 0.3D, 0.3D, 0.15D, true);
+                ParticleTypes.FLAME, x, y, z, 40, 0.4D, 0.4D, 0.4D, 0.18D, true);
         io.redspace.ironsspellbooks.capabilities.magic.MagicManager.spawnParticles(level(),
-                ParticleTypes.FLAME, x, y, z, 20, 0.25D, 0.25D, 0.25D, 0.1D, true);
+                ParticleTypes.LAVA, x, y, z, 10, 0.25D, 0.25D, 0.25D, 0.12D, true);
+        io.redspace.ironsspellbooks.capabilities.magic.MagicManager.spawnParticles(level(),
+                WHITE_WIND_DUST, x, y, z, 25, 0.35D, 0.35D, 0.35D, 0.12D, true);
+        io.redspace.ironsspellbooks.capabilities.magic.MagicManager.spawnParticles(level(),
+                ParticleTypes.EXPLOSION_EMITTER, x, y, z, 1, 0, 0, 0, 0, true);
     }
 
     @Override
@@ -109,35 +124,52 @@ public class GaleArrowEntity extends AbstractGalePiercerArrowEntity {
 
     private void spawnGaleVortexParticles(Vec3 start, Vec3 end) {
         double distance = start.distanceTo(end);
-        int steps = Math.max(2, (int) (distance * 3.0D));
-        Vec3 dir = end.subtract(start).normalize();
-        Vec3 up = Math.abs(dir.y) > 0.9D ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
-        Vec3 right = dir.cross(up).normalize();
-        up = right.cross(dir).normalize();
+        if (distance < 1.0E-4D) {
+            return;
+        }
 
-        for (int i = 0; i < steps; i++) {
-            double progress = (i + 0.5D) / steps;
+        Vec3 dir = end.subtract(start).scale(1.0D / distance);
+        Vec3 referenceAxis = Math.abs(dir.y) > 0.9D ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
+        Vec3 right = dir.cross(referenceAxis).normalize();
+        Vec3 up = right.cross(dir).normalize();
+        int axialSteps = Math.min(8, Math.max(4, (int) Math.ceil(distance * 1.1D)));
+
+        for (int step = 0; step < axialSteps; step++) {
+            double progress = (step + 0.5D) / axialSteps;
             Vec3 center = start.lerp(end, progress);
+            double radius = 0.60D - progress * 0.30D;
 
-            // Swirling vortex angle
-            double angle = (tickCount * 0.4D + progress * Math.PI * 4.0D);
-            double radius = 0.4D;
+            for (int arm = 0; arm < 3; arm++) {
+                double angle = tickCount * 0.75D
+                        + progress * Math.PI * 4.5D
+                        + arm * Math.PI * 2.0D / 3.0D;
+                Vec3 offset = right.scale(Math.cos(angle) * radius)
+                        .add(up.scale(Math.sin(angle) * radius));
+                Vec3 particlePos = center.add(offset);
+                Vec3 spiralVelocity = right.scale(-Math.sin(angle))
+                        .add(up.scale(Math.cos(angle)))
+                        .scale(0.07D)
+                        .subtract(dir.scale(0.04D));
 
-            Vec3 offset = right.scale(Math.cos(angle) * radius).add(up.scale(Math.sin(angle) * radius));
-            Vec3 pPos = center.add(offset);
+                level().addParticle(arm == 1 ? WHITE_WIND_DUST : PALE_WIND_DUST,
+                        particlePos.x, particlePos.y, particlePos.z,
+                        spiralVelocity.x, spiralVelocity.y, spiralVelocity.z);
 
-            // Violent wind vortex
-            level().addParticle(ParticleTypes.CLOUD,
-                    pPos.x, pPos.y, pPos.z,
-                    offset.x * 0.1D, offset.y * 0.1D, offset.z * 0.1D);
+                if (arm < 2) {
+                    level().addParticle(ParticleTypes.SMALL_FLAME,
+                            particlePos.x, particlePos.y, particlePos.z,
+                            spiralVelocity.x, spiralVelocity.y, spiralVelocity.z);
+                }
 
-            // Fiery orange-red sparks dancing within wind stream
-            if (i % 2 == 0) {
-                level().addParticle(ParticleTypes.SMALL_FLAME,
-                        pPos.x + (random.nextDouble() - 0.5D) * 0.15D,
-                        pPos.y + (random.nextDouble() - 0.5D) * 0.15D,
-                        pPos.z + (random.nextDouble() - 0.5D) * 0.15D,
-                        0.0D, 0.02D, 0.0D);
+                // Three hot accents are distributed from the broad wake toward the arrowhead.
+                boolean accent = (arm == 0 && step == 1)
+                        || (arm == 1 && step == axialSteps / 2)
+                        || (arm == 2 && step == axialSteps - 2);
+                if (accent) {
+                    DustParticleOptions spark = arm == 0 ? ORANGE_SPARK_DUST : CRIMSON_SPARK_DUST;
+                    level().addParticle(spark, particlePos.x, particlePos.y, particlePos.z,
+                            spiralVelocity.x, spiralVelocity.y, spiralVelocity.z);
+                }
             }
         }
     }

@@ -2,6 +2,7 @@ package io.redspace.ironspell_more.config;
 
 import io.redspace.ironspell_more.spells.aqua.CrimsonRainBathesMoonSpell;
 import io.redspace.ironspell_more.spells.aqua.GlacialFirmamentSpell;
+import io.redspace.ironspell_more.spells.aqua.ToxicSalvationSpell;
 import io.redspace.ironspell_more.spells.aqua.GlacialVeilSpell;
 import io.redspace.ironspell_more.spells.fire.*;
 import io.redspace.ironspell_more.spells.gold.GildedHareSpell;
@@ -616,6 +617,59 @@ public class SpellConfig {
         }
     }
 
+    public static class ToxicSalvation {
+        public static ForgeConfigSpec.DoubleValue baseDamage;
+        public static ForgeConfigSpec.DoubleValue damagePerLevel;
+        public static ForgeConfigSpec.DoubleValue baseHeal;
+        public static ForgeConfigSpec.DoubleValue healPerLevel;
+        public static ForgeConfigSpec.IntValue baseDuration;
+        public static ForgeConfigSpec.DoubleValue durationPerLevel;
+        public static ForgeConfigSpec.DoubleValue baseRadius;
+        public static ForgeConfigSpec.IntValue baseMana;
+        public static ForgeConfigSpec.IntValue manaPerLevel;
+        public static ForgeConfigSpec.DoubleValue cooldown;
+
+        public static float getBaseDamage() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseDamage.get().floatValue() : ToxicSalvationSpell.BASE_DAMAGE;
+        }
+
+        public static float getDamagePerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? damagePerLevel.get().floatValue() : ToxicSalvationSpell.DAMAGE_PER_LEVEL;
+        }
+
+        public static float getBaseHeal() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseHeal.get().floatValue() : ToxicSalvationSpell.BASE_HEAL;
+        }
+
+        public static float getHealPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? healPerLevel.get().floatValue() : ToxicSalvationSpell.HEAL_PER_LEVEL;
+        }
+
+        public static int getBaseDuration() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseDuration.get() : ToxicSalvationSpell.BASE_DURATION_SECONDS;
+        }
+
+        public static double getDurationPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? durationPerLevel.get() : ToxicSalvationSpell.DURATION_PER_LEVEL_SECONDS;
+        }
+
+        public static float getBaseRadius() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseRadius.get().floatValue() : ToxicSalvationSpell.BASE_RADIUS;
+        }
+
+        public static int getBaseMana() {
+            return (SPEC != null && SPEC.isLoaded()) ? baseMana.get() : ToxicSalvationSpell.BASE_MANA_COST;
+        }
+
+        public static int getManaPerLevel() {
+            return (SPEC != null && SPEC.isLoaded()) ? manaPerLevel.get() : ToxicSalvationSpell.MANA_COST_PER_LEVEL;
+        }
+
+        public static double getCooldown() {
+            return (SPEC != null && SPEC.isLoaded()) ? cooldown.get() : ToxicSalvationSpell.COOLDOWN_SECONDS;
+        }
+    }
+
     public static class GlacialFirmament {
         public static ForgeConfigSpec.DoubleValue baseDamage;
         public static ForgeConfigSpec.DoubleValue damagePerLevel;
@@ -811,6 +865,19 @@ public class SpellConfig {
         GlacialVeil.baseMana = BUILDER.comment("Base mana cost").defineInRange("base_mana", 50, 0, 10000);
         GlacialVeil.manaPerLevel = BUILDER.comment("Mana cost increase per level").defineInRange("mana_per_level", 10, 0, 1000);
         GlacialVeil.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 20.0D, 0.0D, 3600.0D);
+        BUILDER.pop();
+
+        BUILDER.push("toxic_salvation");
+        ToxicSalvation.baseDamage = BUILDER.comment("Toxic mist base damage at Level 1").defineInRange("base_damage", 4.0D, 0.0D, 10000.0D);
+        ToxicSalvation.damagePerLevel = BUILDER.comment("Damage increase per level").defineInRange("damage_per_level", 1.0D, 0.0D, 1000.0D);
+        ToxicSalvation.baseHeal = BUILDER.comment("Healing amount at Level 1").defineInRange("base_heal", 2.0D, 0.0D, 10000.0D);
+        ToxicSalvation.healPerLevel = BUILDER.comment("Heal increase per level").defineInRange("heal_per_level", 0.5D, 0.0D, 1000.0D);
+        ToxicSalvation.baseDuration = BUILDER.comment("Base duration in seconds").defineInRange("base_duration", 10, 1, 3600);
+        ToxicSalvation.durationPerLevel = BUILDER.comment("Duration increase per level in seconds").defineInRange("duration_per_level", 1.5D, 0.0D, 3600.0D);
+        ToxicSalvation.baseRadius = BUILDER.comment("Base radius in blocks").defineInRange("base_radius", 5.0D, 0.5D, 64.0D);
+        ToxicSalvation.baseMana = BUILDER.comment("Base mana cost").defineInRange("base_mana", 40, 0, 10000);
+        ToxicSalvation.manaPerLevel = BUILDER.comment("Mana cost increase per level").defineInRange("mana_per_level", 5, 0, 1000);
+        ToxicSalvation.cooldown = BUILDER.comment("Cooldown in seconds").defineInRange("cooldown_seconds", 22.0D, 0.0D, 3600.0D);
         BUILDER.pop();
 
         BUILDER.push("glacial_firmament");

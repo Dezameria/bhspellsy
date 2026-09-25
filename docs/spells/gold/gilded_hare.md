@@ -51,6 +51,7 @@
   - เป้าหมายจะติดสถานะ **Stun สมบูรณ์เป็นเวลา 1 วินาที (20 ticks)** (เคลื่อนที่ไม่ได้, ขุดไม่ได้, กระโดดไม่ได้, ยกเลิก knockback, ความเร็วแกน x/y/z ถูกล็อกเป็น 0)
   - เป้าหมายจะติดสถานะ **Blindness เป็นเวลา 3 วินาที (60 ticks)** (ริบบิ้นพันมิดตัวและทำให้เสียการมองเห็น)
   - การแสดงผลริบบิ้นจะเปลี่ยนเป็น **ดักแด้ริบบิ้นสีทองพันมิดทั้งตัว (Full Cocoon, Amplifier 4)** พร้อมมีหูกระต่ายริบบิ้นโผล่ขึ้นมาด้านบนศีรษะของเป้าหมาย
+  - **อนุภาคพิเศษเมื่อสแตกครบ (Full Stack Special VFX)**: เมื่อสแตกครบ 5 ครั้ง จะระเบิดอนุภาคพิเศษทันที ได้แก่ คลื่นกระแทกสีทองขยายวง (`ShockwaveParticleOptionCustom`), ฝนละอองทองคำพุ่งกระจาย (`ParticleTypes.TOTEM_OF_UNDYING`), ลำแสงประกายสีขาวทองพุ่งขึ้น (`ParticleTypes.END_ROD`), เกลียวริบบิ้นทองคำคู่หมุนขึ้นรอบดักแด้, วงแหวนประกายคริสตัลระเบิดออก, และแสงแฟลชประกายคู่
   - **การแตกสลายของดักแด้ (Cocoon Shatter)**: เมื่อครบระยะเวลา Stun 1 วินาที (20 ticks) ดักแด้ริบบิ้นจะแตกสลายออกทันที เกิดเสียงกระจก/คริสตัลริบบิ้นแตก (`SoundEvents.AMETHYST_CLUSTER_BREAK`, `SoundEvents.GLASS_BREAK`, `SoundEvents.WOOL_BREAK`) พร้อมสะเก็ดริบบิ้นสีทอง 36 ชิ้นและประกายคริสตัลระเบิดพุ่งกระจายรอบทิศทาง
   - **คูลดาวน์กันปั๊มสแตกต่อเนื่อง (Finisher Stack Lockout 10 วินาที / 200 ticks)**: เมื่อคอมโบครบ 5 ครั้งและดักแด้ทำงาน เป้าหมายจะติดสถานะคูลดาวน์ 10 วินาที ทำให้การโจมตีใส่เป้าหมายนี้จะไม่เริ่มนับหรือขึ้นสแตกใหม่จนกว่าจะพ้นระยะเวลา 10 วินาที
   - รีเซ็ตคอมโบการเตะ และเคลียร์มาร์กหลังจบสถานะดักแด้
@@ -58,19 +59,19 @@
 ## Audio, VFX และ Animation
 
 - **เสียงเมื่อร่าย**: `SoundEvents.ENCHANTMENT_TABLE_USE`, `SoundEvents.AMETHYST_BLOCK_CHIME` (เสียงประกายแก้วคริสตอลกังวานนุ่มนวล)
-- **เสียงเมื่อเตะโดน**: `SoundEvents.PLAYER_ATTACK_WEAK`, `SoundEvents.AMETHYST_BLOCK_HIT` (ประกายคริสตัลริบบิ้นกระทบเป้าหมาย)
-- **เสียงเมื่อติด Stun ดักแด้**: `SoundEvents.PLAYER_ATTACK_CRIT`, `SoundEvents.BELL_RESONATE`, `SoundEvents.AMETHYST_BLOCK_CHIME`
+- **เสียงเมื่อเตะโดน**: `SoundEvents.PLAYER_ATTACK_WEAK`, `SoundEvents.AMETHYST_BLOCK_HIT` (ประกายคริสตัลริบบิ้นกระทบเป้าหมาย, ระดับเสียงสูงขึ้นตามคอมโบ)
+- **เสียงเมื่อติด Stun ดักแด้**: `SoundEvents.PLAYER_ATTACK_CRIT`, `SoundEvents.BELL_RESONATE`, `SoundEvents.AMETHYST_BLOCK_CHIME`, `SoundEvents.TOTEM_USE`
 - **เสียงเมื่อดักแด้แตกออก (Cocoon Shatter)**: `SoundEvents.AMETHYST_CLUSTER_BREAK`, `SoundEvents.GLASS_BREAK`, `SoundEvents.WOOL_BREAK`
 - **อนุภาค (Particles)**:
   - รอบตัวผู้ร่าย: ละอองทองคำเบาบางหมุนวนสม่ำเสมอ
-  - ทุกครั้งที่เตะโดน: ละอองทองคำและสะเก็ดริบบิ้นสีทองจางๆ พุ่งตามทิศทางการเตะ
-  - เมื่อติดดักแด้ 5 ฮิต: วงแหวนประกายคริสตัลระเบิดออกรอบตัวเป้าหมาย
-  - เมื่อดักแด้ครบเวลาแล้วแตกออก: สะเก็ดริบบิ้นทองคำ 36 ชิ้น, Crit sparks และ Wax off พุ่งกระจายรอบทิศทาง
+  - ทุกครั้งที่เตะโดน: ละอองทองคำ, สะเก็ดริบบิ้นสีทอง, และอนุภาคกระต่ายทองคำ (`ironspell_more:gilded_hare`) พุ่งกระโดดกระจายตัวออกจากจุดปะทะ โดยมีจำนวนและความแรงเพิ่มขึ้นตามคอมโบ 1-4 (และแสดงผลทุกครั้งที่มีการต่อยทำความเสียหาย แม้เป้าหมายอยู่ในช่วงคูลดาวน์ฟินิชเชอร์หรือติดสตัน)
+  - เมื่อสแตกครบ 5 ฮิต (Full Stack Special VFX): คลื่นกระแทกสีทอง (`SHOCKWAVE_CUSTOM`), ฝนละอองทองคำ (`TOTEM_OF_UNDYING`), ลำแสง (`END_ROD`), เกลียวริบบิ้นทองคำคู่, วงแหวนประกายคริสตัล 32 ทิศทาง, Flash ซ้อน, และฝูงกระต่ายทองคำ (`ironspell_more:gilded_hare`) 12 ตัวพุ่งกระโดดกระจายรอบทิศทาง 360 องศา
+  - เมื่อดักแด้ครบเวลาแล้วแตกออก: สะเก็ดริบบิ้นทองคำ 36 ชิ้น, กระต่ายทองคำ 6 ตัว, Crit sparks, Totem sparks และ Wax off พุ่งกระจายรอบทิศทาง
 - **Render Layer & Visuals**:
   - `GildedHareRibbonGeometry`: เก็บ geometry ริบบิ้นกลางที่ใช้ร่วมกันทั้ง renderer ปกติและ Epic Fight เพื่อให้รูปทรง สี และ animation ตรงกัน
-  - `GildedHarePlayerLayer`: เรนเดอร์หูกระต่ายริบบิ้นบนศีรษะ และริบบิ้นพันข้อเท้า/หลังเท้า (Ankle & Foot Ribbon Wraps ที่ระดับ y = 9.2 ถึง 11.8 พร้อมโบว์ข้อเท้าด้านนอกที่ y = 10.2) บน vanilla player renderer
+  - `GildedHarePlayerLayer`: เรนเดอร์หูกระต่ายริบบิ้นบนศีรษะบน vanilla player renderer โดยยกเลิกการเรนเดอร์ริบบิ้นพันขาบน vanilla model เพื่อป้องกันการเรนเดอร์ซ้อนทับ และเว้นการเรนเดอร์เมื่ออยู่ใน battle mode เพื่อให้ Epic Fight layer จัดการแทนอย่างสมบูรณ์
   - `GildedHareBindingRenderEvents`: เรนเดอร์ริบบิ้นพันรอบตัวเป้าหมายตามขนาด Bounding Box บน vanilla living renderer (Amplifier 0-3 = ริบบิ้นค่อยๆ พันทีละ 1 ถึง 4 เส้นตามลำดับ, Amplifier 4 = ดักแด้ริบบิ้นมิดตัวพร้อมหูกระต่าย)
-  - `GildedHareEpicFightRenderCompat`: เพิ่ม custom patched layer ให้ Epic Fight living renderers; ริบบิ้นผู้ร่ายยึดกับ head/leg joint matrices ของ animation เฟรมปัจจุบัน (โดย leg joint ใช้ transform scale `(-1, 1, -1)` ชดเชยแกน Y ของ biped armature และ translate `-0.375m` ชดเชย pivot หัวเข่ากลับสู่พิกัดสะโพก เพื่อให้ริบบิ้นพันธนาการข้อเท้าและโบว์อยู่ที่ข้อเท้า/หลังเท้าอย่างแม่นยำ ไม่ลอยขึ้นไปอยู่ที่ระดับเอว) และริบบิ้นเป้าหมายเรนเดอร์จาก entity-root transform (แสดงผล 1-4 เส้น และดักแด้ครบทั้งตัวตาม amplifier)
+  - `GildedHareEpicFightRenderCompat`: เพิ่ม custom patched layer ให้ Epic Fight living renderers; ริบบิ้นผู้ร่ายยึดกับ head/leg joint matrices ของ animation เฟรมปัจจุบัน (โดย leg joint ใช้ transform scale `(-1, 1, -1)` ชดเชยแกน Y ของ biped armature และ translate `-0.375m` ชดเชย pivot หัวเข่ากลับสู่พิกัดสะโพก เพื่อให้ริบบิ้นพันธนาการข้อเท้าและโบว์อยู่ที่ข้อเท้า/หลังเท้าอย่างแม่นยำ ไม่ลอยขึ้นไปอยู่ที่ระดับเอว และเป็นจุดแสดงผลริบบิ้นพันขาเพียงแห่งเดียว) และริบบิ้นเป้าหมายเรนเดอร์จาก entity-root transform (แสดงผล 1-4 เส้น และดักแด้ครบทั้งตัวตาม amplifier)
 
 ## สถาปัตยกรรม Server / Client
 
@@ -80,7 +81,7 @@
   - `GildedHareMarkEffect`: จัดเก็บสถานะ Stun, คุมการ zero delta movement ในช่วงดักแด้
   - `GildedHareCombatEvents`: ดักจับ `LivingDamageEvent` คัดกรองเฉพาะการโจมตีระยะประชิดโดยตรงจากผู้ที่มีบัฟ `GildedHareEffect`
 - **Client**:
-  - เรนเดอร์เลเยอร์ริบบิ้นสำหรับผู้เล่น
+  - เรนเดอร์เลเยอร์ริบบิ้นสำหรับผู้เล่น (เฉพาะหูกระต่ายบน vanilla renderer, ส่วนริบบิ้นพันขาแสดงผลผ่าน Epic Fight เท่านั้น)
   - เรนเดอร์ดักแด้ริบบิ้นสำหรับเป้าหมายที่ติดดีบัฟ
   - เมื่อ Epic Fight ใช้ patched renderer จะเปลี่ยนไปใช้ custom `PatchedLayer` โดยตรง จึงแสดงผลได้ใน battle mode และบนเป้าหมายที่ vanilla `RenderLivingEvent.Post` ถูกข้าม
   - รองรับการจัดวางหูและข้อเท้าร่วมกับ Epic Fight `HumanoidArmature` ของ entity นั้นเอง โดยใช้ pose matrices ที่ renderer ส่งมาในเฟรมปัจจุบัน

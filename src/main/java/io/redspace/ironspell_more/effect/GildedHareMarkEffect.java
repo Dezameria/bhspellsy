@@ -33,10 +33,12 @@ public class GildedHareMarkEffect extends MobEffect {
     @Override
     public void removeAttributeModifiers(LivingEntity entity, AttributeMap attributeMap, int amplifier) {
         super.removeAttributeModifiers(entity, attributeMap, amplifier);
-        if (amplifier >= 4 && entity.level() instanceof net.minecraft.server.level.ServerLevel serverLevel && entity.isAlive()) {
-            io.redspace.ironspell_more.client.particle.GildedHareVfx.spawnCocoonShatterVfx(serverLevel, entity);
+        if (amplifier >= 4) {
+            if (entity.level() instanceof net.minecraft.server.level.ServerLevel serverLevel && entity.isAlive()) {
+                io.redspace.ironspell_more.client.particle.GildedHareVfx.spawnCocoonShatterVfx(serverLevel, entity);
+            }
+            clearComboData(entity);
         }
-        clearComboData(entity);
     }
 
     public static void clearComboData(LivingEntity entity) {

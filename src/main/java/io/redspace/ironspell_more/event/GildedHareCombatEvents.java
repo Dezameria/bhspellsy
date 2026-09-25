@@ -63,12 +63,18 @@ public class GildedHareCombatEvents {
         // 4. If victim is on finisher cooldown (10s after completing full 5-hit combo), do not build stacks
         long finisherCooldown = victim.getPersistentData().getLong(GildedHareMarkEffect.FINISHER_COOLDOWN_TICK_TAG);
         if (victim.level().getGameTime() < finisherCooldown) {
+            if (victim.level() instanceof ServerLevel serverLevel) {
+                GildedHareVfx.spawnKickImpactVfx(serverLevel, attacker, victim, 1);
+            }
             return;
         }
 
         // If victim is currently in Cocoon Stun (amplifier >= 4), do not add combo hits
         var activeMark = victim.getEffect(MobEffectsRegistry.GILDED_HARE_MARK.get());
         if (activeMark != null && activeMark.getAmplifier() >= 4) {
+            if (victim.level() instanceof ServerLevel serverLevel) {
+                GildedHareVfx.spawnKickImpactVfx(serverLevel, attacker, victim, 1);
+            }
             return;
         }
 
@@ -78,22 +84,28 @@ public class GildedHareCombatEvents {
         String lastTargetUUID = attacker.getPersistentData().getString(GildedHareEffect.CASTER_ACTIVE_TARGET_TAG);
         String victimUUID = victim.getStringUUID();
 
-        boolean isOwnerMatch = attackerUUID.equals(storedOwner);
+        boolean isOwnerMatch = attackerUUID.equals(storedOwner)
+                || (storedOwner.isEmpty() && victimUUID.equals(lastTargetUUID));
         boolean isSameTarget = victimUUID.equals(lastTargetUUID);
         boolean hasActiveMark = activeMark != null; // Active mark guarantees inside combo window
 
         int currentCombo = victim.getPersistentData().getInt(GildedHareMarkEffect.COMBO_COUNT_TAG);
+        if (currentCombo <= 0 && activeMark != null) {
+            currentCombo = activeMark.getAmplifier() + 1;
+        }
+
         int nextCombo = (isOwnerMatch && isSameTarget && hasActiveMark) ? currentCombo + 1 : 1;
 
         if (nextCombo < 5) {
             // Consecutive hit (1 to 4) -> maps to amplifier 0 to 3 (displaying 1 to 4 ribbon strips)
             attacker.getPersistentData().putString(GildedHareEffect.CASTER_ACTIVE_TARGET_TAG, victimUUID);
-            victim.getPersistentData().putString(GildedHareMarkEffect.OWNER_UUID_TAG, attackerUUID);
-            victim.getPersistentData().putInt(GildedHareMarkEffect.LAST_HIT_TICK_TAG, victim.tickCount);
-            victim.getPersistentData().putInt(GildedHareMarkEffect.COMBO_COUNT_TAG, nextCombo);
 
             // Remove existing mark before re-adding to cleanly advance amplifier without hidden effect retention
             victim.removeEffect(MobEffectsRegistry.GILDED_HARE_MARK.get());
+
+            victim.getPersistentData().putString(GildedHareMarkEffect.OWNER_UUID_TAG, attackerUUID);
+            victim.getPersistentData().putInt(GildedHareMarkEffect.LAST_HIT_TICK_TAG, victim.tickCount);
+            victim.getPersistentData().putInt(GildedHareMarkEffect.COMBO_COUNT_TAG, nextCombo);
 
             // Apply ribbon binding mark with amplifier (nextCombo - 1) for 100 ticks (5 seconds)
             victim.addEffect(new MobEffectInstance(MobEffectsRegistry.GILDED_HARE_MARK.get(),
@@ -103,9 +115,9 @@ public class GildedHareCombatEvents {
             victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,
                     GildedHareSpell.SLOWNESS_DURATION_TICKS, 0, false, false, true));
 
-            // Impact VFX
+            // Impact VFX scaled by combo count
             if (victim.level() instanceof ServerLevel serverLevel) {
-                GildedHareVfx.spawnKickImpactVfx(serverLevel, attacker, victim);
+                GildedHareVfx.spawnKickImpactVfx(serverLevel, attacker, victim, nextCombo);
             }
         } else {
             // 5th Hit Finisher: Full Cocoon Stun & Blindness (amplifier = 4)

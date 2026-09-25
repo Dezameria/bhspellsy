@@ -41,6 +41,7 @@
 | Crimson Rain Bathes Moon | หาน หลิงเหวิน (Han Lingwen) | `ironspell_more:crimson_rain_bathes_moon` | Channel พายุสายฟ้าครามและฝนหอกสีชาด | [เปิดเอกสาร](spells/aqua/crimson_rain_bathes_moon.md) |
 | Glacial Veil | หยิง ซีหยาง (Ying Xiyang) | `ironspell_more:glacial_veil` | คลื่นน้ำแข็งและหนามน้ำแข็งแปดทิศรอบผู้ร่าย | [เปิดเอกสาร](spells/aqua/glacial_veil.md) |
 | Glacial Firmament | ปิงเยว่ (Bingyue) | `ironspell_more:glacial_firmament` | สร้าง ice domain และวงหนาม/สุสานน้ำแข็งหลายชั้น | [เปิดเอกสาร](spells/aqua/glacial_firmament.md) |
+| Toxic Salvation | ซงหลิน (Song Lin) | `ironspell_more:toxic_salvation` | แปลงพิษในตัวซงหลิน ให้ระเหยกลายเป็นหมอกพิษ ใส่ Poison 1 แก่ศัตรู และฟื้นฟูเลือด | [เปิดเอกสาร](spells/aqua/toxic_salvation.md) |
 
 ## Gold
 

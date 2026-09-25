@@ -4,6 +4,7 @@ import io.redspace.ironspell_more.registry.SpellRegistry;
 import io.redspace.ironspell_more.spells.nature.GalePiercerSpell;
 import io.redspace.ironsspellbooks.damage.DamageSources;
 import io.redspace.ironsspellbooks.entity.spells.AbstractMagicProjectile;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -25,6 +26,7 @@ import net.minecraftforge.entity.PartEntity;
 import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +34,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public abstract class AbstractGalePiercerArrowEntity extends AbstractMagicProjectile {
+    private static final DustParticleOptions PALE_WIND_DUST =
+            new DustParticleOptions(new Vector3f(0.92F, 0.94F, 1.0F), 0.85F);
+
     protected static final EntityDataAccessor<Integer> DATA_TARGET_ID =
             SynchedEntityData.defineId(AbstractGalePiercerArrowEntity.class, EntityDataSerializers.INT);
 
@@ -134,7 +139,7 @@ public abstract class AbstractGalePiercerArrowEntity extends AbstractMagicProjec
     @Override
     public void impactParticles(double x, double y, double z) {
         io.redspace.ironsspellbooks.capabilities.magic.MagicManager.spawnParticles(level(),
-                ParticleTypes.CLOUD, x, y, z, 15, 0.2D, 0.2D, 0.2D, 0.1D, true);
+                PALE_WIND_DUST, x, y, z, 15, 0.2D, 0.2D, 0.2D, 0.1D, true);
         io.redspace.ironsspellbooks.capabilities.magic.MagicManager.spawnParticles(level(),
                 ParticleTypes.POOF, x, y, z, 10, 0.15D, 0.15D, 0.15D, 0.05D, true);
     }

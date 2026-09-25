@@ -53,11 +53,13 @@ public class GalePiercerChargeLayer extends RenderLayer<AbstractClientPlayer, Pl
             return;
         }
 
+        HumanoidArm arm = player.getMainArm();
         poseStack.pushPose();
-        this.getParentModel().translateToHand(HumanoidArm.RIGHT, poseStack);
+        this.getParentModel().translateToHand(arm, poseStack);
 
-        // Position and orient arrow in hand identically to FireArrowSpell
-        poseStack.translate(1.0F / 32.0F, 0.5F, 0.0F);
+        // Position and orient arrow in hand identically to FireArrowSpell / ChargeSpellLayer
+        float xOffset = arm == HumanoidArm.RIGHT ? (1.0F / 32.0F) : (-1.0F / 32.0F);
+        poseStack.translate(xOffset, 0.5F, 0.0F);
         poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
         poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
 

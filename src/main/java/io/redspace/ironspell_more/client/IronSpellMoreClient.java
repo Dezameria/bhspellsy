@@ -30,6 +30,7 @@ public class IronSpellMoreClient {
         event.registerSpriteSet(ParticleRegistry.WHITE_EMBER.get(), WhiteEmberParticle.Provider::new);
         event.registerSpriteSet(ParticleRegistry.WHITE_FIRE_EMITTER.get(), io.redspace.ironspell_more.client.particle.WhiteFireEmitterParticle.Provider::new);
         event.registerSpriteSet(ParticleRegistry.RED_PLUM.get(), RedPlumParticle.Provider::new);
+        event.registerSpriteSet(ParticleRegistry.GILDED_HARE.get(), io.redspace.ironspell_more.client.particle.GildedHareParticle.Provider::new);
     }
 
     @SubscribeEvent
@@ -47,12 +48,12 @@ public class IronSpellMoreClient {
         event.registerEntityRenderer(EntityRegistry.RESONANT_KNELL_DOME.get(), ResonantKnellDomeRenderer::new);
         event.registerEntityRenderer(EntityRegistry.RAPTUROUS_BLOOM.get(), io.redspace.ironspell_more.entity.spells.rapturous_bloom.RapturousBloomRenderer::new);
         event.registerEntityRenderer(EntityRegistry.CRIMSON_ROOT.get(), io.redspace.ironspell_more.entity.spells.crimson_thornbind.CrimsonRootRenderer::new);
+        event.registerEntityRenderer(EntityRegistry.TOXIC_SALVATION_AOE.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
     }
 
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(AzureVenomNeedleModel.LAYER_LOCATION, AzureVenomNeedleModel::createBodyLayer);
-        event.registerLayerDefinition(io.redspace.ironspell_more.entity.spells.gale_piercer.GalePiercerArrowModel.LAYER_LOCATION, io.redspace.ironspell_more.entity.spells.gale_piercer.GalePiercerArrowModel::createBodyLayer);
         event.registerLayerDefinition(io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialSpikeRenderer.GlacialSpikeModel.LAYER_LOCATION, io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialSpikeRenderer.GlacialSpikeModel::createBodyLayer);
         event.registerLayerDefinition(io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialTombRenderer.GlacialTombModel.LAYER_LOCATION, io.redspace.ironspell_more.entity.spells.glacial_firmament.GlacialTombRenderer.GlacialTombModel::createBodyLayer);
     }

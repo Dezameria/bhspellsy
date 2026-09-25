@@ -63,7 +63,8 @@ The spell features custom visual work utilizing a vibrant, high-luminance electr
 - Accompanied by acoustic resonance (`SoundEvents.AMETHYST_BLOCK_CHIME`, `SoundEvents.BEACON_POWER_SELECT`, `SoundEvents.PLAYER_ATTACK_SWEEP`).
 
 #### Sustained Aura ("ออร่าวนรอบตัวจางๆ")
-- `JadeAuraRenderEvents` listens to `RenderLivingEvent.Post` on the client Forge event bus and renders the aura around every living entity carrying the Jade Aura effect, including players and allied mobs.
+- `JadeAuraRenderEvents` listens to `RenderLivingEvent.Post` on the client Forge event bus and renders the aura around every living entity carrying the Jade Aura effect in vanilla mode.
+- **Epic Fight Compatibility**: When Epic Fight is active and the entity is in battle mode, `JadeAuraEpicFightRenderCompat` renders the ribbon and ring geometry via a custom `PatchedLayer` (`JadeAuraEpicFightLayer`) attached to Epic Fight's `PatchedLivingEntityRenderer`. `JadeAuraRenderEvents` checks `EpicFightCompat.isBattleMode` to prevent duplicate rendering in battle mode.
 - The primary visual is full-bright translucent geometry: three continuous helical lightning ribbons with broad electric glow layers and bright radiant cores, plus two gently rippling orbit rings at different body heights.
 - **Electric Lightning Ribbon Geometry**:
   - Helical strands feature deterministic 3D zig-zag displacements generated from hash noise sampled across segment index, strand ID, and stepped time (`(int)(ageInTicks * 1.6F)`). This produces crisp, crackling electric lightning fractures around the entity's body.
@@ -78,7 +79,7 @@ The spell features custom visual work utilizing a vibrant, high-luminance electr
 #### Client / Server Responsibilities
 - The server remains authoritative for applying and synchronizing `JadeAuraEffect` and for the one-shot cast burst particles and sounds.
 - Vanilla mob-effect synchronization is sufficient for the client renderer; Jade Aura adds no networking.
-- Continuous ribbons, LOD selection, smooth animation, and sustained sparkle emission are client-only. This avoids sustained `sendParticles` traffic and server tick work while the buff is active.
+- Continuous ribbons, LOD selection, smooth animation, sustained sparkle emission, and Epic Fight patched layer integration are client-only. This avoids sustained `sendParticles` traffic and server tick work while the buff is active.
 
 ## Progression & Scaling
 

@@ -60,6 +60,7 @@ public class SpellRegistry {
     public static final RegistryObject<AbstractSpell> CRIMSON_RAIN_BATHES_MOON_SPELL = registerSpell(new CrimsonRainBathesMoonSpell());
     public static final RegistryObject<AbstractSpell> GLACIAL_VEIL_SPELL = registerSpell(new GlacialVeilSpell());
     public static final RegistryObject<AbstractSpell> GLACIAL_FIRMAMENT_SPELL = registerSpell(new GlacialFirmamentSpell());
+    public static final RegistryObject<AbstractSpell> TOXIC_SALVATION_SPELL = registerSpell(new io.redspace.ironspell_more.spells.aqua.ToxicSalvationSpell());
 
     public static RegistryObject<AbstractSpell> registerSpell(AbstractSpell spell) {
         return SPELLS.register(spell.getSpellName(), () -> spell);

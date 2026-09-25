@@ -12,7 +12,7 @@
 - **Base Mana Cost**: 40
 - **Mana Cost Per Level**: +5
 - **Cooldown**: 25.0 seconds
-- **Range**: 16.2 blocks (up to 12 connected path segments at 1.35-block spacing)
+- **Range**: 27.0 blocks (up to 20 connected path segments at 1.35-block spacing)
 - **Cast Start Animation**: `SpellAnimations.ONE_HANDED_HORIZONTAL_SWING_ANIMATION`
 - **Cast Start Sound**: `SoundEvents.PLAYER_ATTACK_SWEEP`
 - **Cast Finish Sound**: `SoundRegistry.ROOT_EMERGE`
@@ -23,7 +23,7 @@
 
 - **Cast Origin Visual Sheet (`textures/entity/crimson_root.png`)**: Upon cast, a flat planar sheet formed by the `crimson_root.png` texture fans out radially in all directions (360 degrees, 16 interleaved root petals) perpendicular to the launch vector at the caster's hand origin (`start`). It rapidly unfolds over 4 ticks (0.2s) and lingers in place with a subtle magical breathing pulse throughout the vine's travel and hazard linger duration, clearly marking the exact origin of the spell. Ambient crimson spores and red dust float around it (`spawnOriginBurst`), while generic root fog and block particles are omitted.
 - Segment 1 spawns immediately near the caster's active hand oriented along the caster's initial 3D look angle (pitch and yaw).
-- Segment 1 acts as the server-authoritative propagation coordinator, advancing one segment every 3 ticks (`STEP_INTERVAL = 3`) up to a maximum of 12 segments.
+- Segment 1 acts as the server-authoritative propagation coordinator, advancing one segment every 3 ticks (`STEP_INTERVAL = 3`) up to a maximum of 20 segments.
 - On each step:
   - The coordinator preserves an explicit tail and head for the latest segment. The current segment is always resolved from `currentSegmentTail` to `currentTip` before another segment is created.
   - The next segment's tail is spawned at the previous segment's exact head (`nextTail = currentTip`), so changing aim never recalculates or displaces an already established joint.
@@ -36,7 +36,7 @@
   - If a valid target is struck, propagation halts immediately and an upright `BIND` root is spawned at the target.
 - Path segments have gravity and physics explicitly disabled (`noGravity = true`, `noPhysics = true`, and no-op `travel()`), maintaining mid-air elevation and orientation along their 3D trajectory.
 - **Lingering Hazard Snare Trail (`PATH_LINGER_TICKS = 60`)**:
-  - When propagation halts (due to target hit, block collision, max 12 segments reached, or caster death), the vine path does not vanish immediately.
+  - When propagation halts (due to target hit, block collision, max 20 segments reached, or caster death), the vine path does not vanish immediately.
   - The entire vine trail remains frozen in place in mid-air for 3.0 seconds (60 ticks).
   - During this lingering duration, every segment actively tests its inflated bounding box (`checkHazardSnare()`, inflated by 0.65m horizontally and 0.5m vertically) every 2 ticks.
   - If any valid enemy entity walks into, jumps through, or touches any segment of the lingering vine trail, an upright `BIND` root is immediately spawned on them, dealing direct spell damage and binding them with Wither + Slowness for 10 seconds.

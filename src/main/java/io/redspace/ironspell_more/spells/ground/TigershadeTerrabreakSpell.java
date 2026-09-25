@@ -546,28 +546,121 @@ public class TigershadeTerrabreakSpell extends AbstractSpell {
         double impactY = impactPosition.y;
         double impactZ = impactPosition.z;
 
+        // Heavy visceral impact sound layering (removed anvil, added heavy sub-bass boom & physical shock)
         level.playSound(null, impactX, impactY, impactZ,
-                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.3F, 0.7F);
+                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 2.0F, 0.60F);
         level.playSound(null, impactX, impactY, impactZ,
-                SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.5F, 0.5F);
+                SoundEvents.WARDEN_ATTACK_IMPACT, SoundSource.PLAYERS, 2.0F, 0.70F);
+        level.playSound(null, impactX, impactY, impactZ,
+                SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.4F, 0.80F);
+        level.playSound(null, impactX, impactY, impactZ,
+                SoundEvents.DRAGON_FIREBALL_EXPLODE, SoundSource.PLAYERS, 1.6F, 0.65F);
 
         if (level instanceof ServerLevel serverLevel) {
+            // 1. Concentric Ground Shockwaves (Outer Purple, Mid Magenta, Inner Gold)
             serverLevel.sendParticles(new ShockwaveParticleOptionCustom(
-                            new Vector3f(1.0F, 0.65F, 0.15F), 5.0F, true, new Vector3f(0, 1, 0)),
+                            new Vector3f(0.58F, 0.12F, 0.92F), 6.8F, true, new Vector3f(0, 1, 0)),
+                    impactX, impactY + 0.12D, impactZ, 1, 0, 0, 0, 0);
+            serverLevel.sendParticles(new ShockwaveParticleOptionCustom(
+                            new Vector3f(0.85F, 0.20F, 0.95F), 5.0F, true, new Vector3f(0, 1, 0)),
                     impactX, impactY + 0.15D, impactZ, 1, 0, 0, 0, 0);
-            serverLevel.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK,
-                            Blocks.COARSE_DIRT.defaultBlockState()),
-                    impactX, impactY + 0.1D, impactZ, 60, 1.2, 0.3, 1.2, 0.25);
-            serverLevel.sendParticles(new DustParticleOptions(new Vector3f(1.0F, 0.60F, 0.10F), 2.0F),
-                    impactX, impactY + 0.8D, impactZ, 40, 1.0, 0.8, 1.0, 0.25);
-            serverLevel.sendParticles(ParticleTypes.FLAME,
-                    impactX, impactY + 0.6D, impactZ, 25, 0.8, 0.6, 0.8, 0.15);
-            serverLevel.sendParticles(ParticleTypes.LAVA,
-                    impactX, impactY + 0.5D, impactZ, 6, 0.5, 0.5, 0.5, 0.1);
+            serverLevel.sendParticles(new ShockwaveParticleOptionCustom(
+                            new Vector3f(1.0F, 0.82F, 0.18F), 3.2F, true, new Vector3f(0, 1, 0)),
+                    impactX, impactY + 0.18D, impactZ, 1, 0, 0, 0, 0);
+
+            // 2. Giant Hemispherical Violet / Purple Energy Dome (Canopy)
+            double domeRadius = 5.2D;
+            Vector3f deepPurple = new Vector3f(0.55F, 0.10F, 0.88F);
+            Vector3f brightMagenta = new Vector3f(0.85F, 0.22F, 0.95F);
+            DustParticleOptions purpleDust = new DustParticleOptions(deepPurple, 1.8F);
+            DustParticleOptions magentaDust = new DustParticleOptions(brightMagenta, 1.4F);
+
+            // Dome surface shell (elevation rings from horizon to apex)
+            for (int ring = 1; ring <= 7; ring++) {
+                double phi = (ring / 8.0D) * (Math.PI * 0.5D);
+                double ringY = domeRadius * Math.sin(phi);
+                double ringR = domeRadius * Math.cos(phi);
+                int points = (int) Math.max(8, Math.round(ringR * 6.5D));
+
+                for (int p = 0; p < points; p++) {
+                    double theta = p * (Math.PI * 2.0D / points);
+                    double px = impactX + ringR * Math.cos(theta);
+                    double py = impactY + ringY;
+                    double pz = impactZ + ringR * Math.sin(theta);
+
+                    // Dual-color purple/magenta energy rim
+                    if (p % 2 == 0) {
+                        serverLevel.sendParticles(purpleDust, px, py, pz, 1, 0, 0, 0, 0);
+                    } else {
+                        serverLevel.sendParticles(magentaDust, px, py, pz, 1, 0, 0, 0, 0);
+                    }
+
+                    // Billowing dragon breath along the dome canopy
+                    if ((p + ring) % 3 == 0) {
+                        double vx = (ringR * Math.cos(theta) / domeRadius) * 0.08D;
+                        double vy = (ringY / domeRadius) * 0.08D;
+                        double vz = (ringR * Math.sin(theta) / domeRadius) * 0.08D;
+                        serverLevel.sendParticles(ParticleTypes.DRAGON_BREATH, px, py, pz, 1, vx, vy, vz, 0.03D);
+                    }
+
+                    // Twinkling purple witch stars across the dome
+                    if ((p + ring) % 5 == 0) {
+                        serverLevel.sendParticles(ParticleTypes.WITCH, px, py, pz, 1, 0, 0, 0, 0);
+                    }
+                }
+            }
+
+            // 3. Curved Golden Tiger Slash Arcs (Sweeping upward & outward from ground zero)
+            Vector3f goldColor = new Vector3f(1.0F, 0.85F, 0.18F);
+            DustParticleOptions goldDust = new DustParticleOptions(goldColor, 1.6F);
+            int arcCount = 8;
+            for (int arc = 0; arc < arcCount; arc++) {
+                double baseAngle = arc * (Math.PI * 2.0D / arcCount);
+                for (int step = 0; step <= 14; step++) {
+                    double progress = step / 14.0D;
+                    double arcRadius = 0.4D + 3.8D * Math.pow(progress, 0.85D);
+                    double arcAngle = baseAngle + 1.25D * progress;
+                    double arcHeight = 0.2D + 3.2D * Math.pow(progress, 1.2D);
+
+                    double px = impactX + arcRadius * Math.cos(arcAngle);
+                    double py = impactY + arcHeight;
+                    double pz = impactZ + arcRadius * Math.sin(arcAngle);
+
+                    serverLevel.sendParticles(goldDust, px, py, pz, 1, 0, 0, 0, 0);
+                    serverLevel.sendParticles(ParticleTypes.END_ROD, px, py, pz, 1, 0, 0, 0, 0);
+                    if (step % 2 == 0) {
+                        serverLevel.sendParticles(ParticleTypes.FLAME, px, py, pz, 1, 0.02D, 0.02D, 0.02D, 0.01D);
+                    }
+                }
+            }
+
+            // 4. Epicenter Core Flame & Flash Eruption
             serverLevel.sendParticles(ParticleTypes.FLASH,
                     impactX, impactY + target.getBbHeight() * 0.5D, impactZ, 1, 0, 0, 0, 0);
             serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER,
                     impactX, impactY + 0.5D, impactZ, 1, 0, 0, 0, 0);
+            serverLevel.sendParticles(new DustParticleOptions(new Vector3f(1.0F, 0.65F, 0.10F), 2.4F),
+                    impactX, impactY + 0.8D, impactZ, 55, 0.8D, 1.0D, 0.8D, 0.2D);
+            serverLevel.sendParticles(ParticleTypes.FLAME,
+                    impactX, impactY + 0.6D, impactZ, 45, 0.7D, 0.9D, 0.7D, 0.18D);
+            serverLevel.sendParticles(ParticleTypes.LAVA,
+                    impactX, impactY + 0.5D, impactZ, 14, 0.5D, 0.5D, 0.5D, 0.15D);
+
+            // 5. Shattered Dark Blackstone Shards & Dirt Bursting along the Crater Rim
+            for (int i = 0; i < 28; i++) {
+                double angle = i * (Math.PI * 2.0D / 28.0D);
+                double rimDist = 2.6D + (i % 3) * 0.45D;
+                double rx = impactX + Math.cos(angle) * rimDist;
+                double rz = impactZ + Math.sin(angle) * rimDist;
+                double vx = Math.cos(angle) * 0.35D;
+                double vz = Math.sin(angle) * 0.35D;
+                double vy = 0.32D + (i % 4) * 0.08D;
+
+                serverLevel.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.BLACKSTONE.defaultBlockState()),
+                        rx, impactY + 0.1D, rz, 4, vx, vy, vz, 0.22D);
+                serverLevel.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.COARSE_DIRT.defaultBlockState()),
+                        rx, impactY + 0.1D, rz, 2, vx * 0.7D, vy * 0.7D, vz * 0.7D, 0.15D);
+            }
         }
     }
 

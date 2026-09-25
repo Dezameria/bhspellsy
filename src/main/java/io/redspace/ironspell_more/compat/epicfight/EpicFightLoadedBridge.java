@@ -25,8 +25,12 @@ final class EpicFightLoadedBridge {
     static void registerModEvents(IEventBus modEventBus) {
         modEventBus.addListener(IronSpellAnimations::registerAnimations);
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
-                () -> () -> io.redspace.ironspell_more.compat.epicfight.client.GildedHareEpicFightRenderCompat
-                        .registerModEvents(modEventBus));
+                () -> () -> {
+                    io.redspace.ironspell_more.compat.epicfight.client.GildedHareEpicFightRenderCompat
+                            .registerModEvents(modEventBus);
+                    io.redspace.ironspell_more.compat.epicfight.client.JadeAuraEpicFightRenderCompat
+                            .registerModEvents(modEventBus);
+                });
     }
 
     static CompatResult playAnimation(AnimationRequest request) {

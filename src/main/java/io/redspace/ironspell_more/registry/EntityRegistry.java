@@ -94,6 +94,12 @@ public class EntityRegistry {
                     .updateInterval(1)
                     .build(IronSpellMore.MODID + ":rapturous_bloom"));
 
+    public static final RegistryObject<EntityType<io.redspace.ironspell_more.entity.spells.toxic_salvation.ToxicSalvationAoe>> TOXIC_SALVATION_AOE = ENTITIES.register("toxic_salvation_aoe",
+            () -> EntityType.Builder.<io.redspace.ironspell_more.entity.spells.toxic_salvation.ToxicSalvationAoe>of(io.redspace.ironspell_more.entity.spells.toxic_salvation.ToxicSalvationAoe::new, MobCategory.MISC)
+                    .sized(4.0f, 1.0f)
+                    .clientTrackingRange(64)
+                    .build(IronSpellMore.MODID + ":toxic_salvation_aoe"));
+
     public static final RegistryObject<EntityType<io.redspace.ironspell_more.entity.spells.crimson_thornbind.CrimsonRootEntity>> CRIMSON_ROOT = ENTITIES.register("crimson_root",
             () -> EntityType.Builder.<io.redspace.ironspell_more.entity.spells.crimson_thornbind.CrimsonRootEntity>of(io.redspace.ironspell_more.entity.spells.crimson_thornbind.CrimsonRootEntity::new, MobCategory.MISC)
                     .sized(1.0F, 1.0F)

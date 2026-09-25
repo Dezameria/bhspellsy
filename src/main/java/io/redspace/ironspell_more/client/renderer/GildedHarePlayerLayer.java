@@ -27,22 +27,16 @@ public class GildedHarePlayerLayer extends RenderLayer<AbstractClientPlayer, Pla
             return;
         }
 
+        if (io.redspace.ironspell_more.compat.epicfight.EpicFightCompat.isBattleMode(player)) {
+            return;
+        }
+
         RenderType renderType = RenderHelper.CustomerRenderType.magic(TEXTURE_RIBBON);
         VertexConsumer consumer = bufferSource.getBuffer(renderType);
 
         poseStack.pushPose();
         this.getParentModel().head.translateAndRotate(poseStack);
         GildedHareRibbonGeometry.renderRabbitEars(poseStack, consumer, ageInTicks);
-        poseStack.popPose();
-
-        poseStack.pushPose();
-        this.getParentModel().leftLeg.translateAndRotate(poseStack);
-        GildedHareRibbonGeometry.renderLegRibbons(poseStack, consumer, true, ageInTicks);
-        poseStack.popPose();
-
-        poseStack.pushPose();
-        this.getParentModel().rightLeg.translateAndRotate(poseStack);
-        GildedHareRibbonGeometry.renderLegRibbons(poseStack, consumer, false, ageInTicks);
         poseStack.popPose();
     }
 }
